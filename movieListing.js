@@ -1,6 +1,4 @@
-export default movieListing;
-
-class movieListing {
+export default class movieListing {
     constructor(hasSeen, title, rating){
         this.hasSeen = hasSeen;
         this.title = title;
