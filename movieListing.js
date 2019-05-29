@@ -1,7 +1,4 @@
-export {movieListing};
-
-
-class movieListing {
+export class movieListing {
     constructor(hasSeen, title, rating){
         this.hasSeen = hasSeen;
         this.title = title;
