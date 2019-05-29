@@ -1,4 +1,4 @@
-import {movieListing} from "./movieListing.js"
+import movieListing from "./movieListing.js"
 
 var movies = [
     new movieListing(true,"Field of Dreams",4.5), 
