@@ -25,6 +25,7 @@ h1 {
 
 #attemptResult {
     color: white;
+    flex: auto;
 }
 
 #uppperDeck {
@@ -40,4 +41,5 @@ h1 {
     padding: 0;
 
     display: flex;
+    flex: auto;
 }

@@ -1,3 +1,5 @@
+"use strict";
+
 var targetColor = "rgb(255, 255, 0)";
 var pickers = document.querySelectorAll(".pickerButton");
 
@@ -66,3 +68,4 @@ function main() {
 
 //window.setTimeout(main, 1000);
 main();
+console.log("Main loaded");
