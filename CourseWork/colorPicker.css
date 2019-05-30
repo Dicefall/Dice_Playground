@@ -1,0 +1,24 @@
+.pickerButton {
+    width: 30%;
+    background: purple;
+    padding-bottom: 30%;
+    float: left;
+    margin: 1.66%;
+}
+
+body {
+    background-color: #232323;
+}
+
+#container {
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+h1 {
+    color:white;
+}
+
+#attemptResult {
+    color: white;
+}
