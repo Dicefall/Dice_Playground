@@ -18,10 +18,18 @@ function pickerClicker() {
         document.querySelector("#attemptResult").textContent = "Try Again";
         this.style.backgroundColor = "#232323";
     }
+
+    document.querySelector("#attemptResult").style.color = "black";
 }
 
 function randomColorValue() {
-    return "rgb(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) + ")";
+    // alternative color mode
+    let r = Math.floor(Math.random() * 256);
+    let g = Math.floor(Math.random() * 256);
+    let b = Math.floor(Math.random() * 256);
+
+    return `rgb(${r}, ${g}, ${b})`;
+
 }
 
 function resetBoard() {
@@ -46,12 +54,15 @@ function resetBoard() {
     targetColorText.innerText = targetColor;
 
     document.querySelector("#upperDeck").style.backgroundColor = "#232323";
+    document.querySelector("#attemptResult").style.color = "white";
 }
 
 function main() {
 
     resetBoard();
+    document.querySelector("#freshBoard").addEventListener("click",resetBoard);
 
 }
 
-window.setTimeout(main, 1000);
+//window.setTimeout(main, 1000);
+main();

@@ -8,17 +8,36 @@
 
 body {
     background-color: #232323;
+    padding: 0;
+    margin: 0;
 }
 
-#container {
+.container {
     margin: 0 auto;
     max-width: 600px;
 }
 
 h1 {
     color:white;
+    margin: 0;
+    text-align: center;
 }
 
 #attemptResult {
     color: white;
+}
+
+#uppperDeck {
+    width: 100%;
+    margin: 0;
+}
+
+#navbar {
+    background-color: white;
+    height: 30px;
+    text-align: center;
+    margin-top: 0;
+    padding: 0;
+
+    display: flex;
 }

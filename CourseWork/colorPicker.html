@@ -6,17 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Color Game</title>
     <link rel="stylesheet" href="colorPicker.css" type="text/css">
+    <script defer src="colorPicker.js"></script>
 </head>
 
 <body>
 
     <div id="upperDeck">
         <h1>The Great <span id="colorTarget">RGB</span> colour game.</h1>
-        <p id="attemptResult"></p>
+    </div>
+
+    <div id="navbar">
+        <div class="container">
+            <button id="freshBoard">New Game</button>
+            <span id="attemptResult"></span>
+        </div>
     </div>
 
 
-    <div id="container">
+    <div class="container">
         <div class="pickerButton"></div>
         <div class="pickerButton"></div>
         <div class="pickerButton"></div>
@@ -25,7 +32,6 @@
         <div class="pickerButton"></div>
     </div>
 
-    <script src="colorPicker.js"></script>
 </body>
 
 </html>
