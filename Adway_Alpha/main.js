@@ -36,7 +36,7 @@ function tieredGoldAchievement(){
 window.onload = function() {
     
     // Get previous save from localstorage, check later for online save
-    loadGameFromLocal();
+    //loadGameFromLocal();
 
     //Testing
     goldAchievementGetID = allEvents.registerListener(
