@@ -1,0 +1,31 @@
+Adway roadmap
+
+Future proofing/general architecture
+-
+
+Figure out combat pieces:
+-final fantasy tactics style combat timer
+
+Combat
+-Simple turn ordering and fighting
+
+Growth
+-Gaining xp/levelling up
+-Increasing max level
+
+Game Save
+-Local save to start, online later
+
+Buffs/Debuffs
+-Based on real world time
+-Central object to manage or part of character it's attached to
+
+Jobs/Classes
+-Different attacks maybe, or procs
+-Class mastery effects or special passives for each one
+-Stat modifiers for the classes
+
+
+----Bugfixes / Feature updates
+
+--Real GUID for eventsystem
