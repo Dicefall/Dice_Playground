@@ -19,7 +19,7 @@ var GameText = {
         },
         UI: {
             // Scraps: 0
-            Scraps: "You have {0} scraps."
+            Scraps: "You have {0} scraps.",
         }
     }
 }

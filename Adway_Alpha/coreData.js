@@ -76,13 +76,21 @@ var Game = {
         Achievements: {
             TotalScore: 0,
 
-            // 
+            // Scrap Collections
+            Scraps: {
+                HandlerID: 0,
+                BreakpointEarned: 0,
+                TierBreakpoints: [
+                    10, 50, 100, 1000, 10000
+                ]
+            }
         }
     },
 
     // Settings
     Settings: {
-        GameSpeed: 1,
+        // Tick rate in MS
+        GameSpeed: 100,
     },
     
 }
