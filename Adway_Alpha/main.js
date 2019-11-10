@@ -10,7 +10,7 @@ function mainLoop() {
     // Combat 
 
     // Update UI
-    document.querySelector("scrapDisplay").textContent = 
+    document.querySelector("#scrapDisplay").textContent = 
         ParseGameText(GameText.English.UI.Scraps,Game.Resources.Scraps);
 
 }
