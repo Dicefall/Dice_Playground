@@ -174,7 +174,7 @@ function tieredScrapAchievement(){
 
     let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
 
-    while (Game.Resources.Scraps >= nextTier)
+    if (Game.Resources.Scraps >= nextTier)
     {
         //console.log("Achievement recieved: Acquire 100 Scraps!");
         console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
