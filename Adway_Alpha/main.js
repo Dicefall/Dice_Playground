@@ -80,7 +80,9 @@ function tieredGoldAchievement(){
 
     if (Game.Resources.Scraps >= nextTier)
     {
-        console.log("Achievement recieved: Acquire 100 Scraps!");
+        //console.log("Achievement recieved: Acquire 100 Scraps!");
+        console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
+        scrapAchieve.BreakpointEarned++;
         if (scrapAchieve.BreakpointEarned >= scrapAchieve.TierBreakpoints.length) {
             allEvents.removeEvent(scrapAchieve.HandlerID);
         }
