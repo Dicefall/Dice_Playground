@@ -101,6 +101,6 @@ window.onload = function() {
             tieredScrapAchievement);
 
     // Queue up main loop 
-    window.setInterval(mainLoop, Game.Settings.Speed);
+    window.setInterval(mainLoop, Game.Settings.GameSpeed);
 
 };
