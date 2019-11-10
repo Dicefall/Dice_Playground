@@ -45,6 +45,23 @@ var Game = {
         },
     ],
 
+    EnemyTemplates: [
+        {
+            Name: "Goblin",
+            AttackMod: 1,
+            HealthMod: 1,
+            SpeedMod: 1,
+        },
+        {
+            Name: "Dragon",
+            AttackMod: 2,
+            HealthMod: 5,
+            SpeedMod: 1.2,
+        }
+    ],
+
+    Enemies: [],
+
     // Current Map/World info
     World: {
         CurrentZone: 1,

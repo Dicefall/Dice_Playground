@@ -1,5 +1,5 @@
 function mainLoop() {
-    // Resource gathering------------------------------------------------------
+    // Resource gathering
 
     // Scraps
     Game.Resources.Scraps += Game.Resources.ScrapsIncome;
@@ -7,20 +7,28 @@ function mainLoop() {
 
     // Scrap conversion
 
-    // Combat -----------------------------------------------------------------
+    // Combat 
 
+    // Update UI
+    document.querySelector("scrapDisplay").textContent = 
+        ParseGameText(GameText.English.UI.Scraps,Game.Resources.Scraps);
 
 }
 
 // Utility Functions
 
-// Get a hero based on it's name
+// Get a hero based on it's name, might be useful one day?
 function getHeroByName(heroName) {
+
+    var toReturn = null;
+
     Game.Heroes.forEach(hero => {
         if (hero.Name === heroName) {
-            return hero;
+            toReturn = hero;
         }
     })
+
+    return toReturn;
 }
 
 // Saving Functions, currently unused
@@ -50,9 +58,13 @@ function advanceTurns(){
 
 // Start a new combat encounter
 function newEncounter() {
+
+    // Reset any per-combat stats
     Game.Heroes.forEach(hero => {
         hero.CurrentTurnOrder = 10000 / hero.Speed;
     });
+
+    // Get enemy(s) and set them up
 }
 
 
