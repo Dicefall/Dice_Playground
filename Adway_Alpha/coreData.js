@@ -91,6 +91,7 @@ var Game = {
     Settings: {
         // Tick rate in MS
         GameSpeed: 100,
+        NumberNotation: "Scientific",
     },
     
 }
