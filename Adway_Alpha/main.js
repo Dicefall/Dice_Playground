@@ -2,7 +2,7 @@ function mainLoop() {
     // Resource gathering
 
     // Scraps
-    Game.Resources.Scraps += Game.Resources.ScrapsIncome * (Game.Settings.Speed / 1000);
+    Game.Resources.Scraps += Game.Resources.ScrapsIncome * (Game.Settings.GameSpeed / 1000);
     allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
 
     // Scrap conversion
@@ -72,7 +72,7 @@ function newEncounter() {
 
 var goldAchievementGetID = 0;
 
-function tieredGoldAchievement(){
+function tieredScrapAchievement(){
 
     let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
 
@@ -98,7 +98,7 @@ window.onload = function() {
     Game.Persistents.Achievements.Scraps.HandlerID = 
         allEvents.registerListener(
             allEvents.EventTypes.SCRAPS_RECIEVED,
-            tieredGoldAchievement);
+            tieredScrapAchievement);
 
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.Speed);
