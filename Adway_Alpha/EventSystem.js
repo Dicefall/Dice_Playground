@@ -19,14 +19,14 @@ class EventBoard {
         this.EventTypes = {
             //List of all the types of events
             TEST_EVENT: "TEST_EVENT",
-            OTHER_EVENT: "OTHER_EVENT",
-            SCRAPS_RECIEVED: "SCRAPS_RECIEVED"
+            SCRAPS_RECIEVED: "SCRAPS_RECIEVED",
+            COMBAT_SWING: "COMBAT_SWING"
         }
 
         // Map of event types, will contain callbacks for said events
         this.RootBoard = new Map();
         this.RootBoard.set(this.EventTypes.TEST_EVENT,[]);
-        this.RootBoard.set(this.EventTypes.OTHER_EVENT,[]);
+        this.RootBoard.set(this.EventTypes.COMBAT_SWING,[]);
         this.RootBoard.set(this.EventTypes.SCRAPS_RECIEVED,[]);
     }
 

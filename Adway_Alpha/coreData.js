@@ -4,7 +4,7 @@
 // -Stats
 // --Health (Current/Max)
 // --Attack
-// --Speed ()
+// --Speed
 // --Xp to level (current/Needed)
 // -Class/job unlocks
 // --Class/job mastery points
@@ -21,17 +21,34 @@ var Game = {
         Cloth:  0,
     },
 
-    // Heroes
-    Heroes: {
-        Meryl: {},
-        Chase: {},
-        Tali: {},
-        Herschel: {}
-    },
+    // Alternative, testing
+    Heroes: [
+        {
+            Name: "Meryl",
+            Speed: 15,
+            CurrentTurnOrder: 0,
+        },
+        {
+            Name: "Chase",
+            Speed: 15,
+            CurrentTurnOrder: 0,
+        },
+        {
+            Name: "Tali",
+            Speed: 15,
+            CurrentTurnOrder: 0,
+        },
+        {
+            Name: "Herschel",
+            Speed: 15,
+            CurrentTurnOrder: 0,
+        },
+    ],
 
     // Current Map/World info
     World: {
-
+        CurrentZone: 1,
+        
     },
 
     // Per run values

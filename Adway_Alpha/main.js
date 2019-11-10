@@ -9,10 +9,21 @@ function mainLoop() {
 
     // Combat -----------------------------------------------------------------
 
+
 }
 
+// Utility Functions
 
-// Saving Functions 
+// Get a hero based on it's name
+function getHeroByName(heroName) {
+    Game.Heroes.forEach(hero => {
+        if (hero.Name === heroName) {
+            return hero;
+        }
+    })
+}
+
+// Saving Functions, currently unused
 // TODO: Maybe look at the lz-string thing other games do----------------------
 function saveGameToLocal() {
     window.localStorage.setItem("ADWAY_Save", JSON.stringify(Game));
@@ -21,6 +32,30 @@ function saveGameToLocal() {
 function loadGameFromLocal() {
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
 }
+// ----------------------------------------------------------------------------
+
+// Combat ---------------------------------------------------------------------
+// Everything combat here, including class perks and anything else that needs
+// to be dealt with for combat.
+
+// Main Combat
+function mainCombat() {
+
+}
+
+// Turn order
+function advanceTurns(){
+    
+}
+
+// Start a new combat encounter
+function newEncounter() {
+    Game.Heroes.forEach(hero => {
+        hero.CurrentTurnOrder = 10000 / hero.Speed;
+    });
+}
+
+
 // ----------------------------------------------------------------------------
 
 var goldAchievementGetID = 0;

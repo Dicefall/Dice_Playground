@@ -1,5 +1,10 @@
 Adway roadmap
 
+Basic world design and implementation
+-World maps/zones
+-Dungeons/maps/whatever
+-Exploring concept
+
 Future proofing/general architecture
 -
 
