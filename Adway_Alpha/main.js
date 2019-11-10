@@ -11,7 +11,10 @@ function mainLoop() {
 
     // Update UI
     document.querySelector('#scrapDisplay').textContent = 
-        ParseGameText(GameText.English.UI.Scraps,Game.Resources.Scraps);
+        ParseGameText(
+            GameText.English.UI.Scraps,
+            formatNumber(Game.Resources.Scraps)
+            );
 
 }
 
@@ -31,29 +34,40 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
+// Format numbers for text displaying. Cleans a lot of stuff up
 function formatNumber(number) {
     
     // Ooptions are:
     // Scientific, Engineering, "Standard", More?
 
     // Check for infinite:
-    if (!isFinite(number)) return '<i class="fas fa-infinity"></i>'
+    if (!isFinite(number)) return '<i class="fas fa-infinity"></i>';
 
     // Get base and exponent
-    var mantissa;
-    var exponent;
+    // Turns into: mantissa * 10 ^ exponent
+    var exponent = Math.floor(Math.log10(number));
+    var mantissa = number / Math.pow(10,exponent);
 
-
-
-    switch (Game.Settings.NumberNotation) {
-        
-    }
+    // Clean up weird float precision for numbers less than 10k
+    if (exponent <= 3) return Math.floor(number);
     
+    switch (Game.Settings.NumberNotation) {
+        case 'Scientific':
+            return mantissa.toFixed(2) + 'e' + exponent.toString();
+        case 'Standard':
+            // TODO: See Conway and Guy's construction for standard notation
+
+            return mantissa.toFixed(2)
+        case 'Engineering':
+            var precision = exponent % 3;
+            return (mantissa * (10 ^ precision)).toFixed(2 - precision) + 'e' + (exponent - precision);
+        default:
+            return number;
+    }
 }
 
 /*function prettify(number) {
-	var numberTmp = number;
-	if (!isFinite(number)) return "<span class='icomoon icon-infinity'></span>";
+
 	if (number >= 1000 && number < 10000) return Math.floor(number);
 	if (number == 0) return prettifySub(0);
 	if (number < 0) return "-" + prettify(-number);
@@ -160,7 +174,7 @@ function tieredScrapAchievement(){
 
     let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
 
-    if (Game.Resources.Scraps >= nextTier)
+    while (Game.Resources.Scraps >= nextTier)
     {
         //console.log("Achievement recieved: Acquire 100 Scraps!");
         console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
