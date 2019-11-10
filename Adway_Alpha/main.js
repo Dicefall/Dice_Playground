@@ -2,7 +2,7 @@ function mainLoop() {
     // Resource gathering
 
     // Scraps
-    Game.Resources.Scraps += Game.Resources.ScrapsIncome;
+    Game.Resources.Scraps += Game.Resources.ScrapsIncome * (Game.Settings.Speed / 1000);
     allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
 
     // Scrap conversion
@@ -74,17 +74,17 @@ var goldAchievementGetID = 0;
 
 function tieredGoldAchievement(){
 
-    let scrapAchieve = Game.Persistents.Achievements.Scraps;
-
-    let nextTier = scrapAchieve.TierBreakpoints[scrapAchieve.BreakpointEarned]
+    let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
 
     if (Game.Resources.Scraps >= nextTier)
     {
         //console.log("Achievement recieved: Acquire 100 Scraps!");
         console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
-        scrapAchieve.BreakpointEarned++;
-        if (scrapAchieve.BreakpointEarned >= scrapAchieve.TierBreakpoints.length) {
-            allEvents.removeEvent(scrapAchieve.HandlerID);
+        Game.Persistents.Achievements.Scraps.BreakpointEarned++;
+
+        if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
+            allEvents.removeEvent(
+                Game.Persistents.Achievements.Scraps.HandlerID);
         }
     }
 }
