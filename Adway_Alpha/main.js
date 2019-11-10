@@ -2,7 +2,7 @@ function mainLoop() {
     // Resource gathering
 
     // Scraps
-    Game.Resources.Scraps += Game.Resources.ScrapsIncome * (Game.Settings.GameSpeed / 1000);
+    Game.Resources.Scraps += (Game.Resources.ScrapsIncome * (Game.Settings.GameSpeed / 1000));
     allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
 
     // Scrap conversion
