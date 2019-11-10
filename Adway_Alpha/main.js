@@ -60,7 +60,7 @@ function formatNumber(number) {
             return mantissa.toFixed(2)
         case 'Engineering':
             var precision = exponent % 3;
-            return (mantissa * (Math.pow(10,2))).toFixed(2) + 'e' + (exponent - precision);
+            return (mantissa * (Math.pow(10,precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
         default:
             return number;
     }
