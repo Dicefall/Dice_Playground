@@ -14,8 +14,8 @@ function mainLoop() {
     });
 
     Game.Enemies.forEach(badguy => {
-        badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * badguy.Speed;
-    })
+        badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
+    });
 
     // Go through actors capable of acting and do the thing.
     var nextActor = null;
@@ -46,7 +46,7 @@ function mainLoop() {
         });
 
         if (nextActor != null) {
-            nextActor.CurrentTurnOrder += 1000;
+            nextActor.CurrentTurnOrder += 10000;
         }
 
     } while (nextActor != null)
@@ -134,18 +134,23 @@ function UpdateUIElements(){
         formatNumber(Game.Resources.Scraps)
         );
 
-    // document.querySelector('#scrapDisplay').textContent = 
-    //     ParseGameText(
-    //         GameText.English.UI.Scraps,
-    //         formatNumber(Game.Resources.Scraps)
-    //         );
-
     // Turn order visual testing
-    document.querySelector('#MerylOrder').textContent = 
-        ParseGameText(
-            'Meryl\'s current turn counter: {0}',
-            formatNumber(getHeroByName('Meryl').CurrentTurnOrder)
-        );
+    Game.UIElements.MerylTurnOrder.textContent = ParseGameText(
+        'Meryl\'s current turn counter: {0}',
+        formatNumber(getHeroByName('Meryl').CurrentTurnOrder)
+    );
+    Game.UIElements.ChaseTurnOrder.textContent = ParseGameText(
+        'Chase\'s current turn counter: {0}',
+        formatNumber(getHeroByName('Chase').CurrentTurnOrder)
+    );
+    Game.UIElements.TaliTurnOrder.textContent = ParseGameText(
+        'Tali\'s current turn counter: {0}',
+        formatNumber(getHeroByName('Tali').CurrentTurnOrder)
+    );
+    Game.UIElements.HerschelTurnOrder.textContent = ParseGameText(
+        'Herschel\'s current turn counter: {0}',
+        formatNumber(getHeroByName('Herschel').CurrentTurnOrder)
+    );
 }
 
 // Saving Functions, currently unused
@@ -173,7 +178,7 @@ function newEncounter() {
 
     // Reset any per-combat stats
     Game.Heroes.forEach(hero => {
-        hero.CurrentTurnOrder = 10000 / hero.Speed;
+        hero.CurrentTurnOrder = 100000 / hero.Speed;
     });
 
     // Get enemy(s) and set them up
@@ -198,8 +203,6 @@ function spawnEncounter(){}
 
 // ----------------------------------------------------------------------------
 
-var goldAchievementGetID = 0;
-
 function tieredScrapAchievement(){
 
     let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
@@ -217,6 +220,10 @@ function tieredScrapAchievement(){
     }
 }
 
+function tutorialControl(){
+    
+}
+
 window.onload = function() {
     
     // Get previous save from localstorage, check later for online save
@@ -227,7 +234,12 @@ window.onload = function() {
         allEvents.registerListener(
             allEvents.EventTypes.SCRAPS_RECIEVED,
             tieredScrapAchievement);
-
+    
+    this.Game.Persistents.Stats.TutorialState.TutorialControlID = 
+        allEvents.registerListener(
+            allEvents.EventTypes.TEST_EVENT,
+            tutorialControl
+        )
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
 

@@ -16,6 +16,8 @@ Combat Timer:
 -some abilities could in theory have different turn times
 -adds interaction with this sort of mechanic potentially
 
+-TODO: mess with actual turn timer, balance issue
+
 Combat
 -Simple turn ordering and fighting
 

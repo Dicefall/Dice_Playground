@@ -20,8 +20,13 @@ var GameText = {
         UI: {
             // Scraps: 0
             Scraps: "You have {0} scraps.",
+        },
+        Special: {
+            Thanks: [
+                'List of special thanks to people here'
+            ]
         }
-    }
+    },
 }
 
 function ParseGameText(unParsed, ...restArgs) {

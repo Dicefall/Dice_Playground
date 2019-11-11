@@ -101,12 +101,19 @@ var Game = {
         Stats: {
             GameVersion: "NaNi",
             LastUpdateTime: 0,
+            TutorialState: {
+                TutorialStage: 0,
+                TutorialControlID: 0,
+            }
         }
     },
 
     UIElements: {
         ScrapCounter: document.querySelector('#scrapDisplay'),
         MerylTurnOrder: document.querySelector('#MerylOrder'),
+        ChaseTurnOrder: document.querySelector('#ChaseOrder'),
+        TaliTurnOrder: document.querySelector('#TaliOrder'),
+        HerschelTurnOrder: document.querySelector('#HerschelOrder'),
     },
 
     // Settings
