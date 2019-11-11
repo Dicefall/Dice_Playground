@@ -10,7 +10,7 @@ function mainLoop() {
     // Combat
     // Advance turn cds
     Game.Heroes.forEach(hero => {
-        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + speed / 100);
+        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
     });
 
     Game.Enemies.forEach(badguy => {
