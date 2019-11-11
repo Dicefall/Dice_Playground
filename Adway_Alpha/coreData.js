@@ -26,21 +26,33 @@ var Game = {
         {
             Name: "Meryl",
             Speed: 15,
+            Attack: 10,
+            HealthMax: 100,
+            HealthCurr: 100,
             CurrentTurnOrder: 0,
         },
         {
             Name: "Chase",
             Speed: 15,
+            Attack: 10,
+            HealthMax: 100,
+            HealthCurr: 100,
             CurrentTurnOrder: 0,
         },
         {
             Name: "Tali",
             Speed: 15,
+            Attack: 10,
+            HealthMax: 100,
+            HealthCurr: 100,
             CurrentTurnOrder: 0,
         },
         {
             Name: "Herschel",
             Speed: 15,
+            Attack: 10,
+            HealthMax: 100,
+            HealthCurr: 100,
             CurrentTurnOrder: 0,
         },
     ],
@@ -84,6 +96,11 @@ var Game = {
                     10, 50, 100, 1000, 10000
                 ]
             }
+        },
+
+        Stats: {
+            GameVersion: "NaNi",
+            LastUpdateTime: 0,
         }
     },
 

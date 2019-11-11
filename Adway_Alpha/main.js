@@ -7,15 +7,54 @@ function mainLoop() {
 
     // Scrap conversion
 
-    // Combat 
+    // Combat
+    // Advance turn cds
+    Game.Heroes.forEach(hero => {
+        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * hero.Speed;
+    });
+
+    Game.Enemies.forEach(badguy => {
+        badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * badguy.Speed;
+    })
+
+    // Go through actors capable of acting and do the thing.
+    var nextActor = null;
+    do {
+        nextActor = null;
+        Game.Heroes.forEach(actor => {
+            if (actor.CurrentTurnOrder < 0) {
+                if (nextActor != null) {
+                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
+                        nextActor = actor;
+                    }
+                } else {
+                    nextActor = actor;
+                }
+            }
+        });
+
+        Game.Enemies.forEach(actor => {
+            if (actor.CurrentTurnOrder < 0) {
+                if (nextActor != null) {
+                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
+                        nextActor = actor;
+                    }
+                } else {
+                    nextActor = actor;
+                }
+            }
+        });
+
+        if (nextActor != null) {
+            nextActor.CurrentTurnOrder += 1000;
+        }
+
+    } while (nextActor != null)
 
     // Update UI
-    document.querySelector('#scrapDisplay').textContent = 
-        ParseGameText(
-            GameText.English.UI.Scraps,
-            formatNumber(Game.Resources.Scraps)
-            );
+    UpdateUIElements();
 
+    Game.Persistents.Stats.LastUpdateTime = Date().getTime();
 }
 
 // Utility Functions
@@ -34,7 +73,7 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
-// Format numbers for text displaying. Cleans a lot of stuff up
+// Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number) {
     
     // Ooptions are:
@@ -42,6 +81,7 @@ function formatNumber(number) {
 
     // Check for infinite:
     if (!isFinite(number)) return '<i class="fas fa-infinity"></i>';
+    if (number < 0) return '-' + formatNumber(-number);
 
     // Get base and exponent
     // Turns into: mantissa * 10 ^ exponent
@@ -66,39 +106,8 @@ function formatNumber(number) {
     }
 }
 
-/*function prettify(number) {
+/*function prettify(number) {	
 
-	if (number >= 1000 && number < 10000) return Math.floor(number);
-	if (number == 0) return prettifySub(0);
-	if (number < 0) return "-" + prettify(-number);
-	if (number < 0.005) return (+number).toExponential(2);
-
-	var base = Math.floor(Math.log(number)/Math.log(1000));
-	if (base <= 0) return prettifySub(number);
-
-	if(game.options.menu.standardNotation.enabled == 5) {
-		//Thanks ZXV
-		var logBase = game.global.logNotBase;
-		var exponent = Math.log(number) / Math.log(logBase);
-		return prettifySub(exponent) + "L" + logBase;
-	}
-
-
-	number /= Math.pow(1000, base);
-	if (number >= 999.5) {
-		// 999.5 rounds to 1000 and we don’t want to show “1000K” or such
-		number /= 1000;
-		++base;
-	}
-	if (game.options.menu.standardNotation.enabled == 3){
-		var suffices = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
-		if (base <= suffices.length) suffix = suffices[base -1];
-		else {
-			var suf2 = (base % suffices.length) - 1;
-			if (suf2 < 0) suf2 = suffices.length - 1;
-			suffix = suffices[Math.ceil(base / suffices.length) - 2] + suffices[suf2];
-		}
-	}
 	else {
 		var suffices = [
 			'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud',
@@ -113,21 +122,26 @@ function formatNumber(number) {
             'Nog', 'Na', 'Un', 'Dn', 'Tn', 'Qan', 'Qin', 'Sxn', 'Spn', 'On',
             'Nn', 'Ct', 'Uc'
 		];
-		var suffix;
-		if (game.options.menu.standardNotation.enabled == 2 || (game.options.menu.standardNotation.enabled == 1 && base > suffices.length) || (game.options.menu.standardNotation.enabled == 4 && base > 31))
-			suffix = "e" + ((base) * 3);
-		else if (game.options.menu.standardNotation.enabled && base <= suffices.length)
-			suffix = suffices[base-1];
-		else
-		{
-			var exponent = parseFloat(numberTmp).toExponential(2);
-			exponent = exponent.replace('+', '');
-			return exponent;
-		}
 	}
-	return prettifySub(number) + suffix;
 }
 */
+
+function UpdateUIElements(){
+
+    // Scrap counter
+    document.querySelector('#scrapDisplay').textContent = 
+        ParseGameText(
+            GameText.English.UI.Scraps,
+            formatNumber(Game.Resources.Scraps)
+            );
+
+    // Turn order visual testing
+    document.querySelector('#MerylOrder').textContent = 
+        ParseGameText(
+            'Meryl\'s current turn counter: {0}',
+            formatNumber(getHeroByName('Meryl').CurrentTurnOrder)
+        );
+}
 
 // Saving Functions, currently unused
 // TODO: Maybe look at the lz-string thing other games do----------------------
@@ -149,11 +163,6 @@ function mainCombat() {
 
 }
 
-// Turn order
-function advanceTurns(){
-    
-}
-
 // Start a new combat encounter
 function newEncounter() {
 
@@ -165,6 +174,22 @@ function newEncounter() {
     // Get enemy(s) and set them up
 }
 
+// Who knows when stats will get into a weird state that needs to be reset
+function recalcStats() {
+
+    // Base stats basically
+    Game.Heroes.forEach(hero => {
+        hero.Speed = 15; // No speed mods yet
+        hero.Attack = 10; // no attack mods yet
+        hero.HealthMax = 100; // no health mods yet
+    })
+}
+
+function startWorldZone(){}
+
+function spawnMap(){}
+
+function spawnEncounter(){}
 
 // ----------------------------------------------------------------------------
 

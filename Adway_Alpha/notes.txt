@@ -5,11 +5,16 @@ Basic world design and implementation
 -Dungeons/maps/whatever
 -Exploring concept
 
-Future proofing/general architecture
--
+Exploring is through combat, clean up afterwards with some kind of
+investigation thing, each cell fully scouted out is bonus resource
+generation and maybe discover some cool things. Maybe some forward
+scouting added also to see what's coming up.
 
 Figure out combat pieces:
--final fantasy tactics style combat timer
+Combat Timer:
+-base turn time is 1s, haste makes it tick down faster
+-some abilities could in theory have different turn times
+-adds interaction with this sort of mechanic potentially
 
 Combat
 -Simple turn ordering and fighting
