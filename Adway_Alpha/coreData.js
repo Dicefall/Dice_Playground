@@ -104,6 +104,11 @@ var Game = {
         }
     },
 
+    UIElements: {
+        ScrapCounter: document.querySelector('#scrapDisplay'),
+        MerylTurnOrder: document.querySelector('#MerylOrder'),
+    },
+
     // Settings
     Settings: {
         // Tick rate in MS

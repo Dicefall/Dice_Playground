@@ -54,7 +54,7 @@ function mainLoop() {
     // Update UI
     UpdateUIElements();
 
-    Game.Persistents.Stats.LastUpdateTime = Date().getTime();
+    Game.Persistents.Stats.LastUpdateTime = new Date().getTime();
 }
 
 // Utility Functions
@@ -129,11 +129,16 @@ function formatNumber(number) {
 function UpdateUIElements(){
 
     // Scrap counter
-    document.querySelector('#scrapDisplay').textContent = 
-        ParseGameText(
-            GameText.English.UI.Scraps,
-            formatNumber(Game.Resources.Scraps)
-            );
+    Game.UIElements.ScrapCounter.textContent = ParseGameText(
+        GameText.English.UI.Scraps,
+        formatNumber(Game.Resources.Scraps)
+        );
+
+    // document.querySelector('#scrapDisplay').textContent = 
+    //     ParseGameText(
+    //         GameText.English.UI.Scraps,
+    //         formatNumber(Game.Resources.Scraps)
+    //         );
 
     // Turn order visual testing
     document.querySelector('#MerylOrder').textContent = 
