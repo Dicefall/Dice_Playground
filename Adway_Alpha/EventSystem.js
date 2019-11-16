@@ -16,7 +16,7 @@ class EventBoard {
     }
 
     static GenerateEventGUID() {
-        if (GenerateEventGUID.nextGUID === undefined) {
+        if (typeof GenerateEventGUID.nextGUID == undefined) {
             GenerateEventGUID.nextGUID = 0;
         }
 
