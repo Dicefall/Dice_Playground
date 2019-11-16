@@ -84,7 +84,7 @@ var Game = {
 
     // Current Map/World info
     World: {
-        CurrentZone: 1,
+        CurrentZone: 0,
         
     },
 
@@ -102,6 +102,9 @@ var Game = {
                 BreakpointEarned: 0,
                 TierBreakpoints: [
                     10, 50, 100, 1000, 10000
+                ],
+                TierValues: [
+                    1, 1, 2, 2, 5
                 ]
             }
         },
@@ -122,6 +125,7 @@ var Game = {
         ChaseTurnOrder: document.querySelector('#ChaseOrder'),
         TaliTurnOrder: document.querySelector('#TaliOrder'),
         HerschelTurnOrder: document.querySelector('#HershelOrder'),
+        EnemyHealth: document.querySelector('#enemyHealth'),
     },
 
     // Settings

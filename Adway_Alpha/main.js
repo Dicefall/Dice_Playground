@@ -9,7 +9,8 @@ function mainLoop() {
 
     // Combat
     // For Testing
-    if (Game.Enemies.length == 0) {
+    if (Game.World.CurrentZone == 0) {
+        Game.World.CurrentZone++;
         spawnEncounter();
         newEncounter();
     }
@@ -97,23 +98,32 @@ function UpdateUIElements(){
         formatNumber(Game.Resources.Scraps)
         );
 
-    // Turn order visual testing
+    // Turn order visual testing, health values for now
     Game.UIElements.MerylTurnOrder.textContent = ParseGameText(
-        'Meryl\'s current turn counter: {0}',
-        formatNumber(getHeroByName('Meryl').CurrentTurnOrder)
+        'Meryl HP: {0} / {1}',
+        formatNumber(getHeroByName('Meryl').HealthCurr),
+        formatNumber(getHeroByName('Meryl').HealthMax)
     );
     Game.UIElements.ChaseTurnOrder.textContent = ParseGameText(
-        'Chase\'s current turn counter: {0}',
-        formatNumber(getHeroByName('Chase').CurrentTurnOrder)
+        'Chase HP: {0} / {1}',
+        formatNumber(getHeroByName('Chase').HealthCurr),
+        formatNumber(getHeroByName('Chase').HealthMax)
     );
     Game.UIElements.TaliTurnOrder.textContent = ParseGameText(
-        'Tali\'s current turn counter: {0}',
-        formatNumber(getHeroByName('Tali').CurrentTurnOrder)
+        'Tali HP: {0} / {1}',
+        formatNumber(getHeroByName('Tali').HealthCurr),
+        formatNumber(getHeroByName('Tali').HealthMax)
     );
     Game.UIElements.HerschelTurnOrder.textContent = ParseGameText(
-        'Herschel\'s current turn counter: {0}',
-        formatNumber(getHeroByName('Herschel').CurrentTurnOrder)
+        'Herschel HP: {0} / {1}',
+        formatNumber(getHeroByName('Herschel').HealthCurr),
+        formatNumber(getHeroByName('Herschel').HealthMax)
     );
+    Game.UIElements.EnemyHealth.textContent = ParseGameText(
+        'Enemy HP: {0} / {1}',
+        formatNumber(Game.Enemies[0].HealthCurr),
+        formatNumber(Game.Enemies[0].HealthMax)
+    )
 }
 
 // Saving Functions, currently unused
@@ -134,58 +144,58 @@ function loadGameFromLocal() {
 // Main Combat
 function mainCombat() {
 
-        // Advance turn cds
-        Game.Heroes.forEach(hero => {
-            hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
-        });
-    
-        Game.Enemies.forEach(badguy => {
-            badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
-        });
-    
-        // Go through actors capable of acting and do the thing.
-        var nextActor = null;
-        do {
-            nextActor = null;
-            Game.Heroes.forEach(actor => {
-                if (actor.CurrentTurnOrder < 0) {
-                    if (nextActor != null) {
-                        if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                            nextActor = actor;
-                        }
-                    } else {
+    // Advance turn cds
+    Game.Heroes.forEach(hero => {
+        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
+    });
+
+    Game.Enemies.forEach(badguy => {
+        badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
+    });
+
+    // Go through actors capable of acting and do the thing.
+    var nextActor = null;
+    do {
+        nextActor = null;
+        Game.Heroes.forEach(actor => {
+            if (actor.CurrentTurnOrder < 0) {
+                if (nextActor != null) {
+                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
                         nextActor = actor;
                     }
-                }
-            });
-    
-            Game.Enemies.forEach(actor => {
-                if (actor.CurrentTurnOrder < 0) {
-                    if (nextActor != null) {
-                        if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                            nextActor = actor;
-                        }
-                    } else {
-                        nextActor = actor;
-                    }
-                }
-            });
-    
-            if (nextActor != null) {
-                // combat actions go here
-    
-                // See if it's a hero
-                if (getHeroByName(nextActor.Name) != null) {
-                    // TODO simple combat for now, something something AI
-                    Game.Enemies[0].HealthCurr -= nextActor.Attack;
                 } else {
-                    Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
+                    nextActor = actor;
                 }
-    
-                nextActor.CurrentTurnOrder += 10000;
             }
-    
-        } while (nextActor != null)
+        });
+
+        Game.Enemies.forEach(actor => {
+            if (actor.CurrentTurnOrder < 0) {
+                if (nextActor != null) {
+                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
+                        nextActor = actor;
+                    }
+                } else {
+                    nextActor = actor;
+                }
+            }
+        });
+
+        if (nextActor != null) {
+            // combat actions go here
+
+            // See if it's a hero
+            if (getHeroByName(nextActor.Name) != null) {
+                // TODO simple combat for now, something something AI
+                Game.Enemies[0].HealthCurr -= nextActor.Attack;
+            } else {
+                Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
+            }
+
+            nextActor.CurrentTurnOrder += 10000;
+        }
+
+    } while (nextActor != null)
 }
 
 // Start a new combat encounter
@@ -196,7 +206,6 @@ function newEncounter() {
         hero.CurrentTurnOrder = 100000 / hero.Speed;
     });
 
-    // Get enemy(s) and set them up
 }
 
 // Who knows when stats will get into a weird state that needs to be reset
@@ -244,7 +253,11 @@ function tieredScrapAchievement(){
     if (Game.Resources.Scraps >= nextTier)
     {
         console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
-        Game.Persistents.Achievements.Scraps.BreakpointEarned++;
+
+        Game.Persistents.Achievements.TotalScore += 
+            Game.Persistents.Achievements.Scraps.TierValues[
+                Game.Persistents.Achievements.Scraps.BreakpointEarned++
+            ]
 
         if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
             allEvents.removeEvent(
