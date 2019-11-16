@@ -38,7 +38,7 @@ class EventBoard {
     registerListener(listenFor, EventCallback){
         var toRegister = {
             eventCB: EventCallback,
-            cbGUID: GenerateEventGUID()
+            cbGUID: this.GenerateEventGUID()
         }
 
         this.RootBoard.get(listenFor).push(toRegister);
