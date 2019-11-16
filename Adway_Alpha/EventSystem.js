@@ -15,6 +15,14 @@ class EventBoard {
         return this.instance;
     }
 
+    static GenerateEventGUID() {
+        if (nextGUID === undefined) {
+            nextGUID = 0;
+        }
+
+        return ++nextGUID;
+    }
+
     init(){
         this.EventTypes = {
             //List of all the types of events
@@ -65,13 +73,6 @@ class EventBoard {
         }
     }
 
-}
-
-
-function GenerateEventGUID() {
-
-    // TODO: make this a real GUID
-    return new Date().getTime();
 }
 
 const allEvents = new EventBoard();

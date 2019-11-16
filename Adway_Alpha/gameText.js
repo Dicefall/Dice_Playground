@@ -20,6 +20,9 @@ var GameText = {
         UI: {
             // Scraps: 0
             Scraps: "You have {0} scraps.",
+
+            // When I actually set up data collection for stuff
+            // I should have a disclaimer for it
             DataCollectionDisclaimer: '',
         },
         Special: {

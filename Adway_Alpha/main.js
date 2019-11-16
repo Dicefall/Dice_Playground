@@ -11,60 +11,10 @@ function mainLoop() {
     // For Testing
     if (Game.Enemies.length == 0) {
         spawnEncounter();
+        newEncounter();
     }
 
-    // Advance turn cds
-    Game.Heroes.forEach(hero => {
-        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
-    });
-
-    Game.Enemies.forEach(badguy => {
-        badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
-    });
-
-    // Go through actors capable of acting and do the thing.
-    var nextActor = null;
-    do {
-        nextActor = null;
-        Game.Heroes.forEach(actor => {
-            if (actor.CurrentTurnOrder < 0) {
-                if (nextActor != null) {
-                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                        nextActor = actor;
-                    }
-                } else {
-                    nextActor = actor;
-                }
-            }
-        });
-
-        Game.Enemies.forEach(actor => {
-            if (actor.CurrentTurnOrder < 0) {
-                if (nextActor != null) {
-                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                        nextActor = actor;
-                    }
-                } else {
-                    nextActor = actor;
-                }
-            }
-        });
-
-        if (nextActor != null) {
-            // combat actions go here
-
-            // See if it's a hero
-            if (getHeroByName(nextActor.Name)) {
-                // TODO simple combat for now
-                Game.Enemies[0].HealthCurr -= nextActor.Attack;
-            } else {
-                Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
-            }
-
-            nextActor.CurrentTurnOrder += 10000;
-        }
-
-    } while (nextActor != null)
+    mainCombat();
 
     // Update UI
     UpdateUIElements();
@@ -184,6 +134,58 @@ function loadGameFromLocal() {
 // Main Combat
 function mainCombat() {
 
+        // Advance turn cds
+        Game.Heroes.forEach(hero => {
+            hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
+        });
+    
+        Game.Enemies.forEach(badguy => {
+            badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
+        });
+    
+        // Go through actors capable of acting and do the thing.
+        var nextActor = null;
+        do {
+            nextActor = null;
+            Game.Heroes.forEach(actor => {
+                if (actor.CurrentTurnOrder < 0) {
+                    if (nextActor != null) {
+                        if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
+                            nextActor = actor;
+                        }
+                    } else {
+                        nextActor = actor;
+                    }
+                }
+            });
+    
+            Game.Enemies.forEach(actor => {
+                if (actor.CurrentTurnOrder < 0) {
+                    if (nextActor != null) {
+                        if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
+                            nextActor = actor;
+                        }
+                    } else {
+                        nextActor = actor;
+                    }
+                }
+            });
+    
+            if (nextActor != null) {
+                // combat actions go here
+    
+                // See if it's a hero
+                if (getHeroByName(nextActor.Name) != null) {
+                    // TODO simple combat for now, something something AI
+                    Game.Enemies[0].HealthCurr -= nextActor.Attack;
+                } else {
+                    Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
+                }
+    
+                nextActor.CurrentTurnOrder += 10000;
+            }
+    
+        } while (nextActor != null)
 }
 
 // Start a new combat encounter
@@ -205,6 +207,8 @@ function recalcStats() {
         hero.Speed = 15; // No speed mods yet
         hero.Attack = 10; // no attack mods yet
         hero.HealthMax = 100; // no health mods yet
+
+        hero.HealthCurr = Math.min(hero.HealthCurr,hero.HealthMax);
     })
 }
 
