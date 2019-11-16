@@ -15,8 +15,6 @@ class EventBoard {
         return this.instance;
     }
 
-    static GenerateEventGUID() {return ++nextGUID;}
-
     init(){
         this.EventTypes = {
             //List of all the types of events
@@ -33,6 +31,8 @@ class EventBoard {
 
         this.nextGUID = 0;
     }
+
+    GenerateEventGUID() {return ++(this.nextGUID);}
 
     // Add function to the appropriate board
     registerListener(listenFor, EventCallback){
