@@ -8,6 +8,11 @@ function mainLoop() {
     // Scrap conversion
 
     // Combat
+    // For Testing
+    if (Game.Enemies.length == 0) {
+        spawnEncounter();
+    }
+
     // Advance turn cds
     Game.Heroes.forEach(hero => {
         hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
@@ -47,6 +52,14 @@ function mainLoop() {
 
         if (nextActor != null) {
             // combat actions go here
+
+            // See if it's a hero
+            if (getHeroByName(nextActor.Name)) {
+                // TODO simple combat for now
+                Game.Enemies[0].HealthCurr -= nextActor.Attack;
+            } else {
+                Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
+            }
 
             nextActor.CurrentTurnOrder += 10000;
         }
@@ -201,7 +214,21 @@ function spawnMap(){}
 
 function spawnEncounter(){
     
-
+    // Each zone is 50% stronger than previous zone baseline
+    var worldMod = Math.pow(1.5,Game.World.CurrentZone);
+    var cellMod; // TODO come up with something here
+    // TODO: make it more fancy, for now just spawn goblins
+    Game.Enemies.push(
+        {
+            Name: "Goblin",
+            Speed: 15 * Game.EnemyTemplates[0].SpeedMod,
+            Attack: 1 * Game.EnemyTemplates[0].AttackMod * worldMod,
+            HealthMax: 50 * Game.EnemyTemplates[0].HealthMod * worldMod,
+            HealthCurr: 50 * Game.EnemyTemplates[0].HealthMod * worldMod,
+            CurrentTurnOrder: 10000,
+        }
+    )
+    
 }
 
 // ----------------------------------------------------------------------------
