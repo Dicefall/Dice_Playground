@@ -15,13 +15,7 @@ class EventBoard {
         return this.instance;
     }
 
-    static GenerateEventGUID() {
-        if (typeof EventBoard.nextGUID == undefined) {
-            EventBoard.nextGUID = 0;
-        }
-
-        return ++(EventBoard.nextGUID);
-    }
+    static GenerateEventGUID() {return ++nextGUID;}
 
     init(){
         this.EventTypes = {
@@ -36,6 +30,8 @@ class EventBoard {
         this.RootBoard.set(this.EventTypes.TEST_EVENT,[]);
         this.RootBoard.set(this.EventTypes.COMBAT_SWING,[]);
         this.RootBoard.set(this.EventTypes.SCRAPS_RECIEVED,[]);
+
+        this.nextGUID = 0;
     }
 
     // Add function to the appropriate board

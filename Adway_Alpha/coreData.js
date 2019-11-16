@@ -36,7 +36,7 @@ var Game = {
         {
             Name: "Chase",
             Level: 1,
-            Speed: 15,
+            Speed: 14,
             Attack: 10,
             HealthMax: 100,
             HealthCurr: 100,
@@ -46,7 +46,7 @@ var Game = {
         {
             Name: "Tali",
             Level: 1,
-            Speed: 15,
+            Speed: 16,
             Attack: 10,
             HealthMax: 100,
             HealthCurr: 100,

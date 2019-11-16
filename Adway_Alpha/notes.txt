@@ -20,6 +20,7 @@ Combat Timer:
 
 Combat
 -Simple turn ordering and fighting
+-TODO: AI, more complicated combat
 
 Growth
 -Gaining xp/levelling up
