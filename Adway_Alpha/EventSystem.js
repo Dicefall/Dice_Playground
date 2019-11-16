@@ -16,11 +16,11 @@ class EventBoard {
     }
 
     static GenerateEventGUID() {
-        if (nextGUID === undefined) {
-            nextGUID = 0;
+        if (GenerateEventGUID.nextGUID === undefined) {
+            GenerateEventGUID.nextGUID = 0;
         }
 
-        return ++nextGUID;
+        return ++(GenerateEventGUID.nextGUID);
     }
 
     init(){
