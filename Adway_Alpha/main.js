@@ -271,7 +271,9 @@ window.onload = function() {
             allEvents.EventTypes.TEST_EVENT,
             tutorialControl
         )
+    
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
+    allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
 
 };

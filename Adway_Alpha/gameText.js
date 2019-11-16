@@ -15,7 +15,7 @@ var GameText = {
                 'aftermath of a battle. You remember none of it. The world ' +
                 'is frightening, perhaps you should pick up some scraps. You ' +
                 'never know what you might find.',
-            FoundMeryl: ""
+            FoundMeryl: "TODO: write the next tutorial stage"
         },
         UI: {
             // Scraps: 0

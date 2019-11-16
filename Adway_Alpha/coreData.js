@@ -113,7 +113,7 @@ var Game = {
         MerylTurnOrder: document.querySelector('#MerylOrder'),
         ChaseTurnOrder: document.querySelector('#ChaseOrder'),
         TaliTurnOrder: document.querySelector('#TaliOrder'),
-        HerschelTurnOrder: document.querySelector('#HerschelOrder'),
+        HerschelTurnOrder: document.querySelector('#HershelOrder'),
     },
 
     // Settings
