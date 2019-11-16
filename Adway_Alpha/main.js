@@ -258,7 +258,7 @@ function tutorialControl(){
             allEvents.removeEvent(
                 Game.Persistents.Stats.TutorialState.TutorialControlID);
             
-            this.Game.Persistents.Stats.TutorialState.TutorialControlID = 
+            Game.Persistents.Stats.TutorialState.TutorialControlID = 
                 allEvents.registerListener(
                     allEvents.EventTypes.SCRAPS_RECIEVED,
                     tutorialControl
@@ -293,7 +293,7 @@ window.onload = function() {
             tieredScrapAchievement);
     
     // Tutorial Controller
-    this.Game.Persistents.Stats.TutorialState.TutorialControlID = 
+    Game.Persistents.Stats.TutorialState.TutorialControlID = 
         allEvents.registerListener(
             allEvents.EventTypes.TEST_EVENT,
             tutorialControl
