@@ -46,6 +46,8 @@ function mainLoop() {
         });
 
         if (nextActor != null) {
+            // combat actions go here
+
             nextActor.CurrentTurnOrder += 10000;
         }
 
@@ -77,7 +79,7 @@ function getHeroByName(heroName) {
 function formatNumber(number) {
     
     // Ooptions are:
-    // Scientific, Engineering, "Standard", More?
+    // Scientific, Engineering, Log, 
 
     // Check for infinite:
     if (!isFinite(number)) return '<i class="fas fa-infinity"></i>';
@@ -101,29 +103,27 @@ function formatNumber(number) {
         case 'Engineering':
             var precision = exponent % 3;
             return (mantissa * (Math.pow(10,precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
+        case 'Log':
+            return 'e' + Math.log10(number).toFixed(2);
         default:
             return number;
     }
 }
 
-/*function prettify(number) {	
-
-	else {
-		var suffices = [
-			'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud',
-            'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Od', 'Nd', 'V', 'Uv', 'Dv',
-            'Tv', 'Qav', 'Qiv', 'Sxv', 'Spv', 'Ov', 'Nv', 'Tg', 'Utg', 'Dtg', 'Ttg',
-            'Qatg', 'Qitg', 'Sxtg', 'Sptg', 'Otg', 'Ntg', 'Qaa', 'Uqa', 'Dqa', 'Tqa',
-            'Qaqa', 'Qiqa', 'Sxqa', 'Spqa', 'Oqa', 'Nqa', 'Qia', 'Uqi', 'Dqi',
-            'Tqi', 'Qaqi', 'Qiqi', 'Sxqi', 'Spqi', 'Oqi', 'Nqi', 'Sxa', 'Usx',
-            'Dsx', 'Tsx', 'Qasx', 'Qisx', 'Sxsx', 'Spsx', 'Osx', 'Nsx', 'Spa',
-            'Usp', 'Dsp', 'Tsp', 'Qasp', 'Qisp', 'Sxsp', 'Spsp', 'Osp', 'Nsp',
-            'Og', 'Uog', 'Dog', 'Tog', 'Qaog', 'Qiog', 'Sxog', 'Spog', 'Oog',
-            'Nog', 'Na', 'Un', 'Dn', 'Tn', 'Qan', 'Qin', 'Sxn', 'Spn', 'On',
-            'Nn', 'Ct', 'Uc'
-		];
-	}
-}
+/* 'Standard' Suffixes
+var suffices = [
+	'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud',
+    'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Od', 'Nd', 'V', 'Uv', 'Dv',
+    'Tv', 'Qav', 'Qiv', 'Sxv', 'Spv', 'Ov', 'Nv', 'Tg', 'Utg', 'Dtg', 'Ttg',
+    'Qatg', 'Qitg', 'Sxtg', 'Sptg', 'Otg', 'Ntg', 'Qaa', 'Uqa', 'Dqa', 'Tqa',
+    'Qaqa', 'Qiqa', 'Sxqa', 'Spqa', 'Oqa', 'Nqa', 'Qia', 'Uqi', 'Dqi',
+    'Tqi', 'Qaqi', 'Qiqi', 'Sxqi', 'Spqi', 'Oqi', 'Nqi', 'Sxa', 'Usx',
+    'Dsx', 'Tsx', 'Qasx', 'Qisx', 'Sxsx', 'Spsx', 'Osx', 'Nsx', 'Spa',
+    'Usp', 'Dsp', 'Tsp', 'Qasp', 'Qisp', 'Sxsp', 'Spsp', 'Osp', 'Nsp',
+    'Og', 'Uog', 'Dog', 'Tog', 'Qaog', 'Qiog', 'Sxog', 'Spog', 'Oog',
+    'Nog', 'Na', 'Un', 'Dn', 'Tn', 'Qan', 'Qin', 'Sxn', 'Spn', 'On',
+    'Nn', 'Ct', 'Uc'
+];
 */
 
 function UpdateUIElements(){
@@ -199,7 +199,10 @@ function startWorldZone(){}
 
 function spawnMap(){}
 
-function spawnEncounter(){}
+function spawnEncounter(){
+    
+
+}
 
 // ----------------------------------------------------------------------------
 
@@ -209,7 +212,6 @@ function tieredScrapAchievement(){
 
     if (Game.Resources.Scraps >= nextTier)
     {
-        //console.log("Achievement recieved: Acquire 100 Scraps!");
         console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
         Game.Persistents.Achievements.Scraps.BreakpointEarned++;
 
@@ -222,6 +224,34 @@ function tieredScrapAchievement(){
 
 function tutorialControl(){
     
+    switch (Game.Persistents.Stats.TutorialState.TutorialStage) {
+        case 0:
+            console.log(ParseGameText(GameText.English.Story.Intro));
+            Game.Persistents.Stats.TutorialState.TutorialStage++;
+            allEvents.removeEvent(
+                Game.Persistents.Stats.TutorialState.TutorialControlID);
+            
+            this.Game.Persistents.Stats.TutorialState.TutorialControlID = 
+                allEvents.registerListener(
+                    allEvents.EventTypes.SCRAPS_RECIEVED,
+                    tutorialControl
+                )
+            break;
+        case 1:
+            if (Game.Resources.Scraps >= 50) {
+                console.log(ParseGameText(GameText.English.Story.FoundMeryl));
+                allEvents.removeEvent(
+                    Game.Persistents.Stats.TutorialState.TutorialControlID);
+                
+                Game.Persistents.Stats.TutorialState.TutorialStage++;
+                // no more tutorial bits just yet
+
+            }
+            
+            break;
+        default:
+            // nothing to do here
+    }
 }
 
 window.onload = function() {
@@ -235,6 +265,7 @@ window.onload = function() {
             allEvents.EventTypes.SCRAPS_RECIEVED,
             tieredScrapAchievement);
     
+    // Tutorial Controller
     this.Game.Persistents.Stats.TutorialState.TutorialControlID = 
         allEvents.registerListener(
             allEvents.EventTypes.TEST_EVENT,
