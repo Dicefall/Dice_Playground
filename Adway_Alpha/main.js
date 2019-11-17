@@ -121,7 +121,8 @@ function UpdateUIElements(){
         formatNumber(getHeroByName('Herschel').HealthMax)
     );
     Game.UIElements.EnemyHealth.textContent = ParseGameText(
-        'Enemy HP: {0} / {1}',
+        '{0} HP: {1} / {2}',
+        Game.Enemies[0].Name,
         formatNumber(Game.Enemies[0].HealthCurr),
         formatNumber(Game.Enemies[0].HealthMax)
     );
@@ -195,9 +196,6 @@ function mainCombat() {
             if (getHeroByName(nextActor.Name) != null) {
                 // TODO simple combat for now, something something AI
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
-                if (Game.Enemies[0].HealthCurr <= 0) {
-                    Game.Enemies.splice(0,1);
-                }
             } else {
                 Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
             }
@@ -206,6 +204,10 @@ function mainCombat() {
         }
 
     } while (nextActor != null)
+
+    if (Game.Enemies[0].HealthCurr <= 0) {
+        Game.Enemies.splice(0,1);
+    }
 
     if (Game.Enemies.length == 0) {
         Game.World.CurrentCell++;
