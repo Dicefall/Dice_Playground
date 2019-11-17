@@ -102,28 +102,28 @@ function UpdateUIElements(){
     // Turn order visual testing, health values for now
     Game.UIElements.MerylTurnOrder.textContent = ParseGameText(
         'Meryl HP: {0} / {1}',
-        formatNumber(getHeroByName('Meryl').HealthCurr),
+        formatNumber(Math.max(getHeroByName('Meryl').HealthCurr), 0),
         formatNumber(getHeroByName('Meryl').HealthMax)
     );
     Game.UIElements.ChaseTurnOrder.textContent = ParseGameText(
         'Chase HP: {0} / {1}',
-        formatNumber(getHeroByName('Chase').HealthCurr),
+        formatNumber(Math.max(getHeroByName('Chase').HealthCurr), 0),
         formatNumber(getHeroByName('Chase').HealthMax)
     );
     Game.UIElements.TaliTurnOrder.textContent = ParseGameText(
         'Tali HP: {0} / {1}',
-        formatNumber(getHeroByName('Tali').HealthCurr),
+        formatNumber(Math.max(getHeroByName('Tali').HealthCurr), 0),
         formatNumber(getHeroByName('Tali').HealthMax)
     );
     Game.UIElements.HerschelTurnOrder.textContent = ParseGameText(
         'Herschel HP: {0} / {1}',
-        formatNumber(getHeroByName('Herschel').HealthCurr),
+        formatNumber(Math.max(getHeroByName('Herschel').HealthCurr), 0),
         formatNumber(getHeroByName('Herschel').HealthMax)
     );
     Game.UIElements.EnemyHealth.textContent = ParseGameText(
         '{0} HP: {1} / {2}',
         Game.Enemies[0].Name,
-        formatNumber(Game.Enemies[0].HealthCurr),
+        formatNumber(Math.max(Game.Enemies[0].HealthCurr), 0),
         formatNumber(Game.Enemies[0].HealthMax)
     );
 
@@ -199,7 +199,11 @@ function mainCombat() {
                 // TODO simple combat for now, something something AI
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
             } else {
-                var target = Game.Heroes[Math.floor(Math.random() * 4)];
+                var target;
+                do {
+                    target = Game.Heroes[Math.floor(Math.random() * 4)];
+                } while (!target.isAlive)
+
                 target.HealthCurr -= nextActor.Attack;
 
                 if (target.HealthCurr <= 0) {
@@ -261,9 +265,7 @@ function spawnEncounter(){
         Game.World.CurrentZone);
 
     // TODO come up with something here
-    var cellMod = Math.pow(
-        Game.World.WorldCellScaleFactor,
-        Game.World.CurrentCell);
+    var cellMod = Game.World.WorldCellScaleFactor * Game.World.CurrentCell;
 
     // TODO: make it more fancy, for now just spawn goblins
     Game.Enemies.push(
