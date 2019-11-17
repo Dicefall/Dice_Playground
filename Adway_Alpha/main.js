@@ -154,7 +154,9 @@ function mainCombat() {
 
     // Advance turn cds
     Game.Heroes.forEach(hero => {
-        hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
+        if (hero.isAlive) {
+            hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
+        }
     });
 
     Game.Enemies.forEach(badguy => {
@@ -197,7 +199,12 @@ function mainCombat() {
                 // TODO simple combat for now, something something AI
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
             } else {
-                Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
+                var target = Game.Heroes[Math.floor(Math.random() * 4)];
+                target.HealthCurr -= nextActor.Attack;
+
+                if (target.HealthCurr <= 0) {
+                    target.isAlive = false;
+                }
             }
 
             nextActor.CurrentTurnOrder += 10000;
@@ -211,6 +218,10 @@ function mainCombat() {
 
     if (Game.Enemies.length == 0) {
         Game.World.CurrentCell++;
+        if (Game.World.CurrentCell >= 100) {
+            Game.World.CurrentZone++;
+            Game.World.CurrentCell = 1;
+        }
         spawnEncounter();
     }
 }
