@@ -85,7 +85,9 @@ var Game = {
     // Current Map/World info
     World: {
         CurrentZone: 0,
-        
+        CurrentCell: 0,
+        WorldZoneScaleFactor: 0.5,
+        WorldCellScaleFactor: 0.02,
     },
 
     // Per run values
@@ -126,6 +128,7 @@ var Game = {
         TaliTurnOrder: document.querySelector('#TaliOrder'),
         HerschelTurnOrder: document.querySelector('#HershelOrder'),
         EnemyHealth: document.querySelector('#enemyHealth'),
+        WorldStats: document.querySelector('#WorldStats'),
     },
 
     // Settings

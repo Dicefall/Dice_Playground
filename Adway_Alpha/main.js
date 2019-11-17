@@ -11,6 +11,7 @@ function mainLoop() {
     // For Testing
     if (Game.World.CurrentZone == 0) {
         Game.World.CurrentZone++;
+        Game.World.CurrentCell = 1;
         spawnEncounter();
         newEncounter();
     }
@@ -123,7 +124,13 @@ function UpdateUIElements(){
         'Enemy HP: {0} / {1}',
         formatNumber(Game.Enemies[0].HealthCurr),
         formatNumber(Game.Enemies[0].HealthMax)
-    )
+    );
+
+    Game.UIElements.WorldStats.textContent = ParseGameText(
+        'You are currently in the world at zone {0} and cell {1}',
+        formatNumber(Game.World.CurrentZone),
+        formatNumber(Game.World.CurrentCell),
+    );
 }
 
 // Saving Functions, currently unused
@@ -188,6 +195,9 @@ function mainCombat() {
             if (getHeroByName(nextActor.Name) != null) {
                 // TODO simple combat for now, something something AI
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
+                if (Game.Enemies[0].HealthCurr <= 0) {
+                    Game.Enemies.splice(0,1);
+                }
             } else {
                 Game.Heroes[Math.floor(Math.random() * 4)].HealthCurr -= nextActor.Attack;
             }
@@ -196,6 +206,11 @@ function mainCombat() {
         }
 
     } while (nextActor != null)
+
+    if (Game.Enemies.length == 0) {
+        Game.World.CurrentCell++;
+        spawnEncounter();
+    }
 }
 
 // Start a new combat encounter
@@ -228,16 +243,23 @@ function spawnMap(){}
 function spawnEncounter(){
     
     // Each zone is 50% stronger than previous zone baseline
-    var worldMod = Math.pow(1.5,Game.World.CurrentZone);
-    var cellMod; // TODO come up with something here
+    var worldMod = Math.pow(
+        Game.World.WorldZoneScaleFactor,
+        Game.World.CurrentZone);
+
+    // TODO come up with something here
+    var cellMod = Math.pow(
+        Game.World.WorldCellScaleFactor,
+        Game.World.CurrentCell);
+
     // TODO: make it more fancy, for now just spawn goblins
     Game.Enemies.push(
         {
             Name: "Goblin",
             Speed: 15 * Game.EnemyTemplates[0].SpeedMod,
-            Attack: 1 * Game.EnemyTemplates[0].AttackMod * worldMod,
-            HealthMax: 50 * Game.EnemyTemplates[0].HealthMod * worldMod,
-            HealthCurr: 50 * Game.EnemyTemplates[0].HealthMod * worldMod,
+            Attack: 1 * Game.EnemyTemplates[0].AttackMod * worldMod * cellMod,
+            HealthMax: 50 * Game.EnemyTemplates[0].HealthMod * worldMod * cellMod,
+            HealthCurr: 50 * Game.EnemyTemplates[0].HealthMod * worldMod * cellMod,
             CurrentTurnOrder: 10000,
         }
     )
