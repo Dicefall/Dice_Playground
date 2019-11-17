@@ -86,8 +86,8 @@ var Game = {
     World: {
         CurrentZone: 0,
         CurrentCell: 0,
-        WorldZoneScaleFactor: 0.5,
-        WorldCellScaleFactor: 0.02,
+        WorldZoneScaleFactor: 1.5,
+        WorldCellScaleFactor: 1.02,
     },
 
     // Per run values
