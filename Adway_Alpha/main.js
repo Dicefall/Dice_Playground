@@ -253,19 +253,18 @@ function recalcStats() {
     })
 }
 
-function startWorldZone(){}
+function startWorldZone(){} // TODO: more complicated zone spawn
 
 function spawnMap(){}
 
 function spawnEncounter(){
     
-    // Each zone is 50% stronger than previous zone baseline
     var worldMod = Math.pow(
         Game.World.WorldZoneScaleFactor,
         Game.World.CurrentZone);
 
     // TODO come up with something here
-    var cellMod = Game.World.WorldCellScaleFactor * Game.World.CurrentCell;
+    var cellMod = 1 + (Game.World.WorldCellScaleFactor * Game.World.CurrentCell);
 
     // TODO: make it more fancy, for now just spawn goblins
     Game.Enemies.push(

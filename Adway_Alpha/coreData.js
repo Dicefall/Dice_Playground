@@ -86,8 +86,8 @@ var Game = {
     World: {
         CurrentZone: 0,
         CurrentCell: 0,
-        WorldZoneScaleFactor: 2,
-        WorldCellScaleFactor: 1.015,
+        WorldZoneScaleFactor: 2, // Enemies double in strength every zone
+        WorldCellScaleFactor: 0.015, // Enemy strength inside zone scales 1.5% additive per cell
     },
 
     // Per run values
