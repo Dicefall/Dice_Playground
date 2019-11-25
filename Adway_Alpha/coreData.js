@@ -120,18 +120,15 @@ var Game = {
                 AchievementHandler: 
                     function () {
 
-                        let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
+                        let nextTier = this.TierBreakpoints[this.BreakpointEarned]
 
                         if (Game.Resources.Scraps >= nextTier) {
                             console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
 
-                            Game.Persistents.Achievements.TotalScore +=
-                                Game.Persistents.Achievements.Scraps.TierValues[
-                                Game.Persistents.Achievements.Scraps.BreakpointEarned++
-                                ]
+                            Game.Persistents.Achievements.TotalScore += this.TierValues[this.BreakpointEarned++];                               ]
                         }
 
-                        if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
+                        if (this.BreakpointEarned >= this.TierBreakpoints.length) {
                             allEvents.removeEvent(this.HandlerID);
                         }
                     },
@@ -153,7 +150,8 @@ var Game = {
                             if (this.ActualLargest > this.TierBreakpoints[this.BreakpointEarned]) {
                                 console.log(ParseGameText('Achievement acquired: Largest single hit {0} or greater',
                                 formatNumber(this.TierBreakpoints[this.BreakpointEarned])));
-                                this.BreakpointEarned++;
+
+                                Game.Persistents.Achievements.TotalScore += this.TierValues[this.BreakpointEarned++];
                             }
 
                             if (this.BreakpointEarned > this.TierBreakpoints.length) {
