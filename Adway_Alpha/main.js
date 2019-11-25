@@ -199,7 +199,10 @@ function mainCombat() {
             // See if it's a hero
             if (getHeroByName(nextActor.Name) != null) {
                 // TODO simple combat for now, something something AI
+                // Lots to change, just get something basic working
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
+                allEvents.queueEvent(allEvents.EventTypes.COMBAT_SWING, nextActor.Attack);
+
             } else {
                 var target;
                 do {
@@ -324,12 +327,17 @@ window.onload = function() {
     // Get previous save from localstorage, check later for online save
     //loadGameFromLocal();
 
-    //Testing
+    // Register achievement listeners
     Game.Persistents.Achievements.Scraps.HandlerID = 
         allEvents.registerListener(
             allEvents.EventTypes.SCRAPS_RECIEVED,
             Game.Persistents.Achievements.Scraps.AchievementHandler);
     
+    Game.Persistents.Achievements.LargestSingle.HandlerID = 
+        allEvents.registerListener(
+            allEvents.EventTypes.COMBAT_SWING,
+            Game.Persistents.Achievements.LargestSingle.AchievementHandler);
+        
     // Tutorial Controller
     Game.Persistents.Stats.TutorialState.TutorialControlID = 
         allEvents.registerListener(

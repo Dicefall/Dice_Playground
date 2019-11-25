@@ -132,8 +132,7 @@ var Game = {
                         }
 
                         if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
-                            allEvents.removeEvent(
-                                Game.Persistents.Achievements.Scraps.HandlerID);
+                            allEvents.removeEvent(this.HandlerID);
                         }
                     },
                 BreakpointEarned: 0,
