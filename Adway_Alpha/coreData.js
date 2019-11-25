@@ -28,10 +28,14 @@ var Game = {
             Level: 1,
             Speed: 15,
             Attack: 10,
-            HealthMax: 100,
             HealthCurr: 100,
+            HealthMax: 100,
             isAlive: true,
             CurrentTurnOrder: 0,
+
+            SpeedBase: 15,
+            AttackBase: 10,
+            HealthBase: 100,
         },
         {
             Name: "Chase",
@@ -42,6 +46,10 @@ var Game = {
             HealthCurr: 100,
             isAlive: true,
             CurrentTurnOrder: 0,
+
+            SpeedBase: 14,
+            AttackBase: 10,
+            HealthBase: 100,
         },
         {
             Name: "Tali",
@@ -52,6 +60,10 @@ var Game = {
             HealthCurr: 100,
             isAlive: true,
             CurrentTurnOrder: 0,
+
+            SpeedBase: 16,
+            AttackBase: 10,
+            HealthBase: 100,
         },
         {
             Name: "Herschel",
@@ -62,6 +74,10 @@ var Game = {
             HealthCurr: 100,
             isAlive: true,
             CurrentTurnOrder: 0,
+
+            SpeedBase: 15,
+            AttackBase: 10,
+            HealthBase: 100,
         },
     ],
 
@@ -86,8 +102,8 @@ var Game = {
     World: {
         CurrentZone: 0,
         CurrentCell: 0,
-        WorldZoneScaleFactor: 2, // Enemies double in strength every zone
-        WorldCellScaleFactor: 0.015, // Enemy strength inside zone scales 1.5% additive per cell
+        WorldZoneScaleFactor: 2, // Enemy Multi-per zone
+        WorldCellScaleFactor: 0.021, // Enemy additive per cell
     },
 
     // Per run values
@@ -101,12 +117,58 @@ var Game = {
             // Scrap Collections
             Scraps: {
                 HandlerID: 0,
+                AchievementHandler: 
+                    function () {
+
+                        let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
+
+                        if (Game.Resources.Scraps >= nextTier) {
+                            console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
+
+                            Game.Persistents.Achievements.TotalScore +=
+                                Game.Persistents.Achievements.Scraps.TierValues[
+                                Game.Persistents.Achievements.Scraps.BreakpointEarned++
+                                ]
+                        }
+
+                        if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
+                            allEvents.removeEvent(
+                                Game.Persistents.Achievements.Scraps.HandlerID);
+                        }
+                    },
                 BreakpointEarned: 0,
                 TierBreakpoints: [
                     10, 50, 100, 1000, 10000
                 ],
                 TierValues: [
                     1, 1, 2, 2, 5
+                ],
+            },
+
+            LargestSingle: {
+                HandlerID: 0,
+                AchievementHandler: 
+                    function (hitSize) {
+                        if (hitSize > this.ActualLargest) {
+                            this.ActualLargest = hitSize;
+                            if (this.ActualLargest > this.TierBreakpoints[this.BreakpointEarned]) {
+                                console.log(ParseGameText('Achievement acquired: Largest single hit {0} or greater',
+                                formatNumber(this.TierBreakpoints[this.BreakpointEarned])));
+                                this.BreakpointEarned++;
+                            }
+
+                            if (this.BreakpointEarned > this.TierBreakpoints.length) {
+                                allEvents.removeEvent(this.HandlerID);
+                            }
+                        }
+                    },
+                BreakpointEarned: 0,
+                ActualLargest: 0,
+                TierBreakpoints: [
+                    10, 50, 100, 1000, 10000
+                ],
+                TierValues: [
+                    1, 2, 5, 5, 15
                 ]
             }
         },
@@ -117,7 +179,7 @@ var Game = {
             TutorialState: {
                 TutorialStage: 0,
                 TutorialControlID: 0,
-            }
+            },
         }
     },
 

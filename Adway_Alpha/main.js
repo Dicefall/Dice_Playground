@@ -40,6 +40,8 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
+// Check if selected actor is actually a hero
+
 // Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number) {
     
@@ -220,8 +222,11 @@ function mainCombat() {
         Game.Enemies.splice(0,1);
     }
 
+    // No enemies left, cell over
     if (Game.Enemies.length == 0) {
         Game.World.CurrentCell++;
+        
+        // Whole zone over
         if (Game.World.CurrentCell >= 100) {
             Game.World.CurrentZone++;
             Game.World.CurrentCell = 1;
@@ -282,26 +287,6 @@ function spawnEncounter(){
 
 // ----------------------------------------------------------------------------
 
-function tieredScrapAchievement(){
-
-    let nextTier = Game.Persistents.Achievements.Scraps.TierBreakpoints[Game.Persistents.Achievements.Scraps.BreakpointEarned]
-
-    if (Game.Resources.Scraps >= nextTier)
-    {
-        console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!",nextTier));
-
-        Game.Persistents.Achievements.TotalScore += 
-            Game.Persistents.Achievements.Scraps.TierValues[
-                Game.Persistents.Achievements.Scraps.BreakpointEarned++
-            ]
-
-        if (Game.Persistents.Achievements.Scraps.BreakpointEarned >= Game.Persistents.Achievements.Scraps.TierBreakpoints.length) {
-            allEvents.removeEvent(
-                Game.Persistents.Achievements.Scraps.HandlerID);
-        }
-    }
-}
-
 function tutorialControl(){
     
     switch (Game.Persistents.Stats.TutorialState.TutorialStage) {
@@ -343,7 +328,7 @@ window.onload = function() {
     Game.Persistents.Achievements.Scraps.HandlerID = 
         allEvents.registerListener(
             allEvents.EventTypes.SCRAPS_RECIEVED,
-            tieredScrapAchievement);
+            Game.Persistents.Achievements.Scraps.AchievementHandler);
     
     // Tutorial Controller
     Game.Persistents.Stats.TutorialState.TutorialControlID = 
