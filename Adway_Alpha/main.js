@@ -165,7 +165,7 @@ function mainCombat() {
         badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
     });
 
-    // Go through actors capable of acting and do the thing.
+    // See if anyone is ready to attack
     var nextActor = null;
     do {
         nextActor = null;
@@ -193,15 +193,15 @@ function mainCombat() {
             }
         });
 
+        // If anyone is ready to attack, they get to do something
         if (nextActor != null) {
-            // combat actions go here
 
             // See if it's a hero
             if (getHeroByName(nextActor.Name) != null) {
                 // TODO simple combat for now, something something AI
                 // Lots to change, just get something basic working
                 Game.Enemies[0].HealthCurr -= nextActor.Attack;
-                allEvents.queueEvent(allEvents.EventTypes.COMBAT_SWING, nextActor.Attack);
+                allEvents.queueEvent(allEvents.EventTypes.COMBAT_SWING, nextActor.Name, Game.Enemies[0].Name, nextActor.Attack);
 
             } else {
                 var target;
@@ -221,6 +221,7 @@ function mainCombat() {
 
     } while (nextActor != null)
 
+    // Check to see if enemies are dead
     if (Game.Enemies[0].HealthCurr <= 0) {
         Game.Enemies.splice(0,1);
     }
@@ -348,5 +349,4 @@ window.onload = function() {
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
     allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
-
 };

@@ -11,10 +11,6 @@ class EventBoard {
 
     }
 
-    static Events() {
-        return this.instance;
-    }
-
     init(){
         this.EventTypes = {
             //List of all the types of events
@@ -24,9 +20,16 @@ class EventBoard {
         }
 
         // Map of event types, will contain callbacks for said events
+        // Before each individual board is a list of arguments it expects
         this.RootBoard = new Map();
+
+        // Catchall with anything goes after
         this.RootBoard.set(this.EventTypes.TEST_EVENT,[]);
+
+        // Source, Dest, Attack name, Amount
         this.RootBoard.set(this.EventTypes.COMBAT_SWING,[]);
+
+        // Amount of scraps recieved
         this.RootBoard.set(this.EventTypes.SCRAPS_RECIEVED,[]);
 
         this.nextGUID = 0;
@@ -50,7 +53,7 @@ class EventBoard {
     // Event happens, go and call each function
     queueEvent(eventType, ...restArgs){
         this.RootBoard.get(eventType).forEach(element => {
-            element.eventCB(restArgs);
+            element.eventCB(...restArgs);
         });
     }
 

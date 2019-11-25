@@ -116,49 +116,35 @@ var Game = {
 
             // Scrap Collections
             Scraps: {
-                HandlerID: 0,
-                AchievementHandler: 
-                    function () {
-
-                        let nextTier = this.TierBreakpoints[this.BreakpointEarned]
-
-                        if (Game.Resources.Scraps >= nextTier) {
-                            console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
-
-                            Game.Persistents.Achievements.TotalScore += this.TierValues[this.BreakpointEarned++];                               ]
-                        }
-
-                        if (this.BreakpointEarned >= this.TierBreakpoints.length) {
-                            allEvents.removeEvent(this.HandlerID);
-                        }
-                    },
                 BreakpointEarned: 0,
+                HandlerID: 0,
                 TierBreakpoints: [
                     10, 50, 100, 1000, 10000
                 ],
                 TierValues: [
                     1, 1, 2, 2, 5
                 ],
+                AchievementHandler: 
+                    function () {
+
+                        let base = Game.Persistents.Achievements.Scraps;
+                        
+                        let nextTier = base.TierBreakpoints[base.BreakpointEarned];
+
+                        if (Game.Resources.Scraps >= nextTier) {
+                            console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
+
+                            Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
+                        }
+
+                        if (base.BreakpointEarned >= base.TierBreakpoints.length) {
+                            allEvents.removeEvent(base.HandlerID);
+                        }
+                    },
             },
 
             LargestSingle: {
                 HandlerID: 0,
-                AchievementHandler: 
-                    function (hitSize) {
-                        if (hitSize > this.ActualLargest) {
-                            this.ActualLargest = hitSize;
-                            if (this.ActualLargest > this.TierBreakpoints[this.BreakpointEarned]) {
-                                console.log(ParseGameText('Achievement acquired: Largest single hit {0} or greater',
-                                formatNumber(this.TierBreakpoints[this.BreakpointEarned])));
-
-                                Game.Persistents.Achievements.TotalScore += this.TierValues[this.BreakpointEarned++];
-                            }
-
-                            if (this.BreakpointEarned > this.TierBreakpoints.length) {
-                                allEvents.removeEvent(this.HandlerID);
-                            }
-                        }
-                    },
                 BreakpointEarned: 0,
                 ActualLargest: 0,
                 TierBreakpoints: [
@@ -166,8 +152,27 @@ var Game = {
                 ],
                 TierValues: [
                     1, 2, 5, 5, 15
-                ]
-            }
+                ],
+                AchievementHandler: 
+                    function (source, dest, hitSize) {
+                        console.log(ParseGameText('{0} hits {1} for {2} damage', source, dest, hitSize));
+                        let base = Game.Persistents.Achievements.LargestSingle;
+
+                        if (hitSize > base.ActualLargest) {
+                            base.ActualLargest = hitSize;
+                            if (base.ActualLargest > base.TierBreakpoints[base.BreakpointEarned]) {
+                                console.log(ParseGameText('Achievement acquired: Largest single hit {0} or greater',
+                                formatNumber(base.TierBreakpoints[base.BreakpointEarned])));
+
+                                Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
+                            }
+
+                            if (base.BreakpointEarned > base.TierBreakpoints.length) {
+                                allEvents.removeEvent(base.HandlerID);
+                            }
+                        }
+                    },
+            },
         },
 
         Stats: {
