@@ -1,9 +1,7 @@
 function mainLoop() {
     // Resource gathering
 
-    // Scraps
-    Game.Resources.Scraps += (Game.Resources.ScrapsIncome * (Game.Settings.GameSpeed / 1000));
-    allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
+    generateResources();
 
     // Scrap conversion
 
@@ -146,6 +144,36 @@ function loadGameFromLocal() {
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
 }
 // ----------------------------------------------------------------------------
+// Resources
+
+function generateResources() {
+
+    var GameSpeed = Game.Settings.GameSpeed;
+
+    // Scraps
+    Game.Resources.Scraps += (Game.Resources.ScrapsIncome * (GameSpeed / 1000));
+    allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
+
+    // Conversion
+    //Validate full conversion.
+    if (Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth <
+        Game.Resources.ScrapConversionEfficiency)
+        {
+            //console.log("Scrap conversions not at max. You could be converting a bit more");
+        }
+
+    var totalScrapConversion = Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth * Game.Resources.ScrapConversionRate;
+
+    Game.Resources.Scraps -= (totalScrapConversion * (GameSpeed / 1000));
+    Game.Resources.Metal += totalScrapConversion * Game.Resources.ScrapToMetal;
+    Game.Resources.Leather += totalScrapConversion * Game.Resources.ScrapToLeather;
+    Game.Resources.Cloth += totalScrapConversion * Game.Resources.ScrapToCloth;
+
+    allEvents.queueEvent(allEvents.EventTypes.METAL_RECIEVED);
+    allEvents.queueEvent(allEvents.EventTypes.LEATHER_RECIEVED);
+    allEvents.queueEvent(allEvents.EventTypes.CLOTH_RECIEVED);
+
+}
 
 // Combat ---------------------------------------------------------------------
 // Everything combat here, including class perks and anything else that needs
@@ -292,7 +320,7 @@ function spawnEncounter(){
 // ----------------------------------------------------------------------------
 
 function tutorialControl(){
-    
+
     switch (Game.Persistents.Stats.TutorialState.TutorialStage) {
         case 0:
             console.log(ParseGameText(GameText.English.Story.Intro));
@@ -308,7 +336,7 @@ function tutorialControl(){
             break;
         case 1:
             if (Game.Resources.Scraps >= 50) {
-                console.log(ParseGameText(GameText.English.Story.FoundMeryl));
+                console.log(ParseGameText(GameText.English.Story.MoreThanScrap));
                 allEvents.removeEvent(
                     Game.Persistents.Stats.TutorialState.TutorialControlID);
                 
@@ -325,8 +353,7 @@ function tutorialControl(){
 
 window.onload = function() {
     
-    // Get previous save from localstorage, check later for online save
-    //loadGameFromLocal();
+    // TODO: Load game and set visual state
 
     // Register achievement listeners
     Game.Persistents.Achievements.Scraps.HandlerID = 
@@ -348,5 +375,8 @@ window.onload = function() {
     
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
-    allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
+    // Queue autosave
+    //window.setInterval(,Game.Settings.AutoSaveFrequency);
+
+    //allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
 };

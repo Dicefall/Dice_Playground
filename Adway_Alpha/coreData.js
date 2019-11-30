@@ -9,13 +9,41 @@
 // -Class/job unlocks
 // --Class/job mastery points
 
+class Achievement {
+    constructor(listenerType, handlerFunc){
+
+        this.handlerFunc = handlerFunc;
+        this.HandlerID = allEvents.registerListener(listenerType, handlerFunc);
+    }
+}
+
+class TieredAchievement extends Achievement{
+    constructor(rewardBreakpoints, rewardValues,handlerType, handlerFunc){
+        super(handlerType, handlerFunc);
+
+        this.TierBreakpoints = rewardBreakpoints;
+        this.BreakpointEarned = 0;
+
+        this.TierValues = rewardValues;
+    }
+}
+
+class Actor{}
+
+class Hero extends Actor{}
+
 var Game = {
 
     // Resources
     Resources: {
         Scraps: 0,
         ScrapsIncome: 1,
+        ScrapConversionRate: 0,
+        ScrapConversionEfficiency: 0.5,
 
+        ScrapToMetal: 0,
+        ScrapToLeather: 0,
+        ScrapToCloth: 0,
         Metal: 0,
         Leather: 0,
         Cloth:  0,
@@ -155,7 +183,6 @@ var Game = {
                 ],
                 AchievementHandler: 
                     function (source, dest, hitSize) {
-                        console.log(ParseGameText('{0} hits {1} for {2} damage', source, dest, hitSize));
                         let base = Game.Persistents.Achievements.LargestSingle;
 
                         if (hitSize > base.ActualLargest) {
@@ -173,6 +200,28 @@ var Game = {
                         }
                     },
             },
+
+            Metal: new TieredAchievement(
+                [10,25,50,100,1000],
+                [1,1,2,2,5],
+                allEvents.EventTypes.METAL_RECIEVED,
+                function() {
+                    let base = Game.Persistents.Achievements.Metal;
+                        
+                    let nextTier = base.TierBreakpoints[base.BreakpointEarned];
+
+                    if (Game.Resources.Metal >= nextTier) {
+                        console.log(ParseGameText('Achievement Recieved: ' + GameText.English.AchievementText.Metal.Criteria, nextTier));
+
+                        Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
+                    }
+
+                    if (base.BreakpointEarned >= base.TierBreakpoints.length) {
+                        allEvents.removeEvent(base.HandlerID);
+                    }
+                }
+
+            )
         },
 
         Stats: {
@@ -199,6 +248,7 @@ var Game = {
     Settings: {
         // Tick rate in MS
         GameSpeed: 100,
+        AutoSaveFrequency: 30 * 60 * 1000, //30 minutes
         NumberNotation: "Scientific",
     },
     

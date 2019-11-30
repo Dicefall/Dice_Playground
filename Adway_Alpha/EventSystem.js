@@ -16,7 +16,10 @@ class EventBoard {
             //List of all the types of events
             TEST_EVENT: "TEST_EVENT",
             SCRAPS_RECIEVED: "SCRAPS_RECIEVED",
-            COMBAT_SWING: "COMBAT_SWING"
+            METAL_RECIEVED: "METAL_RECIEVED",
+            LEATHER_RECIEVED: "LEATHER_RECIEVED",
+            CLOTH_RECIEVED: "CLOTH_RECIEVED",
+            COMBAT_SWING: "COMBAT_SWING",
         }
 
         // Map of event types, will contain callbacks for said events
@@ -29,8 +32,11 @@ class EventBoard {
         // Source, Dest, Attack name, Amount
         this.RootBoard.set(this.EventTypes.COMBAT_SWING,[]);
 
-        // Amount of scraps recieved
+        // Amount of resources recieved
         this.RootBoard.set(this.EventTypes.SCRAPS_RECIEVED,[]);
+        this.RootBoard.set(this.EventTypes.METAL_RECIEVED,[]);
+        this.RootBoard.set(this.EventTypes.LEATHER_RECIEVED,[]);
+        this.RootBoard.set(this.EventTypes.CLOTH_RECIEVED,[]);
 
         this.nextGUID = 0;
     }
@@ -61,6 +67,7 @@ class EventBoard {
         let searchIndex = 0;
         for (var eventName in this.EventTypes) {
             searchIndex = 0;
+            console.log(eventName + " attempted access");
             this.RootBoard.get(eventName).forEach(element => {
                 if (element.cbGUID === removeGUID) {
                     this.RootBoard.get(eventName).splice(searchIndex,1);
