@@ -47,6 +47,8 @@ function formatNumber(number) {
 
     // Check for infinite:
     if (!isFinite(number)) return '<i class="fas fa-infinity"></i>';
+
+    // Negative
     if (number < 0) return '-' + formatNumber(-number);
 
     // Get base and exponent
@@ -93,12 +95,12 @@ var suffices = [
 function UpdateUIElements(){
 
     // Resource counter
-    Lookup.UIElements.ScrapCounter.textContent = ParseGameText(
+    Lookup.UIElements.ScrapCounter.innerHTML = ParseGameText(
         GameText.English.UI.Scraps,
         formatNumber(Game.Resources.Scraps)
     );
 
-    Lookup.UIElements.MetalCounter.textContent = ParseGameText(
+    Lookup.UIElements.MetalCounter.innerHTML = ParseGameText(
         GameText.English.UI.Metal,
         formatNumber(Game.Resources.Metal)
     );
@@ -330,29 +332,29 @@ function spawnEncounter(){
 
 // ----------------------------------------------------------------------------
 
-function tutorialControl(){
+function StoryControl(){
 
-    switch (Game.Stats.TutorialState.TutorialStage) {
+    switch (Game.Stats.StoryState.StoryStage) {
         case 0:
             console.log(ParseGameText(GameText.English.Story.Intro));
-            Game.Stats.TutorialState.TutorialStage++;
+            Game.Stats.StoryState.StoryStage++;
             allEvents.removeEvent(
-                Game.Stats.TutorialState.TutorialControlID);
+                Game.Stats.StoryState.StoryControlID);
             
-            Game.Stats.TutorialState.TutorialControlID = 
+            Game.Stats.StoryState.StoryControlID = 
                 allEvents.registerListener(
-                    "SCRAPS_RECIEVED",
-                    tutorialControl
+                    Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
+                    StoryControl
                 )
             break;
         case 1:
-            if (Game.Resources.Scraps >= 50) {
+            if (Game.Resources.Scraps >= 30) {
                 console.log(ParseGameText(GameText.English.Story.MoreThanScrap));
                 allEvents.removeEvent(
-                    Game.Stats.TutorialState.TutorialControlID);
+                    Game.Stats.StoryState.StoryControlID);
                 
-                Game.Stats.TutorialState.TutorialStage++;
-                // no more tutorial bits just yet
+                Game.Stats.StoryState.StoryStage++;
+                // no more Story bits just yet
 
             }
             
@@ -366,11 +368,11 @@ window.onload = function() {
     
     // TODO: Load game and set visual state
         
-    // Tutorial Controller
-    Game.Stats.TutorialState.TutorialControlID = 
+    // Story Controller
+    Game.Stats.StoryState.StoryControlID = 
         allEvents.registerListener(
             "TEST_EVENT",
-            tutorialControl
+            StoryControl
         )
     
     // Queue up main loop 

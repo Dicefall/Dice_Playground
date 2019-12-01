@@ -29,6 +29,11 @@ Growth
 Game Save
 -Local save to start, online later
 
+Basic world design and implementation
+-World maps/zones
+-Dungeons/maps/whatever
+-Exploring concept
+
 Buffs/Debuffs
 -Based on real world time
 -Central object to manage or part of character it's attached to

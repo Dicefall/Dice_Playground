@@ -56,10 +56,10 @@ class Creature extends Actor {
 
         // Get world and cell scaling
         var worldMod = Math.pow(
-            Game.World.WorldZoneScaleFactor - 1,
-            Game.World.CurrentZone);
+            Lookup.WorldZoneScaleFactor,
+            Game.World.CurrentZone - 1);
     
-        var cellMod = 1 + (Game.World.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
+        var cellMod = 1 + (Lookup.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
 
         // Apply scaling to new creature
         Lookup.EnemyTemplates.forEach(archtype => {
@@ -71,6 +71,15 @@ class Creature extends Actor {
             }
         })
         
+    }
+}
+
+class CreatureTemplate {
+    constructor(name, attack, health, speed, loot) {
+        this.Name = name;
+        this.AttackMod = attack;
+        this.HealthMod = health;
+        this.SpeedMod = speed;
     }
 }
 
@@ -123,9 +132,9 @@ class PlayerData {
         this.Stats = {
             GameVersion: "NaNi",
             LastUpdateTime: 0,
-            TutorialState: {
-                TutorialStage: 0,
-                TutorialControlID: 0,
+            StoryState: {
+                StoryStage: 0,
+                StoryControlID: 0,
             },
         };
 
@@ -157,28 +166,20 @@ class GameData {
 
         // Enemy Archtypes
         this.EnemyTemplates = [
-            {
-                Name: "Goblin",
-                AttackMod: 1,
-                HealthMod: 1,
-                SpeedMod: 1,
-            },
-            {
-                Name: "Dragon",
-                AttackMod: 2,
-                HealthMod: 5,
-                SpeedMod: 1.2,
-            }
+            new CreatureTemplate('Goblin', 1, 1, 1),
+            new CreatureTemplate('Dragon', 2, 5, 1.2),
+            new CreatureTemplate("Kobold", 0.8,0.8,0.8)
         ];
 
         this.WorldZoneScaleFactor = 2;
         this.WorldCellScaleFactor = 0.021;
 
-        this.TutorialTriggers = [
+        this.StoryTriggers = [
             "TEST_EVENT",
             "SCRAPS_RECIEVED",
         ];
 
+        // Not the most elegant but all of the achievement stuff goes here
         this.AchievementData = {
 
             CalculateTotal: function () {
@@ -199,7 +200,7 @@ class GameData {
             },
         
             Scraps: new TieredAchievement(
-                [10, 50, 100, 1000, 10000],
+                [50, 100, 500, 1000, 10000],
                 [1, 1, 2, 2, 5],
                 "SCRAPS_RECIEVED",
                 function () {
