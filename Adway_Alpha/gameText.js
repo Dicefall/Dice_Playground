@@ -22,10 +22,10 @@ var GameText = {
             FoundMeryl: "TODO: write the next tutorial stage"
         },
         UI: {
-            Scraps: "You have {0} scraps.",
-            Metal: "You have {0} metal plates.",
-            Leather: "You have {0} leather hides.",
-            Cloth: "You have {0} strips of cloth.",
+            Scraps: "You have {0} scraps.\n",
+            Metal: "You have {0} metal plates.\n",
+            Leather: "You have {0} leather hides.\n",
+            Cloth: "You have {0} strips of cloth.\n",
 
             // When I actually set up data collection for stuff
             // I should have a disclaimer for it

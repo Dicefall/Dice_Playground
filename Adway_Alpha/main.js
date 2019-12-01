@@ -93,11 +93,26 @@ var suffices = [
 
 function UpdateUIElements(){
 
-    // Scrap counter
+    // Resource counter
     Game.UIElements.ScrapCounter.textContent = ParseGameText(
         GameText.English.UI.Scraps,
         formatNumber(Game.Resources.Scraps)
-        );
+    );
+
+    Game.UIElements.MetalCounter.textContent = ParseGameText(
+        GameText.English.UI.Metal,
+        formatNumber(Game.Resources.Metal)
+    );
+
+    Game.UIElements.LeatherCounter.textContent = ParseGameText(
+        GameText.English.UI.Leather,
+        formatNumber(Game.Resources.Leather)
+    );
+
+    Game.UIElements.ClothCounter.textContent = ParseGameText(
+        GameText.English.UI.Cloth,
+        formatNumber(Game.Resources.Cloth)
+    );
 
     // Turn order visual testing, health values for now
     Game.UIElements.MerylTurnOrder.textContent = ParseGameText(
@@ -143,6 +158,8 @@ function saveGameToLocal() {
 function loadGameFromLocal() {
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
 }
+
+function removeLocalSave(){}
 // ----------------------------------------------------------------------------
 // Resources
 
@@ -155,16 +172,10 @@ function generateResources() {
     allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
 
     // Conversion
-    //Validate full conversion.
-    if (Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth <
-        Game.Resources.ScrapConversionEfficiency)
-        {
-            //console.log("Scrap conversions not at max. You could be converting a bit more");
-        }
+    Game.Resources.Scraps -= (Game.Resources.ScrapConversionRate * (GameSpeed / 1000));
 
-    var totalScrapConversion = Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth * Game.Resources.ScrapConversionRate;
+    var totalScrapConversion = (Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth) * Game.Resources.ScrapConversionRate * Game.Resources.ScrapConversionEfficiency;
 
-    Game.Resources.Scraps -= (totalScrapConversion * (GameSpeed / 1000));
     Game.Resources.Metal += totalScrapConversion * Game.Resources.ScrapToMetal;
     Game.Resources.Leather += totalScrapConversion * Game.Resources.ScrapToLeather;
     Game.Resources.Cloth += totalScrapConversion * Game.Resources.ScrapToCloth;
@@ -378,5 +389,5 @@ window.onload = function() {
     // Queue autosave
     //window.setInterval(,Game.Settings.AutoSaveFrequency);
 
-    //allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
+    allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
 };

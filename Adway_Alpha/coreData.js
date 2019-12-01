@@ -32,6 +32,26 @@ class Actor{}
 
 class Hero extends Actor{}
 
+class GameClass{
+    constructor() {
+        this = {
+            Resources: {
+                Scraps: 0,
+                ScrapsIncome: 1,
+                ScrapConversionRate: 0,
+                ScrapConversionEfficiency: 0.5,
+
+                ScrapToMetal: 0,
+                ScrapToLeather: 0,
+                ScrapToCloth: 0,
+                Metal: 0,
+                Leather: 0,
+                Cloth: 0,
+            }
+        }
+    }
+}
+
 var Game = {
 
     // Resources
@@ -146,12 +166,8 @@ var Game = {
             Scraps: {
                 BreakpointEarned: 0,
                 HandlerID: 0,
-                TierBreakpoints: [
-                    10, 50, 100, 1000, 10000
-                ],
-                TierValues: [
-                    1, 1, 2, 2, 5
-                ],
+                TierBreakpoints: [10, 50, 100, 1000, 10000],
+                TierValues: [1, 1, 2, 2, 5],
                 AchievementHandler: 
                     function () {
 
@@ -171,16 +187,13 @@ var Game = {
                     },
             },
 
-            LargestSingle: {
+            LargestSingle: 
+            {
                 HandlerID: 0,
                 BreakpointEarned: 0,
                 ActualLargest: 0,
-                TierBreakpoints: [
-                    10, 50, 100, 1000, 10000
-                ],
-                TierValues: [
-                    1, 2, 5, 5, 15
-                ],
+                TierBreakpoints: [10, 50, 100, 1000, 10000],
+                TierValues: [1, 2, 5, 5, 15],
                 AchievementHandler: 
                     function (source, dest, hitSize) {
                         let base = Game.Persistents.Achievements.LargestSingle;
@@ -222,6 +235,7 @@ var Game = {
                 }
 
             )
+            
         },
 
         Stats: {
@@ -236,6 +250,9 @@ var Game = {
 
     UIElements: {
         ScrapCounter: document.querySelector('#scrapDisplay'),
+        MetalCounter: document.querySelector('#metalDisplay'),
+        LeatherCounter: document.querySelector('#leatherDisplay'),
+        ClothCounter: document.querySelector('#clothDisplay'),
         MerylTurnOrder: document.querySelector('#MerylOrder'),
         ChaseTurnOrder: document.querySelector('#ChaseOrder'),
         TaliTurnOrder: document.querySelector('#TaliOrder'),
@@ -253,3 +270,5 @@ var Game = {
     },
     
 }
+
+var GameResource = new GameClass();

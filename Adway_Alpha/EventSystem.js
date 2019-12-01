@@ -67,7 +67,6 @@ class EventBoard {
         let searchIndex = 0;
         for (var eventName in this.EventTypes) {
             searchIndex = 0;
-            console.log(eventName + " attempted access");
             this.RootBoard.get(eventName).forEach(element => {
                 if (element.cbGUID === removeGUID) {
                     this.RootBoard.get(eventName).splice(searchIndex,1);
