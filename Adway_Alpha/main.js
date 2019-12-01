@@ -93,55 +93,55 @@ var suffices = [
 function UpdateUIElements(){
 
     // Resource counter
-    Game.UIElements.ScrapCounter.textContent = ParseGameText(
+    Lookup.UIElements.ScrapCounter.textContent = ParseGameText(
         GameText.English.UI.Scraps,
         formatNumber(Game.Resources.Scraps)
     );
 
-    Game.UIElements.MetalCounter.textContent = ParseGameText(
+    Lookup.UIElements.MetalCounter.textContent = ParseGameText(
         GameText.English.UI.Metal,
         formatNumber(Game.Resources.Metal)
     );
 
-    Game.UIElements.LeatherCounter.textContent = ParseGameText(
+    Lookup.UIElements.LeatherCounter.textContent = ParseGameText(
         GameText.English.UI.Leather,
         formatNumber(Game.Resources.Leather)
     );
 
-    Game.UIElements.ClothCounter.textContent = ParseGameText(
+    Lookup.UIElements.ClothCounter.textContent = ParseGameText(
         GameText.English.UI.Cloth,
         formatNumber(Game.Resources.Cloth)
     );
 
     // Turn order visual testing, health values for now
-    Game.UIElements.MerylTurnOrder.textContent = ParseGameText(
+    Lookup.UIElements.MerylTurnOrder.textContent = ParseGameText(
         'Meryl HP: {0} / {1}',
         formatNumber(Math.max(getHeroByName('Meryl').HealthCurr), 0),
         formatNumber(getHeroByName('Meryl').HealthMax)
     );
-    Game.UIElements.ChaseTurnOrder.textContent = ParseGameText(
+    Lookup.UIElements.ChaseTurnOrder.textContent = ParseGameText(
         'Chase HP: {0} / {1}',
         formatNumber(Math.max(getHeroByName('Chase').HealthCurr), 0),
         formatNumber(getHeroByName('Chase').HealthMax)
     );
-    Game.UIElements.TaliTurnOrder.textContent = ParseGameText(
+    Lookup.UIElements.TaliTurnOrder.textContent = ParseGameText(
         'Tali HP: {0} / {1}',
         formatNumber(Math.max(getHeroByName('Tali').HealthCurr), 0),
         formatNumber(getHeroByName('Tali').HealthMax)
     );
-    Game.UIElements.HerschelTurnOrder.textContent = ParseGameText(
+    Lookup.UIElements.HerschelTurnOrder.textContent = ParseGameText(
         'Herschel HP: {0} / {1}',
         formatNumber(Math.max(getHeroByName('Herschel').HealthCurr), 0),
         formatNumber(getHeroByName('Herschel').HealthMax)
     );
-    Game.UIElements.EnemyHealth.textContent = ParseGameText(
+    Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
         '{0} HP: {1} / {2}',
         Game.Enemies[0].Name,
         formatNumber(Math.max(Game.Enemies[0].HealthCurr), 0),
         formatNumber(Game.Enemies[0].HealthMax)
     );
 
-    Game.UIElements.WorldStats.textContent = ParseGameText(
+    Lookup.UIElements.WorldStats.textContent = ParseGameText(
         'You are currently in the world at zone {0} and cell {1}',
         formatNumber(Game.World.CurrentZone),
         formatNumber(Game.World.CurrentCell),
