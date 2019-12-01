@@ -11,7 +11,6 @@ function mainLoop() {
         Game.World.CurrentZone++;
         Game.World.CurrentCell = 1;
         spawnEncounter();
-        newEncounter();
     }
 
     mainCombat();
@@ -19,7 +18,7 @@ function mainLoop() {
     // Update UI
     UpdateUIElements();
 
-    Game.Persistents.Stats.LastUpdateTime = new Date().getTime();
+    Game.Stats.LastUpdateTime = new Date().getTime();
 }
 
 // Utility Functions
@@ -152,6 +151,16 @@ function UpdateUIElements(){
 // Saving Functions, currently unused
 // TODO: Maybe look at the lz-string thing other games do----------------------
 function saveGameToLocal() {
+
+    // Copy game save to prep local save
+    let saveString = JSON.stringify(Game);
+    let saveState = JSON.parse(saveString);
+
+    // Get rid of things that don't need to be saved
+
+    // UI references
+    delete saveState.UIElements;
+
     window.localStorage.setItem("ADWAY_Save", JSON.stringify(Game));
 }
 
@@ -159,7 +168,10 @@ function loadGameFromLocal() {
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
 }
 
-function removeLocalSave(){}
+function removeLocalSave(){
+    var result = window.confirm('Are you sure you want to delete your save?');
+    if (result) Game = new GameStore();
+}
 // ----------------------------------------------------------------------------
 // Resources
 
@@ -169,7 +181,7 @@ function generateResources() {
 
     // Scraps
     Game.Resources.Scraps += (Game.Resources.ScrapsIncome * (GameSpeed / 1000));
-    allEvents.queueEvent(allEvents.EventTypes.SCRAPS_RECIEVED);
+    allEvents.queueEvent("SCRAPS_RECIEVED");
 
     // Conversion
     Game.Resources.Scraps -= (Game.Resources.ScrapConversionRate * (GameSpeed / 1000));
@@ -180,9 +192,9 @@ function generateResources() {
     Game.Resources.Leather += totalScrapConversion * Game.Resources.ScrapToLeather;
     Game.Resources.Cloth += totalScrapConversion * Game.Resources.ScrapToCloth;
 
-    allEvents.queueEvent(allEvents.EventTypes.METAL_RECIEVED);
-    allEvents.queueEvent(allEvents.EventTypes.LEATHER_RECIEVED);
-    allEvents.queueEvent(allEvents.EventTypes.CLOTH_RECIEVED);
+    allEvents.queueEvent("METAL_RECIEVED");
+    allEvents.queueEvent("LEATHER_RECIEVED");
+    allEvents.queueEvent("CLOTH_RECIEVED");
 
 }
 
@@ -239,8 +251,8 @@ function mainCombat() {
             if (getHeroByName(nextActor.Name) != null) {
                 // TODO simple combat for now, something something AI
                 // Lots to change, just get something basic working
-                Game.Enemies[0].HealthCurr -= nextActor.Attack;
-                allEvents.queueEvent(allEvents.EventTypes.COMBAT_SWING, nextActor.Name, Game.Enemies[0].Name, nextActor.Attack);
+                Game.Enemies[0].HealthCurr = Math.max(0, Game.Enemies[0].HealthCurr - nextActor.Attack);
+                allEvents.queueEvent("COMBAT_SWING", nextActor.Name, Game.Enemies[0].Name, nextActor.Attack);
 
             } else {
                 var target;
@@ -248,7 +260,7 @@ function mainCombat() {
                     target = Game.Heroes[Math.floor(Math.random() * 4)];
                 } while (!target.isAlive)
 
-                target.HealthCurr -= nextActor.Attack;
+                target.HealthCurr = Math.max(0, target.HealthCurr - nextActor.Attack);
 
                 if (target.HealthCurr <= 0) {
                     target.isAlive = false;
@@ -258,34 +270,38 @@ function mainCombat() {
             nextActor.CurrentTurnOrder += 10000;
         }
 
-    } while (nextActor != null)
+        // Check for dead people and end of fight bits here
 
-    // Check to see if enemies are dead
-    if (Game.Enemies[0].HealthCurr <= 0) {
-        Game.Enemies.splice(0,1);
-    }
-
-    // No enemies left, cell over
-    if (Game.Enemies.length == 0) {
-        Game.World.CurrentCell++;
-        
-        // Whole zone over
-        if (Game.World.CurrentCell >= 100) {
-            Game.World.CurrentZone++;
-            Game.World.CurrentCell = 1;
+        // Check to see if all heroes are dead
+        var partyKill = true;
+        Game.Heroes.forEach(hero => {
+            if (hero.isAlive === true) {
+                partyKill = false;
+            }
+        });
+        if (partyKill) {
+            // TODO: something when party dies
+            break;
         }
+
+        // Check to see if enemies are dead
+        if (Game.Enemies[0].HealthCurr <= 0) {
+            Game.Enemies.splice(0,1);
+        }
+
+        // No enemies left, cell over
+        if (Game.Enemies.length == 0) {
+            Game.World.CurrentCell++;
+        
+            // Whole zone over
+            if (Game.World.CurrentCell >= 100) {
+                Game.World.CurrentZone++;
+                Game.World.CurrentCell = 1;
+            }
         spawnEncounter();
-    }
-}
+        }
 
-// Start a new combat encounter
-function newEncounter() {
-
-    // Reset any per-combat stats
-    Game.Heroes.forEach(hero => {
-        hero.CurrentTurnOrder = 100000 / hero.Speed;
-    });
-
+    } while (nextActor != null)
 }
 
 // Who knows when stats will get into a weird state that needs to be reset
@@ -307,24 +323,8 @@ function spawnMap(){}
 
 function spawnEncounter(){
     
-    var worldMod = Math.pow(
-        Game.World.WorldZoneScaleFactor,
-        Game.World.CurrentZone);
-
-    // TODO come up with something here
-    var cellMod = 1 + (Game.World.WorldCellScaleFactor * Game.World.CurrentCell);
-
     // TODO: make it more fancy, for now just spawn goblins
-    Game.Enemies.push(
-        {
-            Name: "Goblin",
-            Speed: 15 * Game.EnemyTemplates[0].SpeedMod,
-            Attack: 1 * Game.EnemyTemplates[0].AttackMod * worldMod * cellMod,
-            HealthMax: 50 * Game.EnemyTemplates[0].HealthMod * worldMod * cellMod,
-            HealthCurr: 50 * Game.EnemyTemplates[0].HealthMod * worldMod * cellMod,
-            CurrentTurnOrder: 10000,
-        }
-    )
+    Game.Enemies.push(new Creature("Goblin"));
     
 }
 
@@ -332,16 +332,16 @@ function spawnEncounter(){
 
 function tutorialControl(){
 
-    switch (Game.Persistents.Stats.TutorialState.TutorialStage) {
+    switch (Game.Stats.TutorialState.TutorialStage) {
         case 0:
             console.log(ParseGameText(GameText.English.Story.Intro));
-            Game.Persistents.Stats.TutorialState.TutorialStage++;
+            Game.Stats.TutorialState.TutorialStage++;
             allEvents.removeEvent(
-                Game.Persistents.Stats.TutorialState.TutorialControlID);
+                Game.Stats.TutorialState.TutorialControlID);
             
-            Game.Persistents.Stats.TutorialState.TutorialControlID = 
+            Game.Stats.TutorialState.TutorialControlID = 
                 allEvents.registerListener(
-                    allEvents.EventTypes.SCRAPS_RECIEVED,
+                    "SCRAPS_RECIEVED",
                     tutorialControl
                 )
             break;
@@ -349,9 +349,9 @@ function tutorialControl(){
             if (Game.Resources.Scraps >= 50) {
                 console.log(ParseGameText(GameText.English.Story.MoreThanScrap));
                 allEvents.removeEvent(
-                    Game.Persistents.Stats.TutorialState.TutorialControlID);
+                    Game.Stats.TutorialState.TutorialControlID);
                 
-                Game.Persistents.Stats.TutorialState.TutorialStage++;
+                Game.Stats.TutorialState.TutorialStage++;
                 // no more tutorial bits just yet
 
             }
@@ -365,22 +365,11 @@ function tutorialControl(){
 window.onload = function() {
     
     // TODO: Load game and set visual state
-
-    // Register achievement listeners
-    Game.Persistents.Achievements.Scraps.HandlerID = 
-        allEvents.registerListener(
-            allEvents.EventTypes.SCRAPS_RECIEVED,
-            Game.Persistents.Achievements.Scraps.AchievementHandler);
-    
-    Game.Persistents.Achievements.LargestSingle.HandlerID = 
-        allEvents.registerListener(
-            allEvents.EventTypes.COMBAT_SWING,
-            Game.Persistents.Achievements.LargestSingle.AchievementHandler);
         
     // Tutorial Controller
-    Game.Persistents.Stats.TutorialState.TutorialControlID = 
+    Game.Stats.TutorialState.TutorialControlID = 
         allEvents.registerListener(
-            allEvents.EventTypes.TEST_EVENT,
+            "TEST_EVENT",
             tutorialControl
         )
     
@@ -389,5 +378,5 @@ window.onload = function() {
     // Queue autosave
     //window.setInterval(,Game.Settings.AutoSaveFrequency);
 
-    allEvents.queueEvent(allEvents.EventTypes.TEST_EVENT);
+    allEvents.queueEvent("TEST_EVENT");
 };

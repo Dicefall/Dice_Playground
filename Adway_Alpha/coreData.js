@@ -1,38 +1,61 @@
-// All core data of the game.
+// All of the game's core classes and data will be found here.
+// TODO: Need some kind of copyright notice or something
 
-// Hero Template:
-// -Stats
-// --Health (Current/Max)
-// --Attack
-// --Speed
-// --Xp to level (current/Needed)
-// -Class/job unlocks
-// --Class/job mastery points
+class Actor {
+    constructor(name) {
+        this.Name = name;
 
-class Achievement {
-    constructor(listenerType, handlerFunc) {
+        this.Level = 1;
+        this.Speed = 15;
+        this.Attack = 10;
+        this.HealthCurr = 100;
+        this.HealthMax = 100;
+        this.isAlive = true;
+        this.CurrentTurnOrder = 10000;
 
-        this.handlerFunc = handlerFunc;
-        this.HandlerID = allEvents.registerListener(listenerType, handlerFunc);
+        this.SpeedBase = 15;
+        this.Attack = 10;
+        this.HealthBase = 100;
+    }
+ }
+
+class Hero extends Actor { 
+    constructor(name) {
+        super(name);
+    }
+
+    // --Xp to level (current/Needed)
+    // --max level
+    // -Class/job unlocks
+    // --Class/job mastery points
+
+}
+
+class Creature extends Actor {
+    constructor(name) {
+        super(name);
+
+        // Get world and cell scaling
+        var worldMod = Math.pow(
+            Game.World.WorldZoneScaleFactor - 1,
+            Game.World.CurrentZone);
+    
+        var cellMod = 1 + (Game.World.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
+
+        // Apply scaling to new creature
+        Game.EnemyTemplates.forEach(archtype => {
+            if (name === archtype.Name) {
+                this.Speed *= archtype.SpeedMod;
+                this.Attack *= archtype.AttackMod * worldMod * cellMod;
+                this.HealthMax *= archtype.HealthMod * worldMod * cellMod;
+                this.HealthCurr = this.HealthMax;
+            }
+        })
+        
     }
 }
 
-class TieredAchievement extends Achievement {
-    constructor(rewardBreakpoints, rewardValues, handlerType, handlerFunc) {
-        super(handlerType, handlerFunc);
-
-        this.TierBreakpoints = rewardBreakpoints;
-        this.BreakpointEarned = 0;
-
-        this.TierValues = rewardValues;
-    }
-}
-
-class Actor { }
-
-class Hero extends Actor { }
-
-class GameStore {
+class PlayerData {
 
     constructor() {
 
@@ -49,206 +72,95 @@ class GameStore {
             Metal: 0,
             Leather: 0,
             Cloth: 0,
-        },
+        };
 
-            // Alternative, testing
-            this.Heroes = [
-                {
-                    Name: "Meryl",
-                    Level: 1,
-                    Speed: 15,
-                    Attack: 10,
-                    HealthCurr: 100,
-                    HealthMax: 100,
-                    isAlive: true,
-                    CurrentTurnOrder: 0,
+        // Heroes
+        this.Heroes = [
+            new Hero("Meryl"),
+            new Hero("Chase"),
+            new Hero("Tali"),
+            new Hero("Herschel")
+        ];
 
-                    SpeedBase: 15,
-                    AttackBase: 10,
-                    HealthBase: 100,
-                },
-                {
-                    Name: "Chase",
-                    Level: 1,
-                    Speed: 14,
-                    Attack: 10,
-                    HealthMax: 100,
-                    HealthCurr: 100,
-                    isAlive: true,
-                    CurrentTurnOrder: 0,
+        // List of currently alive enemies
+        this.Enemies = [];
 
-                    SpeedBase: 14,
-                    AttackBase: 10,
-                    HealthBase: 100,
-                },
-                {
-                    Name: "Tali",
-                    Level: 1,
-                    Speed: 16,
-                    Attack: 10,
-                    HealthMax: 100,
-                    HealthCurr: 100,
-                    isAlive: true,
-                    CurrentTurnOrder: 0,
+        // Current Map/World info
+        this.World = {
+            CurrentZone: 0,
+            CurrentCell: 0,
+        };
 
-                    SpeedBase: 16,
-                    AttackBase: 10,
-                    HealthBase: 100,
-                },
-                {
-                    Name: "Herschel",
-                    Level: 1,
-                    Speed: 15,
-                    Attack: 10,
-                    HealthMax: 100,
-                    HealthCurr: 100,
-                    isAlive: true,
-                    CurrentTurnOrder: 0,
+        // Achievements
+        this.Achievements = {
+            TotalScore: 0,
 
-                    SpeedBase: 15,
-                    AttackBase: 10,
-                    HealthBase: 100,
-                },
-            ],
+            // Earned
+            Scraps: 0,
+            Metal: 0,
+            
+        };
 
-            this.EnemyTemplates = [
-                {
-                    Name: "Goblin",
-                    AttackMod: 1,
-                    HealthMod: 1,
-                    SpeedMod: 1,
-                },
-                {
-                    Name: "Dragon",
-                    AttackMod: 2,
-                    HealthMod: 5,
-                    SpeedMod: 1.2,
-                }
-            ],
-
-            this.Enemies = [],
-
-            // Current Map/World info
-            this.World = {
-                CurrentZone: 0,
-                CurrentCell: 0,
-                WorldZoneScaleFactor: 2, // Enemy Multi-per zone
-                WorldCellScaleFactor: 0.021, // Enemy additive per cell
+        this.Stats = {
+            GameVersion: "NaNi",
+            LastUpdateTime: 0,
+            TutorialState: {
+                TutorialStage: 0,
+                TutorialControlID: 0,
             },
+        };
 
-            // Persistent values
-            this.Persistents = {
-                // Achievements
-                Achievements: {
-                    TotalScore: 0,
-
-                    // Scrap Collections
-                    Scraps: {
-                        BreakpointEarned: 0,
-                        HandlerID: 0,
-                        TierBreakpoints: [10, 50, 100, 1000, 10000],
-                        TierValues: [1, 1, 2, 2, 5],
-                        AchievementHandler:
-                            function () {
-
-                                let base = Game.Persistents.Achievements.Scraps;
-
-                                let nextTier = base.TierBreakpoints[base.BreakpointEarned];
-
-                                if (Game.Resources.Scraps >= nextTier) {
-                                    console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
-
-                                    Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
-                                }
-
-                                if (base.BreakpointEarned >= base.TierBreakpoints.length) {
-                                    allEvents.removeEvent(base.HandlerID);
-                                }
-                            },
-                    },
-
-                    LargestSingle:
-                    {
-                        HandlerID: 0,
-                        BreakpointEarned: 0,
-                        ActualLargest: 0,
-                        TierBreakpoints: [10, 50, 100, 1000, 10000],
-                        TierValues: [1, 2, 5, 5, 15],
-                        AchievementHandler:
-                            function (source, dest, hitSize) {
-                                let base = Game.Persistents.Achievements.LargestSingle;
-
-                                if (hitSize > base.ActualLargest) {
-                                    base.ActualLargest = hitSize;
-                                    if (base.ActualLargest > base.TierBreakpoints[base.BreakpointEarned]) {
-                                        console.log(ParseGameText('Achievement acquired: Largest single hit {0} or greater',
-                                            formatNumber(base.TierBreakpoints[base.BreakpointEarned])));
-
-                                        Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
-                                    }
-
-                                    if (base.BreakpointEarned > base.TierBreakpoints.length) {
-                                        allEvents.removeEvent(base.HandlerID);
-                                    }
-                                }
-                            },
-                    },
-
-                    Metal: new TieredAchievement(
-                        [10, 25, 50, 100, 1000],
-                        [1, 1, 2, 2, 5],
-                        allEvents.EventTypes.METAL_RECIEVED,
-                        function () {
-                            let base = Game.Persistents.Achievements.Metal;
-
-                            let nextTier = base.TierBreakpoints[base.BreakpointEarned];
-
-                            if (Game.Resources.Metal >= nextTier) {
-                                console.log(ParseGameText('Achievement Recieved: ' + GameText.English.AchievementText.Metal.Criteria, nextTier));
-
-                                Game.Persistents.Achievements.TotalScore += base.TierValues[base.BreakpointEarned++];
-                            }
-
-                            if (base.BreakpointEarned >= base.TierBreakpoints.length) {
-                                allEvents.removeEvent(base.HandlerID);
-                            }
-                        }
-
-                    )
-
-                },
-
-                Stats: {
-                    GameVersion: "NaNi",
-                    LastUpdateTime: 0,
-                    TutorialState: {
-                        TutorialStage: 0,
-                        TutorialControlID: 0,
-                    },
-                }
-            },
-
-            this.UIElements = {
-                ScrapCounter: document.querySelector('#scrapDisplay'),
-                MetalCounter: document.querySelector('#metalDisplay'),
-                LeatherCounter: document.querySelector('#leatherDisplay'),
-                ClothCounter: document.querySelector('#clothDisplay'),
-                MerylTurnOrder: document.querySelector('#MerylOrder'),
-                ChaseTurnOrder: document.querySelector('#ChaseOrder'),
-                TaliTurnOrder: document.querySelector('#TaliOrder'),
-                HerschelTurnOrder: document.querySelector('#HershelOrder'),
-                EnemyHealth: document.querySelector('#enemyHealth'),
-                WorldStats: document.querySelector('#WorldStats'),
-            },
-
-            // Settings
-            this.Settings = {
-                // Tick rate in MS
-                GameSpeed: 100,
-                AutoSaveFrequency: 30 * 60 * 1000, //30 minutes
-                NumberNotation: "Scientific",
-            }
-        }
+        // Settings
+        this.Settings = {
+            GameSpeed: 100, // in MS
+            AutoSaveFrequency: 30 * 60 * 1000, //30 minutes
+            NumberNotation: "Scientific",
+        };
     }
+}
 
-var Game = new GameStore();
+// This is for fixed constants for the game, such as base stats or enemy templates
+class GameData {
+    constructor() {
+        // References to the HTML elements
+        this.UIElements = {
+            ScrapCounter: document.querySelector('#scrapDisplay'),
+            MetalCounter: document.querySelector('#metalDisplay'),
+            LeatherCounter: document.querySelector('#leatherDisplay'),
+            ClothCounter: document.querySelector('#clothDisplay'),
+            MerylTurnOrder: document.querySelector('#MerylOrder'),
+            ChaseTurnOrder: document.querySelector('#ChaseOrder'),
+            TaliTurnOrder: document.querySelector('#TaliOrder'),
+            HerschelTurnOrder: document.querySelector('#HershelOrder'),
+            EnemyHealth: document.querySelector('#enemyHealth'),
+            WorldStats: document.querySelector('#WorldStats'),
+        };
+
+        // Enemy Archtypes
+        this.EnemyTemplates = [
+            {
+                Name: "Goblin",
+                AttackMod: 1,
+                HealthMod: 1,
+                SpeedMod: 1,
+            },
+            {
+                Name: "Dragon",
+                AttackMod: 2,
+                HealthMod: 5,
+                SpeedMod: 1.2,
+            }
+        ];
+
+        this.WorldZoneScaleFactor = 2;
+        this.WorldCellScaleFactor = 0.021;
+
+        this.TutorialTriggers = [
+            "TEST_EVENT",
+            "SCRAPS_RECIEVED",
+        ];
+    }
+}
+
+var Game = new PlayerData(); // Change var name maybe, not the most clear
+var Lookup = new GameData();

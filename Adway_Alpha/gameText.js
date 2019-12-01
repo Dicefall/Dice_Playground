@@ -26,16 +26,12 @@ var GameText = {
             Metal: "You have {0} metal plates.\n",
             Leather: "You have {0} leather hides.\n",
             Cloth: "You have {0} strips of cloth.\n",
+        },
 
-            // When I actually set up data collection for stuff
-            // I should have a disclaimer for it
-            DataCollectionDisclaimer: '',
-        },
-        Special: {
-            Thanks: [
-                'List of special thanks to people here'
-            ]
-        },
+        // When I actually set up data collection for stuff
+        // I should have a disclaimer for it
+        DataCollectionDisclaimer: 'Adway does not collect any data about ' +
+            'any players or their game state.',
         AchievementText: {
             Scraps: {
                 Names: [
@@ -50,14 +46,19 @@ var GameText = {
             Metal: {
                 Names: [
                     'Metalurgy', 
-                    'That\'s the good Scrap',
-                    'Scraptastic',
-                    'Scraptacular',
-                    'That\'s a real big piece of Scrap'
+                    'Metalitosis',
+                    'Gala at the Metal',
+                    'Metalpolis',
+                    'Can\'t spell team without Metal'
                 ],
                 Criteria: 'Acquire a total of {0} Metal',
             }
-        }
+        },
+        Special: {
+            Thanks: [
+                'List of special thanks to people here'
+            ]
+        },
     },
 }
 

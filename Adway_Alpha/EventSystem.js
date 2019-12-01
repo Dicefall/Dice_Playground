@@ -12,31 +12,22 @@ class EventBoard {
     }
 
     init(){
-        this.EventTypes = {
-            //List of all the types of events
-            TEST_EVENT: "TEST_EVENT",
-            SCRAPS_RECIEVED: "SCRAPS_RECIEVED",
-            METAL_RECIEVED: "METAL_RECIEVED",
-            LEATHER_RECIEVED: "LEATHER_RECIEVED",
-            CLOTH_RECIEVED: "CLOTH_RECIEVED",
-            COMBAT_SWING: "COMBAT_SWING",
-        }
+        this.EventTypes = [
+            "TEST_EVENT",
+            "SCRAPS_RECIEVED",
+            "METAL_RECIEVED",
+            "LEATHER_RECIEVED",
+            "CLOTH_RECIEVED",
+            "COMBAT_SWING", // Currently Source, Dest, swing size
+        ];
 
         // Map of event types, will contain callbacks for said events
         // Before each individual board is a list of arguments it expects
         this.RootBoard = new Map();
 
-        // Catchall with anything goes after
-        this.RootBoard.set(this.EventTypes.TEST_EVENT,[]);
-
-        // Source, Dest, Attack name, Amount
-        this.RootBoard.set(this.EventTypes.COMBAT_SWING,[]);
-
-        // Amount of resources recieved
-        this.RootBoard.set(this.EventTypes.SCRAPS_RECIEVED,[]);
-        this.RootBoard.set(this.EventTypes.METAL_RECIEVED,[]);
-        this.RootBoard.set(this.EventTypes.LEATHER_RECIEVED,[]);
-        this.RootBoard.set(this.EventTypes.CLOTH_RECIEVED,[]);
+        this.EventTypes.forEach(EType => {
+            this.RootBoard.set(EType, []);
+        });
 
         this.nextGUID = 0;
     }
@@ -51,7 +42,7 @@ class EventBoard {
         }
 
         this.RootBoard.get(listenFor).push(toRegister);
-        console.log(`${listenFor} event registered`);
+        console.log("Registered for " + listenFor + " events.");
 
         return toRegister.cbGUID;
     }
@@ -65,16 +56,22 @@ class EventBoard {
 
     removeEvent(removeGUID) {
         let searchIndex = 0;
-        for (var eventName in this.EventTypes) {
+        this.EventTypes.forEach(EType => {
             searchIndex = 0;
-            this.RootBoard.get(eventName).forEach(element => {
+            this.RootBoard.get(EType).forEach(element => {
                 if (element.cbGUID === removeGUID) {
-                    this.RootBoard.get(eventName).splice(searchIndex,1);
-                    console.log(`${removeGUID} event removed`);
+                    this.RootBoard.get(EType).splice(searchIndex,1);
+                    console.log("Event number " + removeGUID + " removed.");
                     return;
                 }
                 searchIndex++;
             });
+        });
+    }
+
+    clearAllEvents() {
+        for (var eventName in this.EventTypes) {
+            this.RootBoard.get(eventName) = null;
         }
     }
 
