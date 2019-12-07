@@ -38,12 +38,44 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
+function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding){
+    if(!isCompounding) {
+        // Keep other ones in case something goes wrong
+        //return baseCost * multiBuyCount + (costScaling * (multiBuyCount * (multiBuyCount + 1)) / 2);
+        //return (multiBuyCount / 2) * ((2 * baseCost) + costScaling * (multiBuyCount - 1));
+        //return multiBuyCount * (multiBuyCount * costScaling + (costScaling + baseCost * 2)) / 2; //broken
+
+        return (multiBuyCount * multiBuyCount * costScaling - multiBuyCount * costScaling + 2 * baseCost * multiBuyCount) / 2;
+
+        // all should simplify to: (NND - ND + 2BN) / 2
+        // var taketwo = (N * N * D - N * D + 2*B*N) / 2;
+    }
+
+    return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
+}
+
+function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
+    if (!isCompounding) {
+        //(NND - ND + 2BN) / 2 = totalcost
+        // solve for quadratic and floor it
+        // N = D - 2B + sqrt(4BB + DD + 8DV) / 2D
+        return Math.floor(
+            (costScaling - (2 * baseCost) + Math.sqrt(Math.pow(2*baseCost - costScaling, 2) + (8 * costScaling * totalResource))) / 2
+        );
+    } else {
+
+        //toBuy = Math.floor(log10(((resourcesAvailable / (start * Math.pow(price[1], currentOwned))) * (price[1] - 1)) + 1) / log10(price[1]));
+        return Math.floor(Math.log(1 - (1 - costScaling) * totalResource / baseCost) / Math.log(costScaling));
+
+    }
+}
+
 // Check if selected actor is actually a hero
 
 // Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number) {
     
-    // Ooptions are:
+    // Options are:
     // Scientific, Engineering, Log, 
 
     // Check for infinite:
@@ -101,19 +133,9 @@ function UpdateUIElements(){
         formatNumber(Game.Resources.Scraps)
     );
 
-    Lookup.UIElements.MetalCounter.innerHTML = ParseGameText(
-        GameText[Game.Settings.Language].UI.Metal,
-        formatNumber(Game.Resources.Metal)
-    );
-
-    Lookup.UIElements.LeatherCounter.textContent = ParseGameText(
-        GameText[Game.Settings.Language].UI.Leather,
-        formatNumber(Game.Resources.Leather)
-    );
-
-    Lookup.UIElements.ClothCounter.textContent = ParseGameText(
-        GameText[Game.Settings.Language].UI.Cloth,
-        formatNumber(Game.Resources.Cloth)
+    Lookup.UIElements.XPCounter.innerHTML = ParseGameText(
+        GameText[Game.Settings.Language].UI.XP,
+        formatNumber(Game.Resources.XP)
     );
 
     // Turn order visual testing, health values for now
@@ -284,17 +306,23 @@ function mainCombat() {
 
         // Check to see if enemies are dead
         if (Game.Enemies[0].HealthCurr <= 0) {
+            Game.Resources.XP += 20;
+            allEvents.queueEvent("ENEMY_DEFEATED");
             Game.Enemies.splice(0,1);
         }
 
         // No enemies left, cell over
         if (Game.Enemies.length == 0) {
             Game.World.CurrentCell++;
-        
+            Game.Resources.XP += 25;
+
+            allEvents.queueEvent("CELL_CLEAR");
+
             // Whole zone over
             if (Game.World.CurrentCell >= 100) {
                 Game.World.CurrentZone++;
                 Game.World.CurrentCell = 1;
+                allEvents.queueEvent("ZONE_CLEAR");
             }
         spawnEncounter();
         }

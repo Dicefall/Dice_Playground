@@ -45,7 +45,6 @@ class Hero extends Actor {
         this.isAvailable = false;
 
         this.LevelMax = 10;
-        this.XP = 0;
     }
 
     recalcStats() {
@@ -59,12 +58,19 @@ class Hero extends Actor {
     }
 
     LevelUp() {
-        this.XP = 0;
-        this.Level++;
+        let XPReq = Math.pow(Lookup.ExperienceRequirementScaleFactor,this.Level - 1) * Lookup.ExperienceRequirement;
+        if (Game.Resources.XP >= XPReq) {
+            Game.Resources.XP -= XPReq;
+            this.Level++;
 
-        this.recalcStats();
+            this.recalcStats();
+        } else {
+            console.log("Not Enough XP, need " + formatNumber(XPReq - Game.Resources.XP) + " more.");
+        }
     }
 
+    //this.ExperienceRequirement = 100;
+    //this.ExperienceRequirementScaleFactor = 1.15;
     // -Class/job unlocks
     // --Class/job mastery points
 }
@@ -119,6 +125,8 @@ class PlayerData {
             Metal: 0,
             Leather: 0,
             Cloth: 0,
+
+            XP: 0,
         };
 
         // Heroes
@@ -181,9 +189,7 @@ class GameData {
         // References to the HTML elements
         this.UIElements = {
             ScrapCounter: document.querySelector('#scrapDisplay'),
-            MetalCounter: document.querySelector('#metalDisplay'),
-            LeatherCounter: document.querySelector('#leatherDisplay'),
-            ClothCounter: document.querySelector('#clothDisplay'),
+            XPCounter: document.querySelector('#xpDisplay'),
             MerylTurnOrder: document.querySelector('#MerylOrder'),
             ChaseTurnOrder: document.querySelector('#ChaseOrder'),
             TaliTurnOrder: document.querySelector('#TaliOrder'),

@@ -25,6 +25,7 @@ var GameText = {
             Metal: "You have {0} metal plates.\n",
             Leather: "You have {0} leather hides.\n",
             Cloth: "You have {0} strips of cloth.\n",
+            XP: "You have {0} XP.\n",
         },
 
         // When I actually set up data collection for stuff
@@ -57,7 +58,8 @@ var GameText = {
         },
         Special: {
             Thanks: [
-                'List of special thanks to people here'
+                'List of special thanks to people here',
+                'Ghostfrog for a lot of math help'
             ]
         },
     },
