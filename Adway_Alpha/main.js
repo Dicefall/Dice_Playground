@@ -19,6 +19,7 @@ function mainLoop() {
     UpdateUIElements();
 
     Game.Stats.LastUpdateTime = new Date().getTime();
+    allEvents.queueEvent("GAME_TICK");
 }
 
 // Utility Functions
@@ -158,12 +159,12 @@ function saveGameToLocal() {
     let saveString = JSON.stringify(Game);
     let saveState = JSON.parse(saveString);
 
-    // Get rid of things that don't need to be saved
+    // Get rid of things that don't need to be saved shouldn't be anything
 
-    // UI references
-    delete saveState.UIElements;
+    // after editting
+    saveString = JSON.stringify(saveState);
 
-    window.localStorage.setItem("ADWAY_Save", JSON.stringify(Game));
+    window.localStorage.setItem("ADWAY_Save", saveString);
 }
 
 function loadGameFromLocal() {
@@ -193,18 +194,13 @@ function generateResources() {
     Game.Resources.Metal += totalScrapConversion * Game.Resources.ScrapToMetal;
     Game.Resources.Leather += totalScrapConversion * Game.Resources.ScrapToLeather;
     Game.Resources.Cloth += totalScrapConversion * Game.Resources.ScrapToCloth;
-
-    allEvents.queueEvent("METAL_RECIEVED");
-    allEvents.queueEvent("LEATHER_RECIEVED");
-    allEvents.queueEvent("CLOTH_RECIEVED");
-
 }
 
 // Combat ---------------------------------------------------------------------
 // Everything combat here, including class perks and anything else that needs
 // to be dealt with for combat.
 
-// Main Combat
+// Main Combat (rewrite this at some point)
 function mainCombat() {
 
     // Advance turn cds
@@ -331,12 +327,12 @@ function spawnEncounter(){
 }
 
 // ----------------------------------------------------------------------------
-
 function StoryControl(){
 
     switch (Game.Stats.StoryState.StoryStage) {
         case 0:
-            console.log(ParseGameText(GameText.English.Story.Intro));
+            console.log(ParseGameText(GameText[Game.Settings.Language].Story.Intro));
+
             Game.Stats.StoryState.StoryStage++;
             allEvents.removeEvent(
                 Game.Stats.StoryState.StoryControlID);
@@ -349,16 +345,34 @@ function StoryControl(){
             break;
         case 1:
             if (Game.Resources.Scraps >= 30) {
-                console.log(ParseGameText(GameText.English.Story.MoreThanScrap));
+                console.log(ParseGameText(GameText[Game.Settings.Language].Story.FoundMeryl));
+
+                getHeroByName('Meryl').isAvailable = true;
+
                 allEvents.removeEvent(
                     Game.Stats.StoryState.StoryControlID);
                 
                 Game.Stats.StoryState.StoryStage++;
-                // no more Story bits just yet
+                
+                // Wait 15 seconds of walking around doing nothing
+                // Give player some time to look around before starting combat
+                window.setTimeout(function() {
+                    allEvents.queueEvent("TEST_EVENT");
+                }, 5000);
 
+                Game.Stats.StoryState.StoryControlID = 
+                allEvents.registerListener(
+                    Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
+                    StoryControl
+                )
             }
             
             break;
+        case 2:
+            console.log(ParseGameText(GameText[Game.Settings.Language].Story.IntroCombat));
+            window.setTimeout(function() {
+                allEvents.queueEvent("TEST_EVENT");
+            }, 5000);
         default:
             // nothing to do here
     }

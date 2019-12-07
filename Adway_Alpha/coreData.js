@@ -33,7 +33,7 @@ class Actor {
         this.CurrentTurnOrder = 10000;
 
         this.SpeedBase = 15;
-        this.Attack = 10;
+        this.AttackBase = 10;
         this.HealthBase = 100;
     }
  }
@@ -41,13 +41,32 @@ class Actor {
 class Hero extends Actor { 
     constructor(name) {
         super(name);
+
+        this.isAvailable = false;
+
+        this.LevelMax = 10;
+        this.XP = 0;
     }
 
-    // --Xp to level (current/Needed)
-    // --max level
+    recalcStats() {
+        let levelMulti = Math.pow(Lookup.LevelScaleFactor,this.Level);
+
+        this.Attack = this.AttackBase * levelMulti;
+        this.HealthMax = this.HealthBase * levelMulti;
+        this.HealthCurr = Math.min(this.HealthCurr,this.HealthMax);
+
+        this.Speed = this.SpeedBase;
+    }
+
+    LevelUp() {
+        this.XP = 0;
+        this.Level++;
+
+        this.recalcStats();
+    }
+
     // -Class/job unlocks
     // --Class/job mastery points
-
 }
 
 class Creature extends Actor {
@@ -62,7 +81,7 @@ class Creature extends Actor {
         var cellMod = 1 + (Lookup.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
 
         // Apply scaling to new creature
-        Lookup.EnemyTemplates.forEach(archtype => {
+        Lookup.Bestiary.forEach(archtype => {
             if (name === archtype.Name) {
                 this.Speed *= archtype.SpeedMod;
                 this.Attack *= archtype.AttackMod * worldMod * cellMod;
@@ -138,16 +157,25 @@ class PlayerData {
             },
         };
 
+        this.GameState = "PRE_COMBAT";
+
         // Settings
         this.Settings = {
+            // Languages supported, current list:
+            // English
+            Language: 'English',
             GameSpeed: 100, // in MS
-            AutoSaveFrequency: 30 * 60 * 1000, //30 minutes
+            AutoSaveFrequency: 30 * 60 * 1000, //30 minutes in millisconds
+
+            // Current number notations supported:
+            // Scientific, Engineering, Log
             NumberNotation: "Scientific",
         };
     }
 }
 
 // This is for fixed constants for the game, such as base stats or enemy templates
+// Anything that doesn't change from player to player will likely end up here
 class GameData {
     constructor() {
         // References to the HTML elements
@@ -165,18 +193,25 @@ class GameData {
         };
 
         // Enemy Archtypes
-        this.EnemyTemplates = [
+        this.Bestiary = [
             new CreatureTemplate('Goblin', 1, 1, 1),
             new CreatureTemplate('Dragon', 2, 5, 1.2),
             new CreatureTemplate("Kobold", 0.8,0.8,0.8)
         ];
 
+        // Enemy scaling factors
         this.WorldZoneScaleFactor = 2;
         this.WorldCellScaleFactor = 0.021;
+
+        // Levelling constants
+        this.LevelScaleFactor = 1.1;
+        this.ExperienceRequirement = 100;
+        this.ExperienceRequirementScaleFactor = 1.15;
 
         this.StoryTriggers = [
             "TEST_EVENT",
             "SCRAPS_RECIEVED",
+            "TEST_EVENT",
         ];
 
         // Not the most elegant but all of the achievement stuff goes here
@@ -204,18 +239,27 @@ class GameData {
                 [1, 1, 2, 2, 5],
                 "SCRAPS_RECIEVED",
                 function () {
-        
+                    
+                    if (Game.Achievements['Scraps'] >= Lookup.AchievementData.Scraps.TierBreakpoints.length) {
+                        allEvents.removeEvent(Lookup.AchievementData['Scraps'].HandlerID);
+                        return;
+                    }
+
                     let nextTier = Lookup.AchievementData.Scraps.TierBreakpoints[Game.Achievements['Scraps']];
         
                     if (Game.Resources.Scraps >= nextTier) {
-                        console.log(ParseGameText("Achievement recieved: Acquire {0} Scraps!", nextTier));
+
+                        var recieveText = ParseGameText(
+                            ParseGameText(
+                                GameText['English'].AchievementText.Recieved,
+                                GameText['English'].AchievementText.Scraps.Names[Game.Achievements['Scraps']],
+                                GameText['English'].AchievementText.Scraps.Criteria),
+                            nextTier);
+
+                        console.log(recieveText);
         
                         Game.Achievements['Scraps']++;
                         Lookup.AchievementData.CalculateTotal();
-                    }
-        
-                    if (Game.Achievements['Scraps'] >= Lookup.AchievementData.Scraps.TierBreakpoints.length) {
-                        allEvents.removeEvent(base.HandlerID);
                     }
                 }
             ),
@@ -223,9 +267,14 @@ class GameData {
             Metal: new TieredAchievement(
                 [10, 25, 50, 100, 1000],
                 [1, 1, 2, 2, 5],
-                "METAL_RECIEVED",
+                "SCRAPS_RECIEVED",
                 function () {
         
+                    if (Game.Achievements['Metal'] >= Lookup.AchievementData.Metal.TierBreakpoints.length) {
+                        allEvents.removeEvent(Lookup.AchievementData['Metal'].HandlerID);
+                        return;
+                    }
+
                     let nextTier = Lookup.AchievementData.Metal.TierBreakpoints[Game.Achievements['Metal']];
         
                     if (Game.Resources.Metal >= nextTier) {
@@ -234,15 +283,11 @@ class GameData {
                         Game.Achievements['Metal']++;
                         Lookup.AchievementData.CalculateTotal();
                     }
-        
-                    if (Game.Achievements['Metal'] >= Lookup.AchievementData.Metal.TierBreakpoints.length) {
-                        allEvents.removeEvent(base.HandlerID);
-                    }
                 }
             ),
         }
     }
 }
 
-var Game = new PlayerData(); // Change var name maybe, not the most clear
+var Game = new PlayerData();
 var Lookup = new GameData();

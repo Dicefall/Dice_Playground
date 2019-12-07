@@ -11,15 +11,12 @@
 var GameText = {
     English: {
         Story: {
-            Intro: 'You find yourself alone in a field surrounded by the ' +
-                'aftermath of a battle. You remember none of it. The world ' +
-                'is frightening, perhaps you should pick up some scraps. You ' +
-                'never know what you might find.',
-            MoreThanScrap: "You can't really do much with this scrap, maybe " +
-                "you can separate the components of the scrap into more " +
-                "workable pieces. Looks like there's some cloth, leather, " +
-                "and metal we can get out of the scrap.",
-            FoundMeryl: "TODO: write the next tutorial stage"
+            Intro: 'You find yourself alone in a field surrounded by the aftermath of a battle. You remember none of it. The world is frightening, perhaps you should pick up some scraps. You never know what you might find.',
+            // This is awful, rewrite
+            FoundMeryl: "You finally find someone else that's alive on this battlefield. She's looking around and staring intently into the air. She looks in different places constantly but always with an intense focus. She sees you and begins to walk over to you.",
+            MerylFindsYou: "As she gets close to you she begins to talk. 'That's a first, I didn't think anyone else would have made it this time. You probably don't remember anything from before and strangely, neither do I. Well I do but you see, I don't. No matter, I'm looking for some others that should be out here too.' She looks at the heaps of scrap you're carring. 'Good idea, lets pick up some more of those while we go looking. Oh and by the way, I'm Meryl'",
+            IntroCombat: "You run into some hostile creatures while you and Meryl go searching for her friends. She really knows how to handle herself in a fight. You on the other hand seem to have trouble with the 'point end goes this way' part.",
+
         },
         UI: {
             Scraps: "You have {0} scraps.\n",
@@ -30,9 +27,10 @@ var GameText = {
 
         // When I actually set up data collection for stuff
         // I should have a disclaimer for it
-        DataCollectionDisclaimer: 'Adway does not collect any data about ' +
-            'any players or their game state.',
+        DataCollectionDisclaimer: 'Adway does not collect any data about any players or their game state.',
+        
         AchievementText: {
+            Recieved: "You have earned the achievement: {0} - {1}",
             Scraps: {
                 Names: [
                     'What the Scrap?', 

@@ -15,10 +15,9 @@ class EventBoard {
         this.EventTypes = [
             "TEST_EVENT",
             "SCRAPS_RECIEVED",
-            "METAL_RECIEVED",
-            "LEATHER_RECIEVED",
-            "CLOTH_RECIEVED",
             "COMBAT_SWING", // Currently Source, Dest, swing size
+            "ADDON_EVENT", // Maybe makes it easy for script devs to hook in
+            "GAME_TICK",
         ];
 
         // Map of event types, will contain callbacks for said events
