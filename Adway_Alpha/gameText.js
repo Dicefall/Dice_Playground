@@ -5,7 +5,7 @@
 // to be evaluated later.
 
 // To add new language support, copy the base english in it's entirety
-// Translate what is in the quotes, comments will include information
+// Translate only what is in the quotes, comments will include information
 // such as which dynamic values belong to what.
 
 var GameText = {
@@ -18,7 +18,9 @@ var GameText = {
             IntroCombat: "You run into some hostile creatures while you and Meryl go searching for her friends. She really knows how to handle herself in a fight. You on the other hand seem to have trouble with the 'point end goes this way' part.",
 
         },
+
         UI: {
+            // These should be obvious.
             Scraps: "You have {0} scraps.\n",
             Metal: "You have {0} metal plates.\n",
             Leather: "You have {0} leather hides.\n",
@@ -28,8 +30,9 @@ var GameText = {
         // When I actually set up data collection for stuff
         // I should have a disclaimer for it
         DataCollectionDisclaimer: 'Adway does not collect any data about any players or their game state.',
-        
+
         AchievementText: {
+            // 0 is name, 1 is criteria/description
             Recieved: "You have earned the achievement: {0} - {1}",
             Scraps: {
                 Names: [

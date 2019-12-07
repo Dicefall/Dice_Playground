@@ -97,22 +97,22 @@ function UpdateUIElements(){
 
     // Resource counter
     Lookup.UIElements.ScrapCounter.innerHTML = ParseGameText(
-        GameText.English.UI.Scraps,
+        GameText[Game.Settings.Language].UI.Scraps,
         formatNumber(Game.Resources.Scraps)
     );
 
     Lookup.UIElements.MetalCounter.innerHTML = ParseGameText(
-        GameText.English.UI.Metal,
+        GameText[Game.Settings.Language].UI.Metal,
         formatNumber(Game.Resources.Metal)
     );
 
     Lookup.UIElements.LeatherCounter.textContent = ParseGameText(
-        GameText.English.UI.Leather,
+        GameText[Game.Settings.Language].UI.Leather,
         formatNumber(Game.Resources.Leather)
     );
 
     Lookup.UIElements.ClothCounter.textContent = ParseGameText(
-        GameText.English.UI.Cloth,
+        GameText[Game.Settings.Language].UI.Cloth,
         formatNumber(Game.Resources.Cloth)
     );
 
@@ -330,6 +330,7 @@ function spawnEncounter(){
 function StoryControl(){
 
     switch (Game.Stats.StoryState.StoryStage) {
+        // Very first intro text
         case 0:
             console.log(ParseGameText(GameText[Game.Settings.Language].Story.Intro));
 
@@ -343,6 +344,7 @@ function StoryControl(){
                     StoryControl
                 )
             break;
+        // Get some resources, lets people look around a bit
         case 1:
             if (Game.Resources.Scraps >= 30) {
                 console.log(ParseGameText(GameText[Game.Settings.Language].Story.FoundMeryl));
@@ -354,7 +356,7 @@ function StoryControl(){
                 
                 Game.Stats.StoryState.StoryStage++;
                 
-                // Wait 15 seconds of walking around doing nothing
+                // Wait 5 seconds of walking around doing nothing
                 // Give player some time to look around before starting combat
                 window.setTimeout(function() {
                     allEvents.queueEvent("TEST_EVENT");
@@ -366,13 +368,21 @@ function StoryControl(){
                     StoryControl
                 )
             }
-            
             break;
+        // Intro to combat
         case 2:
             console.log(ParseGameText(GameText[Game.Settings.Language].Story.IntroCombat));
-            window.setTimeout(function() {
-                allEvents.queueEvent("TEST_EVENT");
-            }, 5000);
+
+            Game.Stats.StoryState.StoryStage++;
+
+            // Last current stage
+            allEvents.removeEvent(
+                Game.Stats.StoryState.StoryControlID);
+            break;
+        // Post first combat, introduce scaling
+        case 3:
+            // nothing here yet
+            break;
         default:
             // nothing to do here
     }

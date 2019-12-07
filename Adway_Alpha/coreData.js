@@ -202,6 +202,7 @@ class GameData {
         // Enemy scaling factors
         this.WorldZoneScaleFactor = 2;
         this.WorldCellScaleFactor = 0.021;
+        this.WorldResourceScaleFactor = 0; // TODO something?
 
         // Levelling constants
         this.LevelScaleFactor = 1.1;
@@ -251,9 +252,9 @@ class GameData {
 
                         var recieveText = ParseGameText(
                             ParseGameText(
-                                GameText['English'].AchievementText.Recieved,
-                                GameText['English'].AchievementText.Scraps.Names[Game.Achievements['Scraps']],
-                                GameText['English'].AchievementText.Scraps.Criteria),
+                                GameText[Game.Settings.Language].AchievementText.Recieved,
+                                GameText[Game.Settings.Language].AchievementText.Scraps.Names[Game.Achievements['Scraps']],
+                                GameText[Game.Settings.Language].AchievementText.Scraps.Criteria),
                             nextTier);
 
                         console.log(recieveText);
