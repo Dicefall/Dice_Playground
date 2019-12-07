@@ -18,6 +18,9 @@ class EventBoard {
             "COMBAT_SWING", // Currently Source, Dest, swing size
             "ADDON_EVENT", // Maybe makes it easy for script devs to hook in
             "GAME_TICK",
+            "ZONE_CLEAR",
+            "CELL_CLEAR",
+            "ENEMY_DEFEATED",
         ];
 
         // Map of event types, will contain callbacks for said events
