@@ -13,7 +13,10 @@ function mainLoop() {
         spawnEncounter();
     }
 
-    mainCombat();
+    // check if we should be doing combat
+    if (Game.GameState == "CORE") {
+        mainCombat();
+    }
 
     // Update UI
     UpdateUIElements();
@@ -38,33 +41,26 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
-function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding){
-    if(!isCompounding) {
-        // Keep other ones in case something goes wrong
-        //return baseCost * multiBuyCount + (costScaling * (multiBuyCount * (multiBuyCount + 1)) / 2);
-        //return (multiBuyCount / 2) * ((2 * baseCost) + costScaling * (multiBuyCount - 1));
-        //return multiBuyCount * (multiBuyCount * costScaling + (costScaling + baseCost * 2)) / 2; //broken
-
-        return (multiBuyCount * multiBuyCount * costScaling - multiBuyCount * costScaling + 2 * baseCost * multiBuyCount) / 2;
-
-        // all should simplify to: (NND - ND + 2BN) / 2
-        // var taketwo = (N * N * D - N * D + 2*B*N) / 2;
+function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) {
+    if (!isCompounding) {
+        // simplified formula: (NND - ND + 2BN) / 2
+        // N (ND - D + 2BN) / 2
+        return multiBuyCount * (multiBuyCount * costScaling - costScaling + 2 * baseCost) / 2;
+        //return (multiBuyCount * multiBuyCount * costScaling - multiBuyCount * costScaling + 2 * baseCost * multiBuyCount) / 2;
+    } else {
+        // S = A * (1 - r^n) / (1 - r)
+        return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
     }
-
-    return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
 }
 
 function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
+
+    // Take multibuy cost formula, solve for N instead of S
     if (!isCompounding) {
-        //(NND - ND + 2BN) / 2 = totalcost
-        // solve for quadratic and floor it
-        // N = D - 2B + sqrt(4BB + DD + 8DV) / 2D
         return Math.floor(
-            (costScaling - (2 * baseCost) + Math.sqrt(Math.pow(2*baseCost - costScaling, 2) + (8 * costScaling * totalResource))) / 2
+            (costScaling - (2 * baseCost) + Math.sqrt(Math.pow(2 * baseCost - costScaling, 2) + (8 * costScaling * totalResource))) / 2
         );
     } else {
-
-        //toBuy = Math.floor(log10(((resourcesAvailable / (start * Math.pow(price[1], currentOwned))) * (price[1] - 1)) + 1) / log10(price[1]));
         return Math.floor(Math.log(1 - (1 - costScaling) * totalResource / baseCost) / Math.log(costScaling));
 
     }
@@ -74,7 +70,7 @@ function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
 
 // Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number) {
-    
+
     // Options are:
     // Scientific, Engineering, Log, 
 
@@ -87,11 +83,11 @@ function formatNumber(number) {
     // Get base and exponent
     // Turns into: mantissa * 10 ^ exponent
     var exponent = Math.floor(Math.log10(number));
-    var mantissa = number / Math.pow(10,exponent);
+    var mantissa = number / Math.pow(10, exponent);
 
     // Clean up weird float precision for numbers less than 10k
     if (exponent <= 3) return Math.floor(number);
-    
+
     switch (Game.Settings.NumberNotation) {
         case 'Scientific':
             return mantissa.toFixed(2) + 'e' + exponent.toString();
@@ -101,7 +97,7 @@ function formatNumber(number) {
             return mantissa.toFixed(2)
         case 'Engineering':
             var precision = exponent % 3;
-            return (mantissa * (Math.pow(10,precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
+            return (mantissa * (Math.pow(10, precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
         case 'Log':
             return 'e' + Math.log10(number).toFixed(2);
         default:
@@ -125,7 +121,7 @@ var suffices = [
 ];
 */
 
-function UpdateUIElements(){
+function UpdateUIElements() {
 
     // Resource counter
     Lookup.UIElements.ScrapCounter.innerHTML = ParseGameText(
@@ -193,7 +189,7 @@ function loadGameFromLocal() {
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
 }
 
-function removeLocalSave(){
+function removeLocalSave() {
     var result = window.confirm('Are you sure you want to delete your save?');
     if (result) Game = new GameStore();
 }
@@ -288,27 +284,27 @@ function mainCombat() {
             }
 
             nextActor.CurrentTurnOrder += 10000;
-        }
 
-        // Check for dead people and end of fight bits here
-
-        // Check to see if all heroes are dead
-        var partyKill = true;
-        Game.Heroes.forEach(hero => {
-            if (hero.isAlive === true) {
-                partyKill = false;
+            // Check for dead people
+            // Check to see if all heroes are dead
+            var partyKill = true;
+            Game.Heroes.forEach(hero => {
+                if (hero.isAlive === true) {
+                    partyKill = false;
+                }
+            });
+            if (partyKill) {
+                Game.GameState = "PARTY_WIPE"
+                break;
             }
-        });
-        if (partyKill) {
-            // TODO: something when party dies
-            break;
-        }
+        }        
+        //end of fight bits here
 
         // Check to see if enemies are dead
         if (Game.Enemies[0].HealthCurr <= 0) {
             Game.Resources.XP += 20;
             allEvents.queueEvent("ENEMY_DEFEATED");
-            Game.Enemies.splice(0,1);
+            Game.Enemies.splice(0, 1);
         }
 
         // No enemies left, cell over
@@ -324,7 +320,7 @@ function mainCombat() {
                 Game.World.CurrentCell = 1;
                 allEvents.queueEvent("ZONE_CLEAR");
             }
-        spawnEncounter();
+            spawnEncounter();
         }
 
     } while (nextActor != null)
@@ -339,23 +335,23 @@ function recalcStats() {
         hero.Attack = 10; // no attack mods yet
         hero.HealthMax = 100; // no health mods yet
 
-        hero.HealthCurr = Math.min(hero.HealthCurr,hero.HealthMax);
+        hero.HealthCurr = Math.min(hero.HealthCurr, hero.HealthMax);
     })
 }
 
-function startWorldZone(){} // TODO: more complicated zone spawn
+function startWorldZone() { } // TODO: more complicated zone spawn
 
-function spawnMap(){}
+function spawnMap() { }
 
-function spawnEncounter(){
-    
+function spawnEncounter() {
+
     // TODO: make it more fancy, for now just spawn goblins
     Game.Enemies.push(new Creature("Goblin"));
-    
+
 }
 
 // ----------------------------------------------------------------------------
-function StoryControl(){
+function StoryControl() {
 
     switch (Game.Stats.StoryState.StoryStage) {
         // Very first intro text
@@ -365,8 +361,8 @@ function StoryControl(){
             Game.Stats.StoryState.StoryStage++;
             allEvents.removeEvent(
                 Game.Stats.StoryState.StoryControlID);
-            
-            Game.Stats.StoryState.StoryControlID = 
+
+            Game.Stats.StoryState.StoryControlID =
                 allEvents.registerListener(
                     Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
                     StoryControl
@@ -381,20 +377,20 @@ function StoryControl(){
 
                 allEvents.removeEvent(
                     Game.Stats.StoryState.StoryControlID);
-                
+
                 Game.Stats.StoryState.StoryStage++;
-                
+
                 // Wait 5 seconds of walking around doing nothing
                 // Give player some time to look around before starting combat
-                window.setTimeout(function() {
+                window.setTimeout(function () {
                     allEvents.queueEvent("TEST_EVENT");
                 }, 5000);
 
-                Game.Stats.StoryState.StoryControlID = 
-                allEvents.registerListener(
-                    Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
-                    StoryControl
-                )
+                Game.Stats.StoryState.StoryControlID =
+                    allEvents.registerListener(
+                        Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
+                        StoryControl
+                    )
             }
             break;
         // Intro to combat
@@ -402,6 +398,7 @@ function StoryControl(){
             console.log(ParseGameText(GameText[Game.Settings.Language].Story.IntroCombat));
 
             Game.Stats.StoryState.StoryStage++;
+            Game.GameState = "CORE";
 
             // Last current stage
             allEvents.removeEvent(
@@ -412,21 +409,21 @@ function StoryControl(){
             // nothing here yet
             break;
         default:
-            // nothing to do here
+        // nothing to do here
     }
 }
 
-window.onload = function() {
-    
+window.onload = function () {
+
     // TODO: Load game and set visual state
-        
+
     // Story Controller
-    Game.Stats.StoryState.StoryControlID = 
+    Game.Stats.StoryState.StoryControlID =
         allEvents.registerListener(
             "TEST_EVENT",
             StoryControl
         )
-    
+
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
     // Queue autosave

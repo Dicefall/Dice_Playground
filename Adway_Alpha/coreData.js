@@ -108,6 +108,12 @@ class CreatureTemplate {
     }
 }
 
+class Aura {
+    constructor(target) {
+        this.owner = target;
+    }
+}
+
 class PlayerData {
 
     constructor() {
@@ -153,11 +159,14 @@ class PlayerData {
             // Earned
             Scraps: 0,
             Metal: 0,
-            
         };
 
         this.Stats = {
-            GameVersion: "NaNi",
+            GameVersion: {
+                Major: 0,
+                Minor: 1,
+                Patch: 0,
+            },
             LastUpdateTime: 0,
             StoryState: {
                 StoryStage: 0,
@@ -220,6 +229,15 @@ class GameData {
             "SCRAPS_RECIEVED",
             "TEST_EVENT",
         ];
+
+        //Game States
+        this.GameStates = [
+            "PAUSED",
+            "PRE_COMBAT",
+            "CORE",
+            "PARTY_WIPE",
+            "TEST",
+        ]
 
         // Not the most elegant but all of the achievement stuff goes here
         this.AchievementData = {
