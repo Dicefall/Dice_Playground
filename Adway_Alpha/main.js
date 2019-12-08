@@ -27,7 +27,7 @@ function mainLoop() {
 
 // Utility Functions
 
-// Get a hero based on it's name, might be useful one day?
+// Get a hero based on it's name
 function getHeroByName(heroName) {
 
     var toReturn = null;
@@ -41,6 +41,7 @@ function getHeroByName(heroName) {
     return toReturn;
 }
 
+// The cost to buy multiples of buildings.
 function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) {
     if (!isCompounding) {
         // simplified formula: (NND - ND + 2BN) / 2
@@ -53,6 +54,7 @@ function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) 
     }
 }
 
+// Find out the most one can afford with given resources
 function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
 
     // Take multibuy cost formula, solve for N instead of S
@@ -65,8 +67,6 @@ function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
 
     }
 }
-
-// Check if selected actor is actually a hero
 
 // Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number) {
@@ -105,22 +105,6 @@ function formatNumber(number) {
     }
 }
 
-/* 'Standard' Suffixes
-var suffices = [
-	'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud',
-    'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Od', 'Nd', 'V', 'Uv', 'Dv',
-    'Tv', 'Qav', 'Qiv', 'Sxv', 'Spv', 'Ov', 'Nv', 'Tg', 'Utg', 'Dtg', 'Ttg',
-    'Qatg', 'Qitg', 'Sxtg', 'Sptg', 'Otg', 'Ntg', 'Qaa', 'Uqa', 'Dqa', 'Tqa',
-    'Qaqa', 'Qiqa', 'Sxqa', 'Spqa', 'Oqa', 'Nqa', 'Qia', 'Uqi', 'Dqi',
-    'Tqi', 'Qaqi', 'Qiqi', 'Sxqi', 'Spqi', 'Oqi', 'Nqi', 'Sxa', 'Usx',
-    'Dsx', 'Tsx', 'Qasx', 'Qisx', 'Sxsx', 'Spsx', 'Osx', 'Nsx', 'Spa',
-    'Usp', 'Dsp', 'Tsp', 'Qasp', 'Qisp', 'Sxsp', 'Spsp', 'Osp', 'Nsp',
-    'Og', 'Uog', 'Dog', 'Tog', 'Qaog', 'Qiog', 'Sxog', 'Spog', 'Oog',
-    'Nog', 'Na', 'Un', 'Dn', 'Tn', 'Qan', 'Qin', 'Sxn', 'Spn', 'On',
-    'Nn', 'Ct', 'Uc'
-];
-*/
-
 function UpdateUIElements() {
 
     // Resource counter
@@ -134,7 +118,7 @@ function UpdateUIElements() {
         formatNumber(Game.Resources.XP)
     );
 
-    // Turn order visual testing, health values for now
+    // Testing content, Hero health values for now
     Lookup.UIElements.MerylTurnOrder.textContent = ParseGameText(
         'Meryl HP: {0} / {1}',
         formatNumber(Math.max(getHeroByName('Meryl').HealthCurr), 0),
@@ -162,6 +146,7 @@ function UpdateUIElements() {
         formatNumber(Game.Enemies[0].HealthMax)
     );
 
+    // Text output for zone/cell display
     Lookup.UIElements.WorldStats.textContent = ParseGameText(
         'You are currently in the world at zone {0} and cell {1}',
         formatNumber(Game.World.CurrentZone),
@@ -191,7 +176,11 @@ function loadGameFromLocal() {
 
 function removeLocalSave() {
     var result = window.confirm('Are you sure you want to delete your save?');
-    if (result) Game = new GameStore();
+    if (result) {
+        window.localStorage.clear();
+        Game = new PlayerData();
+        window.location.reload();
+    }
 }
 // ----------------------------------------------------------------------------
 // Resources
@@ -416,6 +405,8 @@ function StoryControl() {
 window.onload = function () {
 
     // TODO: Load game and set visual state
+    // load game works, just leaving it out for testing
+    //loadGameFromLocal();
 
     // Story Controller
     Game.Stats.StoryState.StoryControlID =
@@ -427,7 +418,7 @@ window.onload = function () {
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
     // Queue autosave
-    //window.setInterval(,Game.Settings.AutoSaveFrequency);
+    window.setInterval(saveGameToLocal,Game.Settings.AutoSaveFrequency);
 
     allEvents.queueEvent("TEST_EVENT");
 };

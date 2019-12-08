@@ -108,6 +108,7 @@ class CreatureTemplate {
     }
 }
 
+// Expect the effects to be bound to owner
 class Aura {
     constructor(target) {
         this.owner = target;
@@ -237,7 +238,9 @@ class GameData {
             "CORE",
             "PARTY_WIPE",
             "TEST",
-        ]
+        ];
+
+        this.AuraDB = [];
 
         // Not the most elegant but all of the achievement stuff goes here
         this.AchievementData = {
