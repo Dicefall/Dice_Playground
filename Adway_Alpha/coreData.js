@@ -45,6 +45,10 @@ class Hero extends Actor {
         this.isAvailable = false;
 
         this.LevelMax = 10;
+        this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
+
+        // Storage will be either name or job ID and a number for level
+        this.JobLevels = [];
     }
 
     recalcStats() {
@@ -69,8 +73,6 @@ class Hero extends Actor {
         }
     }
 
-    //this.ExperienceRequirement = 100;
-    //this.ExperienceRequirementScaleFactor = 1.15;
     // -Class/job unlocks
     // --Class/job mastery points
 }
@@ -112,6 +114,21 @@ class CreatureTemplate {
 class Aura {
     constructor(target) {
         this.owner = target;
+
+
+    }
+}
+
+// Basic structure for classes/Jobs
+class Job {
+    constructor(name, atk, hp, spd){
+        this.Name = name;
+
+        this.JobAttackMod = atk;
+        this.JobHealthMod = hp;
+        this.JobSpeedMod = spd;
+
+        this.Requirements = [];
     }
 }
 
@@ -175,12 +192,10 @@ class PlayerData {
             },
         };
 
-        this.GameState = "PRE_COMBAT";
+        this.GameState = Lookup.GameStrings.GameStates.Core;
 
         // Settings
         this.Settings = {
-            // Languages supported, current list:
-            // English
             Language: 'English',
             GameSpeed: 100, // in MS
             AutoSaveFrequency: 30 * 60 * 1000, //30 minutes in millisconds
@@ -206,9 +221,17 @@ class GameData {
             HerschelTurnOrder: document.querySelector('#HershelOrder'),
             EnemyHealth: document.querySelector('#enemyHealth'),
             WorldStats: document.querySelector('#WorldStats'),
+            PartyStatus: document.querySelector('#partyStatus'),
         };
+        
+        // Supported languages
+        // Obviously only english now but support for more exists
+        this.Languages = [
+            "English",
+        ]
 
         // Enemy Archtypes
+        // Attack, HP, Speed, ...
         this.Bestiary = [
             new CreatureTemplate('Goblin', 1, 1, 1),
             new CreatureTemplate('Dragon', 2, 5, 1.2),
@@ -216,9 +239,9 @@ class GameData {
         ];
 
         // Enemy scaling factors
-        this.WorldZoneScaleFactor = 2;
-        this.WorldCellScaleFactor = 0.021;
-        this.WorldResourceScaleFactor = 0; // TODO something?
+        this.WorldZoneScaleFactor = 2; // Double enemy stats each new zone
+        this.WorldCellScaleFactor = 0.021; // 2% per cell scaling
+        this.WorldResourceScaleFactor = 0; // TODO something? Should scale
 
         // Levelling constants
         this.LevelScaleFactor = 1.1;
@@ -231,16 +254,29 @@ class GameData {
             "TEST_EVENT",
         ];
 
-        //Game States
-        this.GameStates = [
-            "PAUSED",
-            "PRE_COMBAT",
-            "CORE",
-            "PARTY_WIPE",
-            "TEST",
+        // Databases for spells/abilities/etc.
+        // TODO: Figure out how I want to handle this
+        this.AuraDB = [];
+        this.AbilityDB = [];
+
+        this.JobsDB = [
+            new Job("Wanderer",1,1,1),
         ];
 
-        this.AuraDB = [];
+        // For internal strings only. Not needed but lets the browser throw
+        // errors if I've made a mistake elsewhere. Strings easier to debug
+        // Anything being displayed to the player should be in gameText.js
+        this.GameStrings = {
+            // Game state control
+            // Not using all caps case because I think it looks ugly
+            // Might change my stance on that who knows
+            GameStates: {
+                Paused: "Paused",
+                PartyWipe: "Party_Wipe",
+                Core: "Core",
+                PreCombat: "Pre_Combat", // Not sure what this is for yet
+            },
+        }
 
         // Not the most elegant but all of the achievement stuff goes here
         this.AchievementData = {
@@ -252,11 +288,6 @@ class GameData {
                 // Scraps
                 for (var i = 0; i < Game.Achievements['Scraps']; i++) {
                     newTotal += Lookup.AchievementData.Scraps.TierValues[i];
-                }
-        
-                // Metal
-                for (var i = 0; i < Game.Achievements['Metal']; i++) {
-                    newTotal += Lookup.AchievementData.Metal.TierValues[i];
                 }
         
                 Game.Achievements.TotalScore = newTotal;
@@ -291,31 +322,9 @@ class GameData {
                     }
                 }
             ),
-        
-            Metal: new TieredAchievement(
-                [10, 25, 50, 100, 1000],
-                [1, 1, 2, 2, 5],
-                "SCRAPS_RECIEVED",
-                function () {
-        
-                    if (Game.Achievements['Metal'] >= Lookup.AchievementData.Metal.TierBreakpoints.length) {
-                        allEvents.removeEvent(Lookup.AchievementData['Metal'].HandlerID);
-                        return;
-                    }
-
-                    let nextTier = Lookup.AchievementData.Metal.TierBreakpoints[Game.Achievements['Metal']];
-        
-                    if (Game.Resources.Metal >= nextTier) {
-                        console.log(ParseGameText("Achievement recieved: Acquire {0} Metal!", nextTier));
-        
-                        Game.Achievements['Metal']++;
-                        Lookup.AchievementData.CalculateTotal();
-                    }
-                }
-            ),
         }
     }
 }
 
+const Lookup = new GameData();
 var Game = new PlayerData();
-var Lookup = new GameData();

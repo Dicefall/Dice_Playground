@@ -11,6 +11,10 @@
 var GameText = {
     English: {
         Story: {
+            // Going for the theme of every chapter follows "A Day Without"
+            ChapterTitles: [
+                "A Yesterday",
+            ],
             Intro: 'You find yourself alone in a field surrounded by the aftermath of a battle. You remember none of it. The world is frightening, perhaps you should pick up some scraps. You never know what you might find.',
             // This is awful, rewrite
             FoundMeryl: "You finally find someone else that's alive on this battlefield. She's looking around and staring intently into the air. She looks in different places constantly but always with an intense focus. She sees you and begins to walk over to you.",
@@ -30,7 +34,9 @@ var GameText = {
 
         // When I actually set up data collection for stuff
         // I should have a disclaimer for it
-        DataCollectionDisclaimer: 'Adway does not collect any data about any players or their game state.',
+        DataCollectionDisclaimer: 'Adway does not collect any data about any players or their game state. For now.',
+
+        SaveReset: "Are you sure you want to delete your save? This is a permenant reset and your save will not be recoverable.",
 
         AchievementText: {
             // 0 is name, 1 is criteria/description
@@ -45,16 +51,6 @@ var GameText = {
                 ],
                 Criteria: 'Acquire a total of {0} scraps',
             },
-            Metal: {
-                Names: [
-                    'Metalurgy', 
-                    'Metalitosis',
-                    'Gala at the Metal',
-                    'Metalpolis',
-                    'Can\'t spell team without Metal'
-                ],
-                Criteria: 'Acquire a total of {0} Metal',
-            }
         },
         Special: {
             Thanks: [
@@ -62,6 +58,12 @@ var GameText = {
                 'Ghostfrog for a lot of math help'
             ]
         },
+    },
+
+    Icons: {
+        Skull: '<i class="fas fa-skull"></i>',
+        Infinity: '<i class="fas fa-infinity"></i>',
+        HeartBeat: '<i class="fas fa-heartbeat"></i>',
     },
 }
 

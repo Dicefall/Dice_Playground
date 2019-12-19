@@ -75,7 +75,7 @@ function formatNumber(number) {
     // Scientific, Engineering, Log, 
 
     // Check for infinite:
-    if (!isFinite(number)) return '<i class="fas fa-infinity"></i>';
+    if (!isFinite(number)) return GameText.Icons.Infinity;
 
     // Negative
     if (number < 0) return '-' + formatNumber(-number);
@@ -88,6 +88,7 @@ function formatNumber(number) {
     // Clean up weird float precision for numbers less than 10k
     if (exponent <= 3) return Math.floor(number);
 
+    // For larger numbers start dealing with notations
     switch (Game.Settings.NumberNotation) {
         case 'Scientific':
             return mantissa.toFixed(2) + 'e' + exponent.toString();
@@ -152,6 +153,12 @@ function UpdateUIElements() {
         formatNumber(Game.World.CurrentZone),
         formatNumber(Game.World.CurrentCell),
     );
+
+    // Party status indicator
+    Lookup.UIElements.PartyStatus.innerHTML = ParseGameText(
+        "Party status: {0}", 
+        (Game.GameState == "PARTY_WIPE") ? GameText.Icons.Skull : GameText.Icons.HeartBeat
+    );
 }
 
 // Saving Functions, currently unused
@@ -171,15 +178,26 @@ function saveGameToLocal() {
 }
 
 function loadGameFromLocal() {
+    // TODO: Deal with version upgrading here somewhere
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
+
 }
 
 function removeLocalSave() {
-    var result = window.confirm('Are you sure you want to delete your save?');
+    var result = window.confirm(GameText[Game.Settings.Language].SaveReset);
     if (result) {
+        
+        // Clean up all of the event listeners
+        allEvents.clearAllEvents();
+
+        // Delete localstorage save
         window.localStorage.clear();
+
+        // Reset the base game object
         Game = new PlayerData();
-        window.location.reload();
+        
+        // Start up the game again
+        newPage();
     }
 }
 // ----------------------------------------------------------------------------
@@ -253,7 +271,7 @@ function mainCombat() {
         if (nextActor != null) {
 
             // See if it's a hero
-            if (getHeroByName(nextActor.Name) != null) {
+            if (nextActor instanceof Hero) {
                 // TODO simple combat for now, something something AI
                 // Lots to change, just get something basic working
                 Game.Enemies[0].HealthCurr = Math.max(0, Game.Enemies[0].HealthCurr - nextActor.Attack);
@@ -402,8 +420,7 @@ function StoryControl() {
     }
 }
 
-window.onload = function () {
-
+function newPage() {
     // TODO: Load game and set visual state
     // load game works, just leaving it out for testing
     //loadGameFromLocal();
@@ -413,7 +430,7 @@ window.onload = function () {
         allEvents.registerListener(
             "TEST_EVENT",
             StoryControl
-        )
+        );
 
     // Queue up main loop 
     window.setInterval(mainLoop, Game.Settings.GameSpeed);
@@ -421,4 +438,6 @@ window.onload = function () {
     window.setInterval(saveGameToLocal,Game.Settings.AutoSaveFrequency);
 
     allEvents.queueEvent("TEST_EVENT");
-};
+}
+
+window.onload = newPage();
