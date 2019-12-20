@@ -73,7 +73,7 @@ class EventBoard {
 
     clearAllEvents() {
         for (var eventName in this.EventTypes) {
-            this.RootBoard.get(eventName) = null;
+            this.RootBoard.get(eventName).clear();
         }
     }
 
