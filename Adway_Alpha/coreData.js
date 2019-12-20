@@ -1,6 +1,7 @@
 // All of the game's core classes and data will be found here.
 // TODO: Need some kind of copyright notice or something
 
+// Achievements
 class Achievement {
     constructor(listenerType, handlerFunc) {
 
@@ -20,6 +21,7 @@ class TieredAchievement extends Achievement {
     }
 }
 
+// Actors, pretty much anyone that will end up in combat
 class Actor {
     constructor(name) {
         this.Name = name;
@@ -101,6 +103,7 @@ class Creature extends Actor {
     }
 }
 
+// Templates for creatures
 class CreatureTemplate {
     constructor(name, attack, health, speed, loot) {
         this.Name = name;
@@ -110,7 +113,9 @@ class CreatureTemplate {
     }
 }
 
-// Expect the effects to be bound to owner
+// Spells and abilities
+// Auras are buffs/debuffs, basically anything that gets attached to an actor
+// and will effect them in some way
 class Aura {
     constructor(target) {
         this.owner = target;
@@ -119,16 +124,30 @@ class Aura {
     }
 }
 
+// Job Abilities, Will limit this to active ones for now
+class Ability {
+    constructor(name){
+
+        // For some flavor
+        this.Name = name;
+    }
+}
+
 // Basic structure for classes/Jobs
 class Job {
-    constructor(name, atk, hp, spd){
+    constructor(name, atk, hp, spd, spellIDs, AbilityAIFunc, requirementFuncs){
         this.Name = name;
 
         this.JobAttackMod = atk;
         this.JobHealthMod = hp;
         this.JobSpeedMod = spd;
 
-        this.Requirements = [];
+        this.Requirements = requirementFuncs;
+
+        this.UsableSpells = spellIDs;
+
+        this.JobAI = AbilityAIFunc;
+
     }
 }
 

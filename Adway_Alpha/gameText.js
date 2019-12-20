@@ -8,6 +8,15 @@
 // Translate only what is in the quotes, comments will include information
 // such as which dynamic values belong to what.
 
+class JobDescription {
+    constructor(flavourText, abilityText, masteryText, requirementText) {
+        this.JobFlavour = flavourText;
+        this.Abilities = abilityText;
+        this.Mastery = masteryText;
+        this.Requirements = requirementText;
+    }
+}
+
 var GameText = {
     English: {
         Story: {
@@ -21,6 +30,17 @@ var GameText = {
             MerylFindsYou: "As she gets close to you she begins to talk. 'That's a first, I didn't think anyone else would have made it this time. You probably don't remember anything from before and strangely, neither do I. Well I do but you see, I don't. No matter, I'm looking for some others that should be out here too.' She looks at the heaps of scrap you're carring. 'Good idea, lets pick up some more of those while we go looking. Oh and by the way, I'm Meryl'",
             IntroCombat: "You run into some hostile creatures while you and Meryl go searching for her friends. She really knows how to handle herself in a fight. You on the other hand seem to have trouble with the 'point end goes this way' part.",
 
+        },
+        
+        // Game text for Job related information. Job descriptions, requirements
+        // ability unlock descriptions, and mastery descriptions
+        JobDescriptions: {
+            Wanderer: new JobDescription(
+                "One who wanders, unsure of why, or what they are looking for. Generalist, good place to start.",
+                [],
+                "",
+                "None"
+            ),
         },
 
         UI: {
