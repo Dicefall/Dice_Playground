@@ -1,9 +1,15 @@
 function mainLoop() {
+    // Do Time stuff
+    var currTime = Date.now();
+    Game.Resources.Time += (currTime - Game.Stats.LastUpdateTime);
+    Game.Stats.LastUpdateTime = currTime;
+
+    if (Game.Resources.Time < Lookup.GameLoopIntervalBase) return;
+
+    Game.Resources.Time -= Lookup.GameLoopIntervalBase;
+
     // Resource gathering
-
     generateResources();
-
-    // Scrap conversion
 
     // Combat
     // For Testing
@@ -14,15 +20,19 @@ function mainLoop() {
     }
 
     // check if we should be doing combat
-    if (Game.GameState == "CORE") {
+    if (Game.GameState == Lookup.GameStrings.GameStates.Core) {
         mainCombat();
+    } else if (Game.GameState == Lookup.GameStrings.GameStates.PartyWipe) {
+        // whatever is supposed to happen while party is recovering
+        
+        // check for whatever moves party back into core state
     }
 
     // Update UI
     UpdateUIElements();
-
-    Game.Stats.LastUpdateTime = new Date().getTime();
     allEvents.queueEvent("GAME_TICK");
+
+    // Offline time triggers extra main loops or something
 }
 
 // Utility Functions
@@ -47,7 +57,6 @@ function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) 
         // simplified formula: (NND - ND + 2BN) / 2
         // N (ND - D + 2BN) / 2
         return multiBuyCount * (multiBuyCount * costScaling - costScaling + 2 * baseCost) / 2;
-        //return (multiBuyCount * multiBuyCount * costScaling - multiBuyCount * costScaling + 2 * baseCost * multiBuyCount) / 2;
     } else {
         // S = A * (1 - r^n) / (1 - r)
         return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
@@ -122,28 +131,31 @@ function UpdateUIElements() {
     // Testing content, Hero health values for now
     Lookup.UIElements.MerylTurnOrder.textContent = ParseGameText(
         'Meryl HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Meryl').HealthCurr), 0),
+        formatNumber(Math.max(getHeroByName('Meryl').HealthCurr, 0)),
         formatNumber(getHeroByName('Meryl').HealthMax)
     );
+    Lookup.UIElements.MerylHPBar.value = Math.max(getHeroByName('Meryl').HealthCurr, 0);
+    Lookup.UIElements.MerylHPBar.max = getHeroByName('Meryl').HealthMax;
+    
     Lookup.UIElements.ChaseTurnOrder.textContent = ParseGameText(
         'Chase HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Chase').HealthCurr), 0),
+        formatNumber(Math.max(getHeroByName('Chase').HealthCurr, 0)),
         formatNumber(getHeroByName('Chase').HealthMax)
     );
     Lookup.UIElements.TaliTurnOrder.textContent = ParseGameText(
         'Tali HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Tali').HealthCurr), 0),
+        formatNumber(Math.max(getHeroByName('Tali').HealthCurr, 0)),
         formatNumber(getHeroByName('Tali').HealthMax)
     );
     Lookup.UIElements.HerschelTurnOrder.textContent = ParseGameText(
         'Herschel HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Herschel').HealthCurr), 0),
+        formatNumber(Math.max(getHeroByName('Herschel').HealthCurr, 0)),
         formatNumber(getHeroByName('Herschel').HealthMax)
     );
     Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
         '{0} HP: {1} / {2}',
         Game.Enemies[0].Name,
-        formatNumber(Math.max(Game.Enemies[0].HealthCurr), 0),
+        formatNumber(Math.max(Game.Enemies[0].HealthCurr, 0)),
         formatNumber(Game.Enemies[0].HealthMax)
     );
 
@@ -175,11 +187,21 @@ function saveGameToLocal() {
     saveString = JSON.stringify(saveState);
 
     window.localStorage.setItem("ADWAY_Save", saveString);
+    console.log("AutoSaved");
 }
 
 function loadGameFromLocal() {
     // TODO: Deal with version upgrading here somewhere
     Game = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
+
+    // Beginning of offline time. Goal is to either do a super fast speed up version, or just give players a resource that they can use to benefit from the missing time. Initial thoughts are extra game ticks or something.
+    // Maximum of 30 days
+    var missingTime = Math.min(
+        Date.now() - Game.Stats.LastUpdateTime,
+        1000 * 60 * 60 * 24 * 30);
+    
+    Game.Stats.LastUpdateTime = Date.now();
+    Game.Resources.Time += missingTime;
 
 }
 
@@ -275,8 +297,6 @@ function mainCombat() {
                 // TODO simple combat for now, something something AI
                 // Lots to change, just get something basic working
                 Game.Enemies[0].HealthCurr = Math.max(0, Game.Enemies[0].HealthCurr - nextActor.Attack);
-                allEvents.queueEvent("COMBAT_SWING", nextActor.Name, Game.Enemies[0].Name, nextActor.Attack);
-
             } else {
                 var target;
                 do {
@@ -334,15 +354,11 @@ function mainCombat() {
 }
 
 // Who knows when stats will get into a weird state that needs to be reset
-function recalcStats() {
+function recalcHeroStats() {
 
     // Base stats basically
     Game.Heroes.forEach(hero => {
-        hero.Speed = 15; // No speed mods yet
-        hero.Attack = 10; // no attack mods yet
-        hero.HealthMax = 100; // no health mods yet
-
-        hero.HealthCurr = Math.min(hero.HealthCurr, hero.HealthMax);
+        hero.recalcStats();
     })
 }
 
@@ -357,6 +373,10 @@ function spawnEncounter() {
 
 }
 
+function OnPartyWipe() {
+    // reset level, equipment, whatever, start health regen
+}
+
 // ----------------------------------------------------------------------------
 function StoryControl() {
 
@@ -364,16 +384,18 @@ function StoryControl() {
         // Very first intro text
         case 0:
             console.log(ParseGameText(GameText[Game.Settings.Language].Story.Intro));
+            Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.Intro);
 
             Game.Stats.StoryState.StoryStage++;
             allEvents.removeEvent(
                 Game.Stats.StoryState.StoryControlID);
 
-            Game.Stats.StoryState.StoryControlID =
-                allEvents.registerListener(
-                    Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
-                    StoryControl
-                )
+                // Temp removed until tutorial stuff gets better
+            // Game.Stats.StoryState.StoryControlID =
+            //     allEvents.registerListener(
+            //         Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
+            //         StoryControl
+            //     )
             break;
         // Get some resources, lets people look around a bit
         case 1:
@@ -424,6 +446,7 @@ function newPage() {
     // TODO: Load game and set visual state
     // load game works, just leaving it out for testing
     //loadGameFromLocal();
+    // Fix in for now, get current time for brand new game
 
     // Story Controller
     Game.Stats.StoryState.StoryControlID =
@@ -432,12 +455,19 @@ function newPage() {
             StoryControl
         );
 
+    // Example for adding buttons
+    Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
+        getHeroByName('Meryl').LevelUp();
+        console.log("Level Up Button Pressed");
+    })
     // Queue up main loop 
-    window.setInterval(mainLoop, Game.Settings.GameSpeed);
+    Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);
     // Queue autosave
-    window.setInterval(saveGameToLocal,Game.Settings.AutoSaveFrequency);
+    Lookup.BookKeeping.AutoSaveFunctionID = window.setInterval(saveGameToLocal,Game.Settings.AutoSaveFrequency);
 
     allEvents.queueEvent("TEST_EVENT");
+
+    console.log(Game.Resources.Time);
 }
 
 window.onload = newPage();

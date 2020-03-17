@@ -6,23 +6,23 @@ class EventBoard {
         //EventBoard is a singleton
         if (typeof this.instance == "undefined"){
             this.instance = this;
+
+            this.EventTypes = [
+                "TEST_EVENT",
+                "SCRAPS_RECIEVED",
+                "ADDON_EVENT", // Maybe makes it easy for script devs to hook in
+                "GAME_TICK",
+                "ZONE_CLEAR",
+                "CELL_CLEAR",
+                "ENEMY_DEFEATED",
+            ];
+            
             this.init();
         }
 
     }
 
     init(){
-        this.EventTypes = [
-            "TEST_EVENT",
-            "SCRAPS_RECIEVED",
-            "COMBAT_SWING", // Currently Source, Dest, swing size
-            "ADDON_EVENT", // Maybe makes it easy for script devs to hook in
-            "GAME_TICK",
-            "ZONE_CLEAR",
-            "CELL_CLEAR",
-            "ENEMY_DEFEATED",
-        ];
-
         // Map of event types, will contain callbacks for said events
         // Before each individual board is a list of arguments it expects
         this.RootBoard = new Map();
@@ -51,6 +51,10 @@ class EventBoard {
 
     // Event happens, go and call each function
     queueEvent(eventType, ...restArgs){
+        if (!(this.EventTypes.includes(eventType))) {
+            console.log("Event type not supported: " + eventType);
+            return;
+        }
         this.RootBoard.get(eventType).forEach(element => {
             element.eventCB(...restArgs);
         });
@@ -72,9 +76,10 @@ class EventBoard {
     }
 
     clearAllEvents() {
-        for (var eventName in this.EventTypes) {
-            this.RootBoard.get(eventName).clear();
-        }
+        // for (var eventName in this.EventTypes) {
+        //     this.RootBoard.get(eventName).clear();
+        // }
+        this.init();
     }
 
 }

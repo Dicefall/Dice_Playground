@@ -5,6 +5,8 @@
 class Achievement {
     constructor(listenerType, handlerFunc) {
 
+        // Function for handling whatever the achievement needs
+        // Tracking info and granting it
         this.handlerFunc = handlerFunc;
         this.HandlerID = allEvents.registerListener(listenerType, handlerFunc);
     }
@@ -14,9 +16,13 @@ class TieredAchievement extends Achievement {
     constructor(rewardBreakpoints, rewardValues, handlerType, handlerFunc) {
         super(handlerType, handlerFunc);
 
+        // Breakpoints are the value being checked
+        // E.g. 50 for a "get 50 scraps" achievement
         this.TierBreakpoints = rewardBreakpoints;
         this.BreakpointEarned = 0;
 
+        // Rewards for each breakpoint
+        // Indexes should match breakpoints
         this.TierValues = rewardValues;
     }
 }
@@ -49,8 +55,13 @@ class Hero extends Actor {
         this.LevelMax = 10;
         this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
 
-        // Storage will be either name or job ID and a number for level
-        this.JobLevels = [];
+        this.Jobs = {
+            Wanderer: {
+                Level: 0,
+                JobXP: 0,
+                Mastery: false,
+            }
+        }
     }
 
     recalcStats() {
@@ -75,8 +86,6 @@ class Hero extends Actor {
         }
     }
 
-    // -Class/job unlocks
-    // --Class/job mastery points
 }
 
 class Creature extends Actor {
@@ -135,7 +144,7 @@ class Ability {
 
 // Basic structure for classes/Jobs
 class Job {
-    constructor(name, atk, hp, spd, spellIDs, AbilityAIFunc, requirementFuncs){
+    constructor(name, atk, hp, spd, spellIDs, AbilityAIFunc, requirementFuncs, baseAp){
         this.Name = name;
 
         this.JobAttackMod = atk;
@@ -148,9 +157,14 @@ class Job {
 
         this.JobAI = AbilityAIFunc;
 
+        this.APForLevel = baseAp;
+
     }
 }
 
+
+// This is it, the big player data structure. Anything that will get saved
+// will end up in here. 
 class PlayerData {
 
     constructor() {
@@ -170,6 +184,8 @@ class PlayerData {
             Cloth: 0,
 
             XP: 0,
+
+            Time: 0,
         };
 
         // Heroes
@@ -204,7 +220,7 @@ class PlayerData {
                 Minor: 1,
                 Patch: 0,
             },
-            LastUpdateTime: 0,
+            LastUpdateTime: new Date().getTime(),
             StoryState: {
                 StoryStage: 0,
                 StoryControlID: 0,
@@ -231,16 +247,20 @@ class PlayerData {
 class GameData {
     constructor() {
         // References to the HTML elements
+        // This will likely change as the ui gets built
         this.UIElements = {
             ScrapCounter: document.querySelector('#scrapDisplay'),
             XPCounter: document.querySelector('#xpDisplay'),
             MerylTurnOrder: document.querySelector('#MerylOrder'),
+            MerylHPBar: document.querySelector("#MerylHPBar"),
             ChaseTurnOrder: document.querySelector('#ChaseOrder'),
             TaliTurnOrder: document.querySelector('#TaliOrder'),
             HerschelTurnOrder: document.querySelector('#HershelOrder'),
             EnemyHealth: document.querySelector('#enemyHealth'),
             WorldStats: document.querySelector('#WorldStats'),
             PartyStatus: document.querySelector('#partyStatus'),
+            LevelUpButton: document.querySelector("#MerylLevelUp"),
+            LogDebugMessage: document.querySelector("#lastMessage"),
         };
         
         // Supported languages
@@ -266,6 +286,7 @@ class GameData {
         this.LevelScaleFactor = 1.1;
         this.ExperienceRequirement = 100;
         this.ExperienceRequirementScaleFactor = 1.15;
+        this.JobsAPScaleFactor = 5;
 
         this.StoryTriggers = [
             "TEST_EVENT",
@@ -342,7 +363,26 @@ class GameData {
                 }
             ),
         }
+
+        this.BookKeeping = {
+            MainFunctionID: 0,
+            AutoSaveFunctionID: 0,
+        }
+
+        // How frequently the game should be processing itself.
+        // This is different from the game speed in the player settings
+        // This will define how fast the underlying game players, the
+        // other setting will define how frequently the browser runs
+        // This also allows a way to hook into mechanics.
+        this.GameLoopIntervalBase = 100;
     }
+
+    // ConstructActorDisplay(actor) {
+    //     return `
+    //     <h1>${actor.Name}</h1>
+        
+    //     `
+    // }
 }
 
 const Lookup = new GameData();

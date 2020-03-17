@@ -127,3 +127,14 @@ function getMaxGeoBuy(baseCost, ratio, maxValue){
     return Math.log(1 - (1-R) * S / A) / Math.log(R);
 }
 
+function findAndClickKitten() {
+    // http://pastebin.com/HSUJVBiE doesn't work anymore
+    var els = null;
+    if ( (els = Molpy.Redacted.divElement) ) {
+        var btn = els[0].querySelectorAll('input')[0];
+        if (btn) {
+            console.log("Kitten time");
+            btn.click();
+        }
+    }
+}
