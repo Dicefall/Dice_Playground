@@ -132,6 +132,16 @@ function UpdateUIElements() {
     );
 
     // Testing content, Hero health values for now
+    Lookup.UIElements.PlayerOrder.innerHTML = ParseGameText(
+        '{0} HP: {1} / {2}',
+        Game.Hero.Name,
+        formatNumber(Math.max(Game.Hero.HealthCurr, 0)),
+        formatNumber(Game.Hero.HealthMax)
+    );
+
+    Lookup.UIElements.PlayerHpBar.value = Math.max(Game.Hero.HealthCurr,0);
+    Lookup.UIElements.PlayerHpBar.max = Game.Hero.HealthMax;
+
     Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
         '{0} HP: {1} / {2}',
         Game.Enemies[0].Name,
@@ -149,7 +159,7 @@ function UpdateUIElements() {
     // Party status indicator
     Lookup.UIElements.PartyStatus.innerHTML = ParseGameText(
         "Party status: {0}", 
-        (Game.GameState == "PARTY_WIPE") ? GameText.Icons.Skull : GameText.Icons.HeartBeat
+        (Game.GameState == Lookup.GameStrings.GameStates.PartyWipe) ? GameText.Icons.Skull : GameText.Icons.HeartBeat
     );
 }
 
@@ -227,11 +237,11 @@ function generateResources() {
 // Everything combat here, including class perks and anything else that needs
 // to be dealt with for combat.
 
-// Main Combat (rewrite this at some point)
+// Main Combat (expect a lot of re-writes and changes)
 function mainCombat() {
 
     // Advance turn cds
-    Game.Hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
+    Game.Hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + Game.Hero.Speed / 100);
 
     Game.Enemies.forEach(badguy => {
         badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
@@ -265,16 +275,56 @@ function mainCombat() {
             }
         }
 
-        fastestActor = readyActors.splice(fastestActor, 1);
+        // Pull best one out of list
+        fastestActor = readyActors.splice(fastestActor, 1)[0];
 
-        // Take turn
-        if (fastestActor.Name == "Hiro") {
-            // Is hero, attack enemy
+        // Check for dead actor
+        if (!fastestActor.isAlive) {continue;}
+
+        // Maybe change to attack specific
+        fastestActor.CurrentTurnOrder += 10000;
+
+        // Do attack
+        if (fastestActor instanceof Hero) {
+            // Is hero, do hero things
+            Game.Enemies[0].HealthCurr -= fastestActor.Attack;
+            if (Game.Enemies[0].HealthCurr <= 0) {
+                Game.Enemies[0].isAlive = false;
+            }
         } else {
-            // is enemy, attack hero
+            // Is not hero, do badguy things
+            Game.Hero.HealthCurr -= fastestActor.Attack;
+            if (Game.Hero.HealthCurr <= 0) {
+                Game.Hero.isAlive = false;
+            }
+        }
+    }
+
+    // Check for deaths
+    for (var i = 0; i < Game.Enemies.length; i++) {
+        if (!Game.Enemies[i].isAlive) {
+            Game.Enemies.splice(i,1);
+            i--;
+        }
+    }
+
+    // Check for cell clear
+    // TODO: XP values
+    if (Game.Enemies.length == 0) {
+        Game.Resources.XP += 25;
+        Game.World.CurrentCell++;
+
+        allEvents.queueEvent("CELL_CLEAR");
+
+        //Check for zone clear
+        // TODO: Different sized zones
+        if (Game.World.CurrentCell >= 100) {
+            Game.World.CurrentZone++;
+            Game.World.CurrentCell = 1;
+            allEvents.queueEvent("ZONE_CLEAR");
         }
 
-
+        spawnEncounter();
     }
 
 }
@@ -343,7 +393,8 @@ function newPage() {
 
     // Example for adding buttons
     Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
-        console.log("Level Up Button Pressed");
+        //console.log("Level Up Button Pressed");
+        Game.Hero.LevelUp();
     })
     // Queue up main loop 
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);
@@ -351,8 +402,6 @@ function newPage() {
     Lookup.BookKeeping.AutoSaveFunctionID = window.setInterval(saveGameToLocal,Game.Settings.AutoSaveFrequency);
 
     allEvents.queueEvent("TEST_EVENT");
-
-    console.log(Game.Resources.Time);
 }
 
 window.onload = newPage();

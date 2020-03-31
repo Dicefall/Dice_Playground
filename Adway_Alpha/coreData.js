@@ -50,8 +50,6 @@ class Hero extends Actor {
     constructor(name) {
         super(name);
 
-        this.isAvailable = false;
-
         this.LevelMax = 10;
         this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
 
@@ -247,16 +245,13 @@ class GameData {
         this.UIElements = {
             ScrapCounter: document.querySelector('#scrapDisplay'),
             XPCounter: document.querySelector('#xpDisplay'),
-            MerylTurnOrder: document.querySelector('#MerylOrder'),
-            MerylHPBar: document.querySelector("#MerylHPBar"),
-            ChaseTurnOrder: document.querySelector('#ChaseOrder'),
-            TaliTurnOrder: document.querySelector('#TaliOrder'),
-            HerschelTurnOrder: document.querySelector('#HershelOrder'),
+            PlayerOrder: document.querySelector('#PlayerOrder'),
+            PlayerHpBar: document.querySelector("#PlayerHP"),
             EnemyHealth: document.querySelector('#enemyHealth'),
             WorldStats: document.querySelector('#WorldStats'),
             PartyStatus: document.querySelector('#partyStatus'),
-            LevelUpButton: document.querySelector("#MerylLevelUp"),
             LogDebugMessage: document.querySelector("#lastMessage"),
+            LevelUpButton: document.querySelector('#PlayerLevelUp')
         };
         
         // Supported languages
@@ -266,7 +261,7 @@ class GameData {
         ]
 
         // Enemy Archtypes
-        // Attack, HP, Speed, ...
+        // name, attack, health, speed, loot
         this.Bestiary = [
             new CreatureTemplate('Goblin', 1, 1, 1),
             new CreatureTemplate('Dragon', 2, 5, 1.2),
