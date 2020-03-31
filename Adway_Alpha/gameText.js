@@ -20,7 +20,8 @@ class JobDescription {
 var GameText = {
     English: {
         Story: {
-            // Going for the theme of every chapter follows "A Day Without"
+            // Going for the theme of every chapter follows "A Day Without",
+            // Same for challenges eventually
             ChapterTitles: [
                 "A Yesterday",
             ],

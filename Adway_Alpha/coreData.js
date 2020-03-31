@@ -188,13 +188,9 @@ class PlayerData {
             Time: 0,
         };
 
-        // Heroes
-        this.Heroes = [
-            new Hero("Meryl"),
-            new Hero("Chase"),
-            new Hero("Tali"),
-            new Hero("Herschel")
-        ];
+        // Hero
+        // TODO: Figure out name situation
+        this.Hero = new Hero("Hiro");
 
         // List of currently alive enemies
         this.Enemies = [];
@@ -303,8 +299,7 @@ class GameData {
             new Job("Wanderer",1,1,1),
         ];
 
-        // For internal strings only. Not needed but lets the browser throw
-        // errors if I've made a mistake elsewhere. Strings easier to debug
+        // For internal strings only. Strings easier to debug
         // Anything being displayed to the player should be in gameText.js
         this.GameStrings = {
             // Game state control
@@ -378,10 +373,7 @@ class GameData {
     }
 
     // ConstructActorDisplay(actor) {
-    //     return `
-    //     <h1>${actor.Name}</h1>
-        
-    //     `
+    //  var actorElement = new DocumentFragment();
     // }
 }
 

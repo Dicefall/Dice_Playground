@@ -12,7 +12,7 @@ function mainLoop() {
     generateResources();
 
     // Combat
-    // For Testing
+    // At start queue up the first zone
     if (Game.World.CurrentZone == 0) {
         Game.World.CurrentZone++;
         Game.World.CurrentCell = 1;
@@ -39,6 +39,9 @@ function mainLoop() {
 
 // Get a hero based on it's name
 function getHeroByName(heroName) {
+
+    // Keeping in just in case, design change no longer used
+    return null;
 
     var toReturn = null;
 
@@ -129,29 +132,6 @@ function UpdateUIElements() {
     );
 
     // Testing content, Hero health values for now
-    Lookup.UIElements.MerylTurnOrder.textContent = ParseGameText(
-        'Meryl HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Meryl').HealthCurr, 0)),
-        formatNumber(getHeroByName('Meryl').HealthMax)
-    );
-    Lookup.UIElements.MerylHPBar.value = Math.max(getHeroByName('Meryl').HealthCurr, 0);
-    Lookup.UIElements.MerylHPBar.max = getHeroByName('Meryl').HealthMax;
-    
-    Lookup.UIElements.ChaseTurnOrder.textContent = ParseGameText(
-        'Chase HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Chase').HealthCurr, 0)),
-        formatNumber(getHeroByName('Chase').HealthMax)
-    );
-    Lookup.UIElements.TaliTurnOrder.textContent = ParseGameText(
-        'Tali HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Tali').HealthCurr, 0)),
-        formatNumber(getHeroByName('Tali').HealthMax)
-    );
-    Lookup.UIElements.HerschelTurnOrder.textContent = ParseGameText(
-        'Herschel HP: {0} / {1}',
-        formatNumber(Math.max(getHeroByName('Herschel').HealthCurr, 0)),
-        formatNumber(getHeroByName('Herschel').HealthMax)
-    );
     Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
         '{0} HP: {1} / {2}',
         Game.Enemies[0].Name,
@@ -251,106 +231,52 @@ function generateResources() {
 function mainCombat() {
 
     // Advance turn cds
-    Game.Heroes.forEach(hero => {
-        if (hero.isAlive) {
-            hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
-        }
-    });
+    Game.Hero.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + hero.Speed / 100);
 
     Game.Enemies.forEach(badguy => {
         badguy.CurrentTurnOrder -= Game.Settings.GameSpeed * (1 + badguy.Speed / 100);
     });
 
-    // See if anyone is ready to attack
-    var nextActor = null;
-    do {
-        nextActor = null;
-        Game.Heroes.forEach(actor => {
-            if (actor.CurrentTurnOrder < 0) {
-                if (nextActor != null) {
-                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                        nextActor = actor;
-                    }
-                } else {
-                    nextActor = actor;
-                }
+    // Loop through people's turns, maintain order
+    var readyActors = [];
+    if (Game.Hero.CurrentTurnOrder <= 0) {
+        readyActors.push(Game.Hero);
+    }
+
+    Game.Enemies.forEach(badguy => {
+        if (badguy.CurrentTurnOrder <= 0) {
+            readyActors.push(badguy);
+        }
+    });
+
+    // Put everyone that's ready into a list
+    // Splice out the fastest each time, let them act
+    // Check for deaths in ready actors
+    // Repeat until no one left below 0
+    while (readyActors.length > 0) {
+
+        // Pick which actor that's ready is 'fastest'
+        // Lowest value should act first (largest magnitude below 0)
+        var fastestActor = 0;
+        for (var i = 0; i < readyActors.length;i++){
+            // < instead of <= *should* give priority to player
+            if (readyActors[i].CurrentTurnOrder < readyActors[fastestActor].CurrentTurnOrder) {
+                fastestActor = i;
             }
-        });
-
-        Game.Enemies.forEach(actor => {
-            if (actor.CurrentTurnOrder < 0) {
-                if (nextActor != null) {
-                    if (actor.CurrentTurnOrder < nextActor.CurrentTurnOrder) {
-                        nextActor = actor;
-                    }
-                } else {
-                    nextActor = actor;
-                }
-            }
-        });
-
-        // If anyone is ready to attack, they get to do something
-        if (nextActor != null) {
-
-            // See if it's a hero
-            if (nextActor instanceof Hero) {
-                // TODO simple combat for now, something something AI
-                // Lots to change, just get something basic working
-                Game.Enemies[0].HealthCurr = Math.max(0, Game.Enemies[0].HealthCurr - nextActor.Attack);
-            } else {
-                var target;
-                do {
-                    target = Game.Heroes[Math.floor(Math.random() * 4)];
-                } while (!target.isAlive)
-
-                target.HealthCurr = Math.max(0, target.HealthCurr - nextActor.Attack);
-
-                if (target.HealthCurr <= 0) {
-                    target.isAlive = false;
-                }
-            }
-
-            nextActor.CurrentTurnOrder += 10000;
-
-            // Check for dead people
-            // Check to see if all heroes are dead
-            var partyKill = true;
-            Game.Heroes.forEach(hero => {
-                if (hero.isAlive === true) {
-                    partyKill = false;
-                }
-            });
-            if (partyKill) {
-                Game.GameState = "PARTY_WIPE"
-                break;
-            }
-        }        
-        //end of fight bits here
-
-        // Check to see if enemies are dead
-        if (Game.Enemies[0].HealthCurr <= 0) {
-            Game.Resources.XP += 20;
-            allEvents.queueEvent("ENEMY_DEFEATED");
-            Game.Enemies.splice(0, 1);
         }
 
-        // No enemies left, cell over
-        if (Game.Enemies.length == 0) {
-            Game.World.CurrentCell++;
-            Game.Resources.XP += 25;
+        fastestActor = readyActors.splice(fastestActor, 1);
 
-            allEvents.queueEvent("CELL_CLEAR");
-
-            // Whole zone over
-            if (Game.World.CurrentCell >= 100) {
-                Game.World.CurrentZone++;
-                Game.World.CurrentCell = 1;
-                allEvents.queueEvent("ZONE_CLEAR");
-            }
-            spawnEncounter();
+        // Take turn
+        if (fastestActor.Name == "Hiro") {
+            // Is hero, attack enemy
+        } else {
+            // is enemy, attack hero
         }
 
-    } while (nextActor != null)
+
+    }
+
 }
 
 // Who knows when stats will get into a weird state that needs to be reset
@@ -387,55 +313,15 @@ function StoryControl() {
             Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.Intro);
 
             Game.Stats.StoryState.StoryStage++;
+            // Just remove the tutorial for now. TODO: Re-add
             allEvents.removeEvent(
                 Game.Stats.StoryState.StoryControlID);
-
-                // Temp removed until tutorial stuff gets better
-            // Game.Stats.StoryState.StoryControlID =
-            //     allEvents.registerListener(
-            //         Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
-            //         StoryControl
-            //     )
             break;
         // Get some resources, lets people look around a bit
         case 1:
-            if (Game.Resources.Scraps >= 30) {
-                console.log(ParseGameText(GameText[Game.Settings.Language].Story.FoundMeryl));
-
-                getHeroByName('Meryl').isAvailable = true;
-
-                allEvents.removeEvent(
-                    Game.Stats.StoryState.StoryControlID);
-
-                Game.Stats.StoryState.StoryStage++;
-
-                // Wait 5 seconds of walking around doing nothing
-                // Give player some time to look around before starting combat
-                window.setTimeout(function () {
-                    allEvents.queueEvent("TEST_EVENT");
-                }, 5000);
-
-                Game.Stats.StoryState.StoryControlID =
-                    allEvents.registerListener(
-                        Lookup.StoryTriggers[Game.Stats.StoryState.StoryStage],
-                        StoryControl
-                    )
-            }
             break;
         // Intro to combat
         case 2:
-            console.log(ParseGameText(GameText[Game.Settings.Language].Story.IntroCombat));
-
-            Game.Stats.StoryState.StoryStage++;
-            Game.GameState = "CORE";
-
-            // Last current stage
-            allEvents.removeEvent(
-                Game.Stats.StoryState.StoryControlID);
-            break;
-        // Post first combat, introduce scaling
-        case 3:
-            // nothing here yet
             break;
         default:
         // nothing to do here
@@ -457,7 +343,6 @@ function newPage() {
 
     // Example for adding buttons
     Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
-        getHeroByName('Meryl').LevelUp();
         console.log("Level Up Button Pressed");
     })
     // Queue up main loop 

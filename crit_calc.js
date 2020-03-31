@@ -138,3 +138,19 @@ function findAndClickKitten() {
         }
     }
 }
+
+function witherStacks(Hardened) {
+    // number of stacks needed to just go all in on world
+    // basically figure out number of cells you can get from recursively withering
+
+    var targetZone = 70;
+    var hardenStacks = Hardened;
+    var cellsFromHarden = 0;
+
+    do {
+        cellsFromHarden += hardenStacks * 0.05;
+        hardenStacks = hardenStacks * 0.5 + hardenStacks * 0.05;
+    } while (hardenStacks > 2000)
+
+    return cellsFromHarden;
+}
