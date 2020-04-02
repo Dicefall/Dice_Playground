@@ -47,6 +47,7 @@ var GameText = {
             Leather: "You have {0} leather hides.\n",
             Cloth: "You have {0} strips of cloth.\n",
             XP: "You have {0} XP.\n",
+            Time: "You have {0} extra seconds.\n"
         },
 
         // When I actually set up data collection for stuff
@@ -72,7 +73,12 @@ var GameText = {
         Special: {
             Thanks: [
                 'List of special thanks to people here',
-                'Ghostfrog for a lot of math help'
+                'Ghostfrog for a lot of math help',
+            ],
+            Inspiration: [
+                "Other games that have greatly inspired me in general and this game in particular. No real order intended",
+                "Trimps, probably my favorite and the most inspiration with an amazing community: https://trimps.github.io/",
+
             ]
         },
     },

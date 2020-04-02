@@ -33,14 +33,15 @@ class Actor {
         this.Name = name;
 
         this.Level = 1;
-        this.Speed = 15;
+        this.Speed = 1; // read as percentage. 50% = 0.5
         this.Attack = 10;
         this.HealthCurr = 100;
         this.HealthMax = 100;
+        this.HealthRegen = 0; // Health regen per second
         this.isAlive = true;
-        this.CurrentTurnOrder = 10000;
+        this.CurrentTurnOrder = 1000;
 
-        this.SpeedBase = 15;
+        this.SpeedBase = 1;
         this.AttackBase = 10;
         this.HealthBase = 100;
     }
@@ -51,6 +52,8 @@ class Hero extends Actor {
         super(name);
 
         this.LevelMax = 10;
+        this.HealthRegen = 1;
+
         this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
 
         this.Jobs = {
@@ -68,11 +71,17 @@ class Hero extends Actor {
         this.Attack = this.AttackBase * levelMulti;
         this.HealthMax = this.HealthBase * levelMulti;
         this.HealthCurr = Math.min(this.HealthCurr,this.HealthMax);
+        this.HealthRegen = Math.max(this.HealthRegen * levelMulti, 0);
 
         this.Speed = this.SpeedBase;
     }
 
     LevelUp() {
+        if (this.Level == this.LevelMax) {
+            console.log("Currently at max level. Increase cap to level up. Current level cap: " + formatNumber(this.LevelMax));
+            return;
+        }
+
         let XPReq = Math.pow(Lookup.ExperienceRequirementScaleFactor,this.Level - 1) * Lookup.ExperienceRequirement;
         if (Game.Resources.XP >= XPReq) {
             Game.Resources.XP -= XPReq;
@@ -251,7 +260,8 @@ class GameData {
             WorldStats: document.querySelector('#WorldStats'),
             PartyStatus: document.querySelector('#partyStatus'),
             LogDebugMessage: document.querySelector("#lastMessage"),
-            LevelUpButton: document.querySelector('#PlayerLevelUp')
+            LevelUpButton: document.querySelector('#PlayerLevelUp'),
+            TimeCounter: document.querySelector('#bonusTime')
         };
         
         // Supported languages
