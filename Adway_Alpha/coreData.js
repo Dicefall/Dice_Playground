@@ -273,8 +273,8 @@ class GameData {
         // Enemy Archtypes
         // name, attack, health, speed, loot
         this.Bestiary = [
-            new CreatureTemplate('Goblin', 1, 1, 1),
-            new CreatureTemplate('Dragon', 2, 5, 1.2),
+            new CreatureTemplate("Goblin", 1, 1, 1),
+            new CreatureTemplate("Dragon", 2, 5, 1.2),
             new CreatureTemplate("Kobold", 0.8,0.8,0.8)
         ];
 

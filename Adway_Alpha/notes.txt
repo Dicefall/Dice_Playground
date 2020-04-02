@@ -1,0 +1,158 @@
+Adway roadmap
+
+Basic world design and implementation
+-World maps/zones
+-Dungeons/maps/whatever
+-Exploring concept
+
+Exploring is through combat, clean up afterwards with some kind of
+investigation thing, each cell fully scouted out is bonus resource
+generation and maybe discover some cool things. Maybe some forward
+scouting added also to see what's coming up.
+
+Figure out combat pieces:
+Combat Timer:
+-base turn time is 1s, haste makes it tick down faster
+-some abilities could in theory have different turn times
+-adds interaction with this sort of mechanic potentially
+
+Combat
+-Simple turn ordering and fighting
+-TODO: AI, more complicated combat
+
+Game Save
+-Local save to start, online later
+-TODO: String compression
+-TODO: Online Save
+
+XP Growth
+-Gaining xp/levelling up
+-Increasing max level
+
+Offline progress
+-Probably just store the time and let it run fast to catch up
+--Not exactly sure what to do but it's important
+-TODO: Actually work in some actual acceleration
+--Missing time still gets saved, will see what to do with it
+
+--Decision: for now rework things to be single attacker and cut back on classes
+---I'll come back to this later I think but for now it's just too much and will get in the way of things.
+---Focus on basic combat and extra systems. Initial characters in story will intro other pieces of the game.
+
+Party wipe
+-Just turn off combat until regen brings them back to full.
+-Add in some bonuses to out of combat regen of various resources
+I am here ---------------------------------------------------------------------
+
+Scraps
+-Something for scraps.
+--The do nothing right now
+
+Resets
+-Reset currency
+-Reset process
+
+Basic world design and implementation
+-World maps/zones
+--Enemy spawns, limitations, different enemies
+-Story
+
+VISUALS-----------------------------------------------
+
+Some basic UI work
+-Do a small mockup
+-Start thinking about art and theme options
+-Is it possible to massively change ui for a "work mode" or something?
+--It is, do I want to do it?
+
+Animation Engine?
+-Need to figure out how I want to architect it
+-Big giant thing or make it small for each one?
+-Not even ready to think about spell animations
+
+--Real GUID system?
+
+----Bugfixes / Feature updates
+Update plans-----------------------------------------
+
+World
+-Maps, dungeons
+-Exploration?
+
+Buffs/Debuffs
+
+Gear (Save for classes/jobs?)
+-Equipment from scraps/other resources
+-Extra stats?
+-Randomness
+-Armor types
+
+Other Features!
+
+Need some kind of automation system fantasy idea
+
+Jobs/Classes
+-Different attacks maybe, or procs
+-Class mastery effects or special passives for each one
+-Stat modifiers for the classes
+--Thoughts: Epic7 style few abilities with CDs to rotate through
+--bit more complicated with buff/debuff system
+
+Expansion/Major patch ideas -----------------------------
+
+-Enchanting gear
+-Long term gear scaling system maybe, researching new stuff
+-Actual presistent gear
+
+-"The swarm" (critter mound style thing maybe)
+--No clue how to make this make any sense, fights enemy swarm maybe?
+
+-Town of some sort
+--Maybe houses a lot of the other mechanisms
+--They would know only that you're fighting
+--Part of unlocking stuff and new systems like a mage tower etc
+
+-Alchemy/potions
+--Consumables, generic abilities anyone can use with potion theme
+
+-Quest system (probably just fancy stuff (ui) thrown on top of events)
+--This will be for everything, unlocks, etc
+
+-"The Box" reverse containment chamber from antimemetics
+--This is where challenges might come in, left notes for self (remember more) makes it harder
+--Could have some fun with the name things for 'a day without X' for challenges
+---E.G. Sleep challenge (A day without sleep), Hope (A day without hope), etc
+
+-Museum/Artifacts?
+--Some kind of collection system, copmlete sets for bonuses
+
+-Reputations
+--Factions of some kind with presistent reputations and rewards
+
+-Alignment bonuses
+--Pick some kind of approach based on good/evil and law/chaos
+--Neat 9x9 grid of potentially interesting bonuses
+
+Tutorial Steps:
+-Intro to world breifly and tell player to pick up scraps
+--Pick up a sufficient amount of scrap, maybe just wait some small amount of time watching number go up a bit.
+-Run into meryl, little story telling, keep getting scraps and wait breifly
+--Very short time wait, just an actual time wait.
+--Start combat, next step after combat (first enemy) is over.
+
+--Not ironed out past here
+-Run into 1-2 other people (probably chase and one other), likely after a few battles, maybe run into one already fighting.
+-Explain what's going on with scraps. Also what you're really looking for out here
+-Last person to join
+-Go into talking about the world I guess
+-Eventually on party wipe talk about the Box
+--reverse containment chamber, can start growing this into something larger
+--Find all the information here, big exposition dump maybe?
+--Memories = xp, forgetting brings you back to lvl 1, job xp remains
+
+// TODO repo:
+-Game saving
+--Online saving: for later
+--Save string compression
+-Missing Time acceleration, needs fantasy and function
+-Crowdsource enemies

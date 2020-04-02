@@ -365,7 +365,9 @@ function spawnEncounter() {
     if (Game.World.CurrentCell == 100) {
         Game.Enemies.push(new Creature("Dragon"));
     } else {
-        Game.Enemies.push(new Creature("Goblin"));
+        let x = Math.floor(Math.random() * Lookup.Bestiary.length);
+
+        Game.Enemies.push(new Creature(Lookup.Bestiary[x].Name));
     }
 
 }
