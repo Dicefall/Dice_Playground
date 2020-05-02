@@ -1,6 +1,4 @@
 function mainLoop() {
-    // Update UI
-    UpdateUIElements();
 
     // If game is paused do nothing and move on
     if (Game.GameState == Lookup.GameStrings.GameStates.Paused) return;
@@ -13,12 +11,16 @@ function mainLoop() {
     // Handling for possible slowdown and other effects, eg. background tab
     if (Game.Resources.Time < Lookup.GameLoopIntervalBase) return;
 
+
+    // Eventually everything time based will be handled via Chronos.
+    // Things that wont be handled via chronos will come after
+    // This will be things like spawning new encounters, etc
+    Game.Chronos.Tick(Lookup.GameLoopIntervalBase);
+
     // Basically the cost in terms of time of anything happening
     // TODO: Add in a speed up mechanism for running multiple times per frame
     Game.Resources.Time -= Lookup.GameLoopIntervalBase;
-
-    // Resource gathering
-    generateResources();
+    Game.statTracking.RunTimeSpent += Lookup.GameLoopIntervalBase;
 
     // At start queue up the first zone
     // Also start up on new run
@@ -29,7 +31,7 @@ function mainLoop() {
     }
 
     // Combat includes any fighting etc.
-    mainCombat();
+    //mainCombat();
 
     // Just in case I want to hook into this
     allEvents.queueEvent("GAME_TICK");
@@ -75,8 +77,14 @@ function formatNumber(number) {
     // Negative
     if (number < 0) return '-' + formatNumber(-number);
 
+    // Don't want negative exponents just yet
+    if (number < 0.0001 && number > 0) return 'ε';
+
+    // Handling below 1, looks weird to see 0 when it's small but still > 0
+    //if (number < 1) return number.toFixed(2);
+
     // Get base and exponent
-    // Turns into: mantissa * 10 ^ exponent
+    // Number expressed by: mantissa * 10 ^ exponent
     var exponent = Math.floor(Math.log10(number));
     var mantissa = number / Math.pow(10, exponent);
 
@@ -137,6 +145,9 @@ function UpdateUIElements() {
             formatNumber(Math.max(Game.Enemies[0].HealthCurr, 0)),
             formatNumber(Game.Enemies[0].HealthMax)
         );
+    } else {
+        Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
+            'No Enemies');
     }
 
     // Text output for zone/cell display
@@ -149,7 +160,7 @@ function UpdateUIElements() {
     // Party status indicator
     Lookup.UIElements.PartyStatus.innerHTML = ParseGameText(
         "Party status: {0}",
-        (Game.GameState == Lookup.GameStrings.GameStates.PartyWipe) ? GameText.Icons.Skull : GameText.Icons.HeartBeat
+        (Game.GameState == Lookup.GameStrings.GameStates.Rest) ? GameText.Icons.Skull : GameText.Icons.HeartBeat
     );
 }
 
@@ -196,6 +207,7 @@ function removeLocalSave() {
 
         // Clean up all of the event listeners
         allEvents.clearAllEvents();
+        Game.Chronos.ClearTimers();
 
         // Delete localstorage save
         window.localStorage.clear();
@@ -213,11 +225,9 @@ function removeLocalSave() {
 function generateResources() {
 
     // All resource numbers are stored as per seconds
-    // Convert from MS to S
-    var GameSpeed = Lookup.GameLoopIntervalBase / 1000;
 
     // Scraps
-    Game.Resources.Scraps += (Game.Resources.ScrapsIncome * GameSpeed);
+    Game.Resources.Scraps += (Game.Resources.ScrapsIncome);
     allEvents.queueEvent("SCRAPS_RECIEVED");
 
     return;
@@ -236,144 +246,81 @@ function generateResources() {
 // Everything combat here, including class perks and anything else that needs
 // to be dealt with for combat.
 
-// Main Combat (expect a lot of re-writes and changes)
-function mainCombat() {
+function combatCleanup() {
+    // Check for which enemies died, get loot from them, give rewards
+    for (var i = Game.Enemies.length - 1; i >= 0; i--) {
+        if (Game.Enemies[i].HealthCurr <= 0) {
+            //give rewards
+            Game.Resources.XP += 25 /* Game.Enemies[i].lootMod*/;
+            Game.Resources.Scraps += 5 /* Game.Enemies[i].lootMod*/;
 
-    // Things that happen that are combat related that always happen.
-    // Health regen.
-    // Higher out of combat regen?
-    Game.Hero.HealthCurr = Math.min(Game.Hero.HealthCurr + Game.Hero.HealthRegen * Lookup.GameLoopIntervalBase / 1000, Game.Hero.HealthMax);
-
-    if (Game.GameState == Lookup.GameStrings.GameStates.PartyWipe) {
-        // Extra regen?
-        Game.Hero.HealthCurr = Math.min(Game.Hero.HealthCurr + Game.Hero.HealthRegen * Lookup.GameLoopIntervalBase / 1000, Game.Hero.HealthMax);
-        if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
-            Game.GameState = Lookup.GameStrings.GameStates.Core;
-            Game.Hero.isAlive = true;
-        }
-    } else {
-        // Only Active combat things.
-
-        // Advance turn cds
-        Game.Hero.CurrentTurnOrder -= Lookup.GameLoopIntervalBase * Game.Hero.Speed;
-
-        Game.Enemies.forEach(badguy => {
-            badguy.CurrentTurnOrder -= Lookup.GameLoopIntervalBase * badguy.Speed;
-        });
-
-        // Loop through people's turns, maintain order
-        var readyActors = [];
-        if (Game.Hero.CurrentTurnOrder <= 0) {
-            readyActors.push(Game.Hero);
-        }
-
-        Game.Enemies.forEach(badguy => {
-            if (badguy.CurrentTurnOrder <= 0) {
-                readyActors.push(badguy);
-            }
-        });
-
-        // Put everyone that's ready into a list
-        // Splice out the fastest each time, let them act
-        // Check for deaths in ready actors
-        // Repeat until no one left below 0
-        while (readyActors.length > 0) {
-
-            // Pick which actor that's ready is 'fastest'
-            // Lowest value should act first (largest magnitude below 0)
-            var fastestActor = 0;
-            for (var i = 0; i < readyActors.length; i++) {
-                // < instead of <= *should* give priority to player
-                if (readyActors[i].CurrentTurnOrder < readyActors[fastestActor].CurrentTurnOrder) {
-                    fastestActor = i;
-                }
-            }
-
-            // Pull best one out of list
-            fastestActor = readyActors.splice(fastestActor, 1)[0];
-
-            // Check for dead actor
-            if (!fastestActor.isAlive) { continue; }
-
-            // Maybe change to attack specific
-            fastestActor.CurrentTurnOrder += 1000;
-
-            // Do attack
-            if (fastestActor instanceof Hero) {
-                // Is hero, do hero things
-                Game.Enemies[0].HealthCurr -= fastestActor.Attack;
-                if (Game.Enemies[0].HealthCurr <= 0) {
-                    Game.Enemies[0].isAlive = false;
-                }
-            } else {
-                // Is not hero, do badguy things
-                Game.Hero.HealthCurr -= fastestActor.Attack;
-                if (Game.Hero.HealthCurr <= 0) {
-                    Game.Hero.HealthCurr = 0;
-                    Game.Hero.isAlive = false;
-                    Game.GameState = Lookup.GameStrings.GameStates.PartyWipe;
-                }
-            }
-        }
-
-        // Check for deaths
-        for (var i = 0; i < Game.Enemies.length; i++) {
-            if (!Game.Enemies[i].isAlive) {
-                Game.Enemies.splice(i, 1);
-                allEvents.queueEvent("ENEMY_DEFEATED");
-                i--;
-            }
-        }
-
-        // Check for cell clear
-        // TODO: XP values
-        if (Game.Enemies.length == 0) {
-            Game.Resources.XP += 25;
-            Game.World.CurrentCell++;
-
-            allEvents.queueEvent("CELL_CLEAR");
-
-            //Check for zone clear
-            // TODO: Different sized zones
-            if (Game.World.CurrentCell >= 100) {
-                Game.World.CurrentZone++;
-                Game.World.CurrentCell = 1;
-                allEvents.queueEvent("ZONE_CLEAR");
-            }
-
-            spawnEncounter();
+            Game.Chronos.RemoveTimer(Game.Enemies[i].turnTimerID);
+            Game.Enemies.splice(i, 1);
         }
     }
+
+    // Prep for next encounter if needed
+    if (Game.Enemies.length == 0){
+        endEncounter();
+    }
+
 }
 
-// Who knows when stats will get into a weird state that needs to be reset
-function recalcHeroStats() {
+function startWorldZone(zone) { } // TODO: more complicated zone spawn
 
-    // Base stats basically
-    Game.Heroes.forEach(hero => {
-        hero.recalcStats();
-    })
+function endEncounter() {
+
+    console.log("Encounter Over");
+    // Move on to the next cell
+    Game.World.CurrentCell++;
+
+    allEvents.queueEvent("CELL_CLEAR");
+
+    //Check for zone clear
+    // TODO: Generic zone sizes
+    if (Game.World.CurrentCell >= 100) {
+        Game.World.CurrentZone++;
+        Game.World.CurrentCell = 1;
+        allEvents.queueEvent("ZONE_CLEAR");
+    }
+
+    // Switch to rest for the very small time until next combat
+    Game.GameState = Lookup.GameStrings.GameStates.Rest;
+
+    // Spawn new encounter after a short delay
+    // Delay is 500ms
+    Game.Chronos.CreateTimer(time => {return time;},spawnEncounter,500);
+
 }
-
-function startWorldZone() { } // TODO: more complicated zone spawn
-
-function spawnMap() { }
 
 function spawnEncounter() {
 
-    // TODO: make it more fancy, for now just spawn goblins, dragons at max cell
+    // TODO: make it more fancy, eventually move spawn logic to the zone
+    // or other system
+
+    // For now dragon on last cell random otherwise
+    // Zone control here
     if (Game.World.CurrentCell == 100) {
-        Game.Enemies.push(new Creature("Dragon"));
+        Game.Enemies.push(new Creature("Dragon", true));
     } else {
         let x = Math.floor(Math.random() * Lookup.Bestiary.length);
 
         Game.Enemies.push(new Creature(Lookup.Bestiary[x].Name));
     }
+    
+    // If you're spawning enemies you should go back into core.
+    Game.GameState = Lookup.GameStrings.GameStates.Core;
 
 }
 
 function OnPartyWipe() {
-    // reset level, equipment, whatever, start health regen
+    Game.Hero.HealthCurr = 0;
+    Game.Hero.isAlive = false;
+
+    //Chronos.RemoveTimer(Game.Hero.turnTimerID);
+
+    // Switch to rest state
+    Game.GameState = Lookup.GameStrings.GameStates.Rest;
 }
 
 // ----------------------------------------------------------------------------
@@ -414,16 +361,26 @@ function newPage() {
             StoryControl
         );
 
+    allEvents.registerListener("ENEMY_DEFEATED",combatCleanup);
+
     // Example for adding buttons
     Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
         //console.log("Level Up Button Pressed");
         Game.Hero.LevelUp();
     });
 
+    // Start up game timers
+    Game.Hero.turnTimerID = Game.Chronos.CreateForevertimer(Game.Hero.CombatTicker.bind(Game.Hero),Game.Hero.CombatActions.bind(Game.Hero), Actor.baseTurnRate);
+
+    // Generate resources once every second
+    Lookup.BookKeeping.ResourceTimerID = Game.Chronos.CreateForevertimer(time => { return time}, generateResources, 1000);
+
     // Queue up main loop 
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);
     // Queue autosave
     Lookup.BookKeeping.AutoSaveFunctionID = window.setInterval(saveGameToLocal, Game.Settings.AutoSaveFrequency);
+
+    window.setInterval(UpdateUIElements,Game.Settings.GameSpeed);
 
     allEvents.queueEvent("TEST_EVENT");
 }

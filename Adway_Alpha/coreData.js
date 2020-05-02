@@ -3,10 +3,14 @@
 
 // Achievements
 class Achievement {
+
+    // Function for handling whatever the achievement needs
+    // Also ID for registering/unregistering it from events
+    handlerFunc;
+    HandlerID;
+
     constructor(listenerType, handlerFunc) {
 
-        // Function for handling whatever the achievement needs
-        // Tracking info and granting it
         this.handlerFunc = handlerFunc;
         this.HandlerID = allEvents.registerListener(listenerType, handlerFunc);
     }
@@ -29,40 +33,56 @@ class TieredAchievement extends Achievement {
 
 // Actors, pretty much anyone that will end up in combat
 class Actor {
+
+    static baseTurnRate = 5000;
+
     constructor(name) {
         this.Name = name;
 
-        this.Level = 1;
         this.Speed = 1; // read as percentage. 50% = 0.5
         this.Attack = 10;
         this.HealthCurr = 100;
         this.HealthMax = 100;
         this.HealthRegen = 0; // Health regen per second
         this.isAlive = true;
-        this.CurrentTurnOrder = 1000;
-
+        this.HealthRegen = 0;
+    
         this.SpeedBase = 1;
         this.AttackBase = 10;
         this.HealthBase = 100;
+
+        this.turnTimerID = -1;
+    }
+
+    CombatTicker(inputTime) {
+        if (Game.GameState == Lookup.GameStrings.GameStates.Core) {
+            return inputTime * this.Speed;
+        } else {
+            return 0;
+        }
     }
  }
 
 class Hero extends Actor { 
+
+    Level = 1;
+    LevelMax = 10;
+
     constructor(name) {
         super(name);
 
-        this.LevelMax = 10;
+        // Player character gets a base of 1
         this.HealthRegen = 1;
 
-        this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
+        // this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
 
-        this.Jobs = {
-            Wanderer: {
-                Level: 0,
-                JobXP: 0,
-                Mastery: false,
-            }
-        }
+        // this.Jobs = {
+        //     Wanderer: {
+        //         Level: 0,
+        //         JobXP: 0,
+        //         Mastery: false,
+        //     }
+        // }
     }
 
     recalcStats() {
@@ -77,8 +97,8 @@ class Hero extends Actor {
     }
 
     LevelUp() {
-        if (this.Level == this.LevelMax) {
-            console.log("Currently at max level. Increase cap to level up. Current level cap: " + formatNumber(this.LevelMax));
+        if (this.Level >= this.LevelMax) {
+            console.log("Currently at or above max level. Increase cap to level up. Current level cap: " + formatNumber(this.LevelMax));
             return;
         }
 
@@ -93,11 +113,44 @@ class Hero extends Actor {
         }
     }
 
+    CombatTicker(inputtime){
+
+        if (!this.isAlive || Game.GameState == Lookup.GameStrings.GameStates.Rest) { 
+            if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
+                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthCurr + Game.Hero.HealthRegen * inputtime / 1000, Game.Hero.HealthMax);
+            }
+
+            if (Game.Hero.HealthCurr >= Game.Hero.HealthMax) {
+                Game.GameState = Lookup.GameStrings.GameStates.Core;
+                Game.Hero.isAlive = true;
+            }
+
+            return 0 
+        } else {
+        // Don't tick down if dead
+            return inputtime * this.Speed;
+        }
+    }
+
+    CombatActions() {
+        // This will be what fires off when an action is done in combat.
+
+        Game.Enemies[0].HealthCurr -= Game.Hero.Attack;
+
+        // See if you killed it
+        if (Game.Enemies[0].HealthCurr <= 0)
+            { allEvents.queueEvent("ENEMY_DEFEATED");}
+
+        // Chronos.CreateTimer(this.CombatTicker.bind(Game.Hero),this.CombatActions.bind(this),Actor.baseTurnRate);
+    }
+
 }
 
 class Creature extends Actor {
-    constructor(name) {
+    constructor(name, isBoss = false) {
         super(name);
+
+        let minionMod = isBoss ? 1 : 0.5;
 
         // Get world and cell scaling
         var worldMod = Math.pow(
@@ -110,12 +163,27 @@ class Creature extends Actor {
         Lookup.Bestiary.forEach(archtype => {
             if (name === archtype.Name) {
                 this.Speed *= archtype.SpeedMod;
-                this.Attack *= archtype.AttackMod * worldMod * cellMod;
-                this.HealthMax *= archtype.HealthMod * worldMod * cellMod;
+                this.Attack *= archtype.AttackMod * worldMod * cellMod * minionMod;
+                this.HealthMax *= archtype.HealthMod * worldMod * cellMod * minionMod;
                 this.HealthCurr = this.HealthMax;
             }
         })
+
+        // Add creature combat timer to the list
+        this.turnTimerID = Game.Chronos.CreateForevertimer(this.CombatTicker.bind(this),this.CreatureCombatAction.bind(this),Actor.baseTurnRate);
         
+    }
+
+    CreatureCombatAction() {
+
+        if (Game.Hero.isAlive) {
+            Game.Hero.HealthCurr -= this.Attack;
+
+            if (Game.Hero.HealthCurr <= 0) {
+                Game.Hero.HealthCurr = 0;
+                OnPartyWipe();
+            }
+        }
     }
 }
 
@@ -132,42 +200,14 @@ class CreatureTemplate {
 // Spells and abilities
 // Auras are buffs/debuffs, basically anything that gets attached to an actor
 // and will effect them in some way
-class Aura {
-    constructor(target) {
-        this.owner = target;
+// Expect these to essentially be timers with effects on start and end
+class Aura {}
 
-
-    }
-}
-
-// Job Abilities, Will limit this to active ones for now
-class Ability {
-    constructor(name){
-
-        // For some flavor
-        this.Name = name;
-    }
-}
+// Job Abilities
+class Ability {}
 
 // Basic structure for classes/Jobs
-class Job {
-    constructor(name, atk, hp, spd, spellIDs, AbilityAIFunc, requirementFuncs, baseAp){
-        this.Name = name;
-
-        this.JobAttackMod = atk;
-        this.JobHealthMod = hp;
-        this.JobSpeedMod = spd;
-
-        this.Requirements = requirementFuncs;
-
-        this.UsableSpells = spellIDs;
-
-        this.JobAI = AbilityAIFunc;
-
-        this.APForLevel = baseAp;
-
-    }
-}
+class Job {}
 
 
 // This is it, the big player data structure. Anything that will get saved
@@ -175,6 +215,10 @@ class Job {
 class PlayerData {
 
     constructor() {
+        // Chronometer will be saved, and is considered part
+        // of the current state of the game and the player's
+        // progress, so it will be here.
+        this.Chronos = new Chronometer();
 
         // Resources
         this.Resources = {
@@ -232,11 +276,20 @@ class PlayerData {
 
         this.GameState = Lookup.GameStrings.GameStates.Core;
 
+        this.statTracking = {
+            TotalTimeSpent: 0,
+            RunTimeSpent: 0
+        };
+
         // Settings
         this.Settings = {
             Language: 'English',
-            GameSpeed: 100, // in MS
-            AutoSaveFrequency: 30 * 60 * 1000, //30 minutes in millisconds
+            // How frequently your browser attempts to run the game loop
+            // or other pieces of the game, in milliseconds. The game is
+            // still operating on the same timescales regardless of this
+            // setting. See GameData.GameLoopIntervalBase
+            GameSpeed: 20,
+            AutoSaveFrequency: 30 * 60 * 1000, // in millisconds
 
             // Current number notations supported:
             // Scientific, Engineering, Log
@@ -274,8 +327,8 @@ class GameData {
         // name, attack, health, speed, loot
         this.Bestiary = [
             new CreatureTemplate("Goblin", 1, 1, 1),
-            new CreatureTemplate("Dragon", 2, 5, 1.2),
-            new CreatureTemplate("Kobold", 0.8,0.8,0.8)
+            new CreatureTemplate("Kobold", 0.8,0.8,0.8),
+            //new CreatureTemplate("Dragon", 2, 5, 1.2)
         ];
 
         // Enemy scaling factors
@@ -312,9 +365,8 @@ class GameData {
             // Might change my stance on that who knows
             GameStates: {
                 Paused: "Paused",
-                PartyWipe: "Party_Wipe",
+                Rest: "Rest",
                 Core: "Core",
-                PreCombat: "Pre_Combat", // Not sure what this is for yet
             },
         }
 
@@ -367,19 +419,19 @@ class GameData {
         this.BookKeeping = {
             MainFunctionID: 0,
             AutoSaveFunctionID: 0,
+            UIUpdateFunctionID: 0,
+            ResourceTimerID: -1,
         }
 
         // How frequently the game should be processing itself.
         // This is different from the game speed in the player settings
-        // This will define how fast the underlying game players, the
+        // This will define how fast the underlying game plays, the
         // other setting will define how frequently the browser runs
-        // This also allows a way to hook into mechanics.
+        // See PlayerData.Settings.GameSpeed
         this.GameLoopIntervalBase = 100;
-    }
 
-    // ConstructActorDisplay(actor) {
-    //  var actorElement = new DocumentFragment();
-    // }
+        this.SupportedNumberNotations = ["Scientific", "Engineering", "Log"];
+    }
 }
 
 const Lookup = new GameData();

@@ -84,4 +84,136 @@ class EventBoard {
 
 }
 
+// Chronometer is an all purpose time keeping class. 
+
+class Chronometer {
+    constructor() {
+
+        this.timerList = [];
+
+        this.nextTimerID = 0;
+    }
+
+    SortTimers() {
+        let isListSorted = false;
+        while (!isListSorted) {
+
+            // Assume sorted to start
+            isListSorted = true;
+
+            // go from second element down to the last
+            // check if it's smaller than the one before it
+            for (var i = 1; i < this.timerList.length; i++) {
+                if (this.timerList[i].remainingDuration < this.timerList[i - 1].remainingDuration) {
+                    //this.timerList.splice(i - 1, 0, this.timerList.splice(i,1));
+                    [this.timerList[i - 1], this.timerList[i]] = [this.timerList[i], this.timerList[i - 1]];
+                    isListSorted = false;
+                }
+            }
+        }
+    }
+
+    // Timers will have their own tick and tock functions
+    // Tick(time) and Tock()
+
+    // This is the Chronometer global tick
+    // this will go through all timers on the list and tick them down
+    Tick(elapsedTime) {
+
+        // Don't need to do anything if there are no timers
+        if (this.timerList.length == 0) return;
+        
+        // tick timers down
+        this.timerList.forEach(timer => {
+            timer.remainingDuration -= timer.tick(elapsedTime);
+        });
+        
+        // sort timers
+        // -since list should remain mostly sorted, going with insertion sort
+        this.SortTimers();
+
+        // tock timers in order
+
+        // Swapping to a while loop instead
+
+        while (this.timerList[0].remainingDuration <= 0) {
+            var currentTimer = this.timerList[0];
+
+            currentTimer.tock();
+
+            if (currentTimer.isForever) {
+                currentTimer.remainingDuration += currentTimer.initDuration;
+                this.SortTimers();
+            } else {
+                this.RemoveTimer(currentTimer.timerID);
+            }
+        }
+
+    }
+
+    // Information needed:
+    // -Function for handling tick down time
+    // -What to call at the end of the timer
+    // -How long the timer is
+    CreateTimer(tickFunc, tockFunc, totalDuration){
+
+        var newTimer = {
+            timerID: this.GenerateTimerID(),
+            remainingDuration: totalDuration,
+            tick: tickFunc,
+            tock: tockFunc,
+            isForever: false,
+            initDuration: totalDuration
+
+        }
+
+        // insert into list at appropriate spot
+
+        this.timerList.push(newTimer);
+        this.SortTimers();
+
+        console.log("Timer created with id:" + newTimer.timerID);
+
+        return newTimer.timerID;
+    }
+
+    CreateForevertimer(tickFunc, tockFunc, frequency){
+
+        var newTimer = {
+            timerID: this.GenerateTimerID(),
+            remainingDuration: frequency,
+            tick: tickFunc,
+            tock: tockFunc,
+            isForever: true,
+            initDuration: frequency
+        }
+
+        this.timerList.push(newTimer);
+        this.SortTimers();
+
+        return newTimer.timerID;
+    }
+
+    // TODO: Make infinite timer
+
+    RemoveTimer(removeID) {
+
+        for (var i = 0; i < this.timerList.length; i++) {
+            if (this.timerList[i].timerID == removeID) {
+                this.timerList.splice(i,1);
+                return;
+            }
+        }
+
+    }
+
+    GenerateTimerID(){
+        return ++(this.nextTimerID);
+    }
+
+    ClearTimers(){
+        this.timerList = [];
+    }
+}
+
 const allEvents = new EventBoard();

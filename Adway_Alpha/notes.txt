@@ -31,9 +31,9 @@ XP Growth
 
 Offline progress
 -Probably just store the time and let it run fast to catch up
---Not exactly sure what to do but it's important
--TODO: Actually work in some actual acceleration
---Missing time still gets saved, will see what to do with it
+--Time afk stored. Either background tab or offline will all store it I think.
+--Game loop will run faster if able.
+--TODO: Actual acceleration if needed
 
 --Decision: for now rework things to be single attacker and cut back on classes
 ---I'll come back to this later I think but for now it's just too much and will get in the way of things.
@@ -42,20 +42,33 @@ Offline progress
 Party wipe
 -Just turn off combat until regen brings them back to full.
 -Add in some bonuses to out of combat regen of various resources
+
+Between Combat time
+-Maybe a half second after something dies before spawning something new in.
+--Change party wipe to non-combat?
+--Feels weird without a break, needs testing
+
 I am here ---------------------------------------------------------------------
+--------------------Reworking game/combat states-------------------------------
 
 Scraps
 -Something for scraps.
---The do nothing right now
+--They do nothing right now
+--Create basic equipment system out of this.
+--Sort of liking the way idle wizard handles it, might start there
 
 Resets
 -Reset currency
 -Reset process
 
+Story
+-Need to do the tutorial and early bits of story
+
 Basic world design and implementation
 -World maps/zones
 --Enemy spawns, limitations, different enemies
 -Story
+--Include a reason there's an end or something
 
 VISUALS-----------------------------------------------
 
@@ -76,8 +89,7 @@ Animation Engine?
 Update plans-----------------------------------------
 
 World
--Maps, dungeons
--Exploration?
+-Zones, maps, etc
 
 Buffs/Debuffs
 
@@ -99,6 +111,12 @@ Jobs/Classes
 --bit more complicated with buff/debuff system
 
 Expansion/Major patch ideas -----------------------------
+
+Exploration
+-Exploration, dungeons, etc
+--Thinking something like etrian odyysey mapping out dungeons
+--Would have to be largely active and some good rewards for finishing floor
+--Would need to do something to avoid "look up the right map"
 
 -Enchanting gear
 -Long term gear scaling system maybe, researching new stuff
@@ -132,6 +150,16 @@ Expansion/Major patch ideas -----------------------------
 -Alignment bonuses
 --Pick some kind of approach based on good/evil and law/chaos
 --Neat 9x9 grid of potentially interesting bonuses
+--Probably tie this into the town or non-direct player power
+
+-"Walk the path to power"
+--some corrupted power structure
+--cosmic elements maybe
+
+-Summons
+--Kind of like spells from other games like RG or Idle Wizard
+--Big cooldown but some major payoff for it? Requires active to start
+--Potential for extra tie ins and additional progression
 
 Tutorial Steps:
 -Intro to world breifly and tell player to pick up scraps
@@ -141,18 +169,20 @@ Tutorial Steps:
 --Start combat, next step after combat (first enemy) is over.
 
 --Not ironed out past here
--Run into 1-2 other people (probably chase and one other), likely after a few battles, maybe run into one already fighting.
 -Explain what's going on with scraps. Also what you're really looking for out here
--Last person to join
 -Go into talking about the world I guess
 -Eventually on party wipe talk about the Box
 --reverse containment chamber, can start growing this into something larger
 --Find all the information here, big exposition dump maybe?
---Memories = xp, forgetting brings you back to lvl 1, job xp remains
 
 // TODO repo:
 -Game saving
+--Saving is not working right now, class methods not saved?
 --Online saving: for later
 --Save string compression
--Missing Time acceleration, needs fantasy and function
 -Crowdsource enemies
+-AI, more complicated combat
+-Actual offline time acceleration similar to time warp
+--Right now I've just set the game loop to run faster than the default update
+--Eats through extra time if it can
+-Check enemy death at some point, hacky right now without destructors
