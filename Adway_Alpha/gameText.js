@@ -28,17 +28,6 @@ var GameText = {
             Intro: 'You find yourself alone in a field surrounded by the aftermath of a battle. You remember none of it. The world is frightening, perhaps you should pick up some scraps. You never know what you might find.',
 
         },
-        
-        // Game text for Job related information. Job descriptions, requirements
-        // ability unlock descriptions, and mastery descriptions
-        JobDescriptions: {
-            Wanderer: new JobDescription(
-                "One who wanders, unsure of why, or what they are looking for. Generalist, good place to start.",
-                [],
-                "",
-                "None"
-            ),
-        },
 
         UI: {
             // These should be obvious.

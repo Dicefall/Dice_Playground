@@ -231,15 +231,6 @@ function generateResources() {
     allEvents.queueEvent("SCRAPS_RECIEVED");
 
     return;
-
-    // Conversion not in yet, don't even know what it is yet
-    Game.Resources.Scraps -= (Game.Resources.ScrapConversionRate * GameSpeed);
-
-    var totalScrapConversion = (Game.Resources.ScrapToMetal + Game.Resources.ScrapToLeather + Game.Resources.ScrapToCloth) * Game.Resources.ScrapConversionRate * Game.Resources.ScrapConversionEfficiency;
-
-    Game.Resources.Metal += totalScrapConversion * Game.Resources.ScrapToMetal;
-    Game.Resources.Leather += totalScrapConversion * Game.Resources.ScrapToLeather;
-    Game.Resources.Cloth += totalScrapConversion * Game.Resources.ScrapToCloth;
 }
 
 // Combat ---------------------------------------------------------------------
@@ -270,7 +261,6 @@ function startWorldZone(zone) { } // TODO: more complicated zone spawn
 
 function endEncounter() {
 
-    console.log("Encounter Over");
     // Move on to the next cell
     Game.World.CurrentCell++;
 
@@ -349,7 +339,6 @@ function StoryControl() {
 }
 
 function newPage() {
-    // TODO: Load game and set visual state
     // load game works, just leaving it out for testing
     //loadGameFromLocal();
     // Fix in for now, get current time for brand new game
@@ -385,4 +374,5 @@ function newPage() {
     allEvents.queueEvent("TEST_EVENT");
 }
 
-window.onload = newPage();
+//window.onload = newPage();
+window.addEventListener('load', newPage);

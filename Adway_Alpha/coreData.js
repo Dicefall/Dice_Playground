@@ -44,8 +44,8 @@ class Actor {
         this.HealthCurr = 100;
         this.HealthMax = 100;
         this.HealthRegen = 0; // Health regen per second
+        this.RegenBase = 1;
         this.isAlive = true;
-        this.HealthRegen = 0;
     
         this.SpeedBase = 1;
         this.AttackBase = 10;
@@ -65,24 +65,14 @@ class Actor {
 
 class Hero extends Actor { 
 
-    Level = 1;
-    LevelMax = 10;
-
     constructor(name) {
         super(name);
 
+        this.Level = 1;
+        this.LevelMax = 10;
+
         // Player character gets a base of 1
         this.HealthRegen = 1;
-
-        // this.CurrentJob = Lookup.JobsDB[0]; // Default to wanderer
-
-        // this.Jobs = {
-        //     Wanderer: {
-        //         Level: 0,
-        //         JobXP: 0,
-        //         Mastery: false,
-        //     }
-        // }
     }
 
     recalcStats() {
@@ -91,7 +81,7 @@ class Hero extends Actor {
         this.Attack = this.AttackBase * levelMulti;
         this.HealthMax = this.HealthBase * levelMulti;
         this.HealthCurr = Math.min(this.HealthCurr,this.HealthMax);
-        this.HealthRegen = Math.max(this.HealthRegen * levelMulti, 0);
+        this.HealthRegen = Math.max(this.RegenBase * levelMulti, 0);
 
         this.Speed = this.SpeedBase;
     }

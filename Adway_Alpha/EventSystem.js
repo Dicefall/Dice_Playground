@@ -172,8 +172,6 @@ class Chronometer {
         this.timerList.push(newTimer);
         this.SortTimers();
 
-        console.log("Timer created with id:" + newTimer.timerID);
-
         return newTimer.timerID;
     }
 
@@ -194,7 +192,7 @@ class Chronometer {
         return newTimer.timerID;
     }
 
-    // TODO: Make infinite timer
+    // TODO: Make finite repeating timer
 
     RemoveTimer(removeID) {
 
