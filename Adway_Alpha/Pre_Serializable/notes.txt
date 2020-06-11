@@ -1,0 +1,188 @@
+Adway roadmap
+
+Basic world design and implementation
+-World maps/zones
+-Dungeons/maps/whatever
+-Exploring concept
+
+Exploring is through combat, clean up afterwards with some kind of
+investigation thing, each cell fully scouted out is bonus resource
+generation and maybe discover some cool things. Maybe some forward
+scouting added also to see what's coming up.
+
+Figure out combat pieces:
+Combat Timer:
+-base turn time is 1s, haste makes it tick down faster
+-some abilities could in theory have different turn times
+-adds interaction with this sort of mechanic potentially
+
+Combat
+-Simple turn ordering and fighting
+-TODO: AI, more complicated combat
+
+Game Save
+-Local save to start, online later
+-TODO: String compression
+-TODO: Online Save
+
+XP Growth
+-Gaining xp/levelling up
+-Increasing max level
+
+Offline progress
+-Probably just store the time and let it run fast to catch up
+--Time afk stored. Either background tab or offline will all store it I think.
+--Game loop will run faster if able.
+--TODO: Actual acceleration if needed
+
+--Decision: for now rework things to be single attacker and cut back on classes
+---I'll come back to this later I think but for now it's just too much and will get in the way of things.
+---Focus on basic combat and extra systems. Initial characters in story will intro other pieces of the game.
+
+Party wipe
+-Just turn off combat until regen brings them back to full.
+-Add in some bonuses to out of combat regen of various resources
+
+Between Combat time
+-Maybe a half second after something dies before spawning something new in.
+--Change party wipe to non-combat?
+--Feels weird without a break, needs testing
+
+I am here ---------------------------------------------------------------------
+--------------------Reworking game/combat states-------------------------------
+
+Scraps
+-Something for scraps.
+--They do nothing right now
+--Create basic equipment system out of this.
+--Sort of liking the way idle wizard handles it, might start there
+
+Resets
+-Reset currency
+-Reset process
+
+Story
+-Need to do the tutorial and early bits of story
+
+Basic world design and implementation
+-World maps/zones
+--Enemy spawns, limitations, different enemies
+-Story
+--Include a reason there's an end or something
+
+VISUALS-----------------------------------------------
+
+Some basic UI work
+-Do a small mockup
+-Start thinking about art and theme options
+-Is it possible to massively change ui for a "work mode" or something?
+--It is, do I want to do it?
+
+Animation Engine?
+-Need to figure out how I want to architect it
+-Big giant thing or make it small for each one?
+-Not even ready to think about spell animations
+
+--Real GUID system?
+
+----Bugfixes / Feature updates
+Update plans-----------------------------------------
+
+World
+-Zones, maps, etc
+
+Buffs/Debuffs
+
+Gear (Save for classes/jobs?)
+-Equipment from scraps/other resources
+-Extra stats?
+-Randomness
+-Armor types
+
+Other Features!
+
+Need some kind of automation system fantasy idea
+
+Jobs/Classes
+-Different attacks maybe, or procs
+-Class mastery effects or special passives for each one
+-Stat modifiers for the classes
+--Thoughts: Epic7 style few abilities with CDs to rotate through
+--bit more complicated with buff/debuff system
+
+Expansion/Major patch ideas -----------------------------
+
+Exploration
+-Exploration, dungeons, etc
+--Thinking something like etrian odyysey mapping out dungeons
+--Would have to be largely active and some good rewards for finishing floor
+--Would need to do something to avoid "look up the right map"
+
+-Enchanting gear
+-Long term gear scaling system maybe, researching new stuff
+-Actual presistent gear
+
+-"The swarm" (critter mound style thing maybe)
+--No clue how to make this make any sense, fights enemy swarm maybe?
+
+-Town of some sort
+--Maybe houses a lot of the other mechanisms
+--They would know only that you're fighting
+--Part of unlocking stuff and new systems like a mage tower etc
+
+-Alchemy/potions
+--Consumables, generic abilities anyone can use with potion theme
+
+-Quest system (probably just fancy stuff (ui) thrown on top of events)
+--This will be for everything, unlocks, etc
+
+-"The Box" reverse containment chamber from antimemetics
+--This is where challenges might come in, left notes for self (remember more) makes it harder
+--Could have some fun with the name things for 'a day without X' for challenges
+---E.G. Sleep challenge (A day without sleep), Hope (A day without hope), etc
+
+-Museum/Artifacts?
+--Some kind of collection system, copmlete sets for bonuses
+
+-Reputations
+--Factions of some kind with presistent reputations and rewards
+
+-Alignment bonuses
+--Pick some kind of approach based on good/evil and law/chaos
+--Neat 9x9 grid of potentially interesting bonuses
+--Probably tie this into the town or non-direct player power
+
+-"Walk the path to power"
+--some corrupted power structure
+--cosmic elements maybe
+
+-Summons
+--Kind of like spells from other games like RG or Idle Wizard
+--Big cooldown but some major payoff for it? Requires active to start
+--Potential for extra tie ins and additional progression
+
+Tutorial Steps:
+-Intro to world breifly and tell player to pick up scraps
+--Pick up a sufficient amount of scrap, maybe just wait some small amount of time watching number go up a bit.
+-Run into meryl, little story telling, keep getting scraps and wait breifly
+--Very short time wait, just an actual time wait.
+--Start combat, next step after combat (first enemy) is over.
+
+--Not ironed out past here
+-Explain what's going on with scraps. Also what you're really looking for out here
+-Go into talking about the world I guess
+-Eventually on party wipe talk about the Box
+--reverse containment chamber, can start growing this into something larger
+--Find all the information here, big exposition dump maybe?
+
+// TODO repo:
+-Game saving
+--Saving is not working right now, class methods not saved?
+--Online saving: for later
+--Save string compression
+-Crowdsource enemies
+-AI, more complicated combat
+-Actual offline time acceleration similar to time warp
+--Right now I've just set the game loop to run faster than the default update
+--Eats through extra time if it can
+-Check enemy death at some point, hacky right now without destructors
