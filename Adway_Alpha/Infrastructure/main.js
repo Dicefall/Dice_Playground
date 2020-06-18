@@ -1,12 +1,12 @@
 function mainLoop() {
 
-    // If game is paused do nothing and move on
-    if (Game.GameState == Lookup.GameStrings.GameStates.Paused) return;
-
     // Do Time stuff
     var currTime = Date.now();
     Game.Resources.Time += (currTime - Game.Stats.LastUpdateTime);
     Game.Stats.LastUpdateTime = currTime;
+
+    // If game is paused do nothing and move on
+    if (Game.GameState == Lookup.GameStrings.GameStates.Paused) return;
 
     // Handling for possible slowdown and other effects, eg. background tab
     if (Game.Resources.Time < Lookup.GameLoopIntervalBase) return;
@@ -14,98 +14,15 @@ function mainLoop() {
     // Eventually everything time based will be handled via Chronos.
     // Things that wont be handled via chronos will come after
     // This will be things like spawning new encounters, etc
-    Game.Chronos.Tick(Lookup.GameLoopIntervalBase);
+    Chronos.Tick(Lookup.GameLoopIntervalBase);
 
     // Basically the cost in terms of time of anything happening
     // TODO: Add in a speed up mechanism for running multiple times per frame
     Game.Resources.Time -= Lookup.GameLoopIntervalBase;
     Game.statTracking.RunTimeSpent += Lookup.GameLoopIntervalBase;
 
-    // At start queue up the first zone
-    // Also start up on new run
-    if (Game.World.CurrentZone == 0) {
-        Game.World.CurrentZone++;
-        Game.World.CurrentCell = 1;
-        spawnEncounter();
-    }
-
-    // Combat includes any fighting etc.
-    //mainCombat();
-
     // Just in case I want to hook into this
     //allEvents.queueEvent("GAME_TICK");
-}
-
-// Utility Functions-----------------------------------------------------------
-
-// The cost to buy multiples of buildings.
-function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) {
-    if (!isCompounding) {
-        // simplified formula: (NND - ND + 2BN) / 2
-        // N (ND - D + 2BN) / 2
-        return multiBuyCount * (multiBuyCount * costScaling - costScaling + 2 * baseCost) / 2;
-    } else {
-        // S = A * (1 - r^n) / (1 - r)
-        return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
-    }
-}
-
-// Find out the most one can afford with given resources
-function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
-
-    // Take multibuy cost formula, solve for N instead of S
-    if (!isCompounding) {
-        return Math.floor(
-            (costScaling - (2 * baseCost) + Math.sqrt(Math.pow(2 * baseCost - costScaling, 2) + (8 * costScaling * totalResource))) / 2
-        );
-    } else {
-        return Math.floor(Math.log(1 - (1 - costScaling) * totalResource / baseCost) / Math.log(costScaling));
-
-    }
-}
-
-// Format numbers for text displaying. Cleans a lot of display up
-function formatNumber(number) {
-
-    // Options are:
-    // Scientific, Engineering, Log, 
-
-    // Check for infinite:
-    if (!isFinite(number)) return GameText.Icons.Infinity;
-
-    // Negative
-    if (number < 0) return '-' + formatNumber(-number);
-
-    // Don't want negative exponents just yet
-    if (number < 0.0001 && number > 0) return 'ε';
-
-    // Handling below 1, looks weird to see 0 when it's small but still > 0
-    //if (number < 1) return number.toFixed(2);
-
-    // Get base and exponent
-    // Number expressed by: mantissa * 10 ^ exponent
-    var exponent = Math.floor(Math.log10(number));
-    var mantissa = number / Math.pow(10, exponent);
-
-    // Clean up weird float precision for numbers less than 10k
-    if (exponent <= 3) return Math.floor(number);
-
-    // For larger numbers start dealing with notations
-    switch (Game.Settings.NumberNotation) {
-        case 'Scientific':
-            return mantissa.toFixed(2) + 'e' + exponent.toString();
-        case 'Standard':
-            // TODO: See Conway and Guy's construction for standard notation
-
-            return mantissa.toFixed(2)
-        case 'Engineering':
-            var precision = exponent % 3;
-            return (mantissa * (Math.pow(10, precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
-        case 'Log':
-            return 'e' + Math.log10(number).toFixed(2);
-        default:
-            return number;
-    }
 }
 
 function UpdateUIElements() {
@@ -206,7 +123,7 @@ function removeLocalSave() {
 
         // Clean up all of the event listeners
         allEvents.clearAllEvents();
-        Game.Chronos.ClearTimers();
+        Chronos.ClearTimers();
 
         // Delete localstorage save
         window.localStorage.clear();
@@ -217,19 +134,6 @@ function removeLocalSave() {
         // Start up the game again
         newPage();
     }
-}
-// ----------------------------------------------------------------------------
-// Resources
-
-function generateResources() {
-
-    // All resource numbers are stored as per seconds
-
-    // Scraps
-    Game.Resources.Scraps += (Game.Resources.ScrapsIncome);
-    allEvents.queueEvent("CURRENCY_GAINED");
-
-    return;
 }
 
 // Combat ---------------------------------------------------------------------
@@ -244,7 +148,7 @@ function combatCleanup() {
             Game.Resources.XP += 25 /* Game.Enemies[i].lootMod*/;
             Game.Resources.Scraps += 5 /* Game.Enemies[i].lootMod*/;
 
-            Game.Chronos.RemoveTimer(Game.Enemies[i].turnTimerID);
+            Chronos.RemoveTimer(Game.Enemies[i].turnTimerID);
             Game.Enemies.splice(i, 1);
         }
     }
@@ -256,49 +160,34 @@ function combatCleanup() {
 
 }
 
-function startWorldZone(zone) { } // TODO: more complicated zone spawn
+function startWorldZone(zone) {
+    Game.World.CurrentZone = zone;
+    Game.World.CurrentCell = 0;
+    endEncounter();
+ } // TODO: more complicated zone spawn, just set new cell and spawn an encounter for now
 
-function endEncounter() {
-
-    // Move on to the next cell
-    Game.World.CurrentCell++;
+function endEncounter() { // TODO: Major change to this, will redo when world spawning advances
 
     allEvents.queueEvent("CELL_CLEAR");
 
     //Check for zone clear
     // TODO: Generic zone sizes
     if (Game.World.CurrentCell >= 100) {
-        Game.World.CurrentZone++;
-        Game.World.CurrentCell = 1;
+        startWorldZone(Game.World.CurrentZone++);
         allEvents.queueEvent("ZONE_CLEAR");
     }
+
+    // Move on to the next cell
+    Game.World.CurrentCell++;
 
     // Switch to rest for the very small time until next combat
     Game.GameState = Lookup.GameStrings.GameStates.Rest;
 
     // Spawn new encounter after a short delay
     // Delay is 500ms
-    Game.Chronos.CreateTimer(time => {return time;},spawnEncounter,500);
-
-}
-
-function spawnEncounter() {
-
-    // TODO: make it more fancy, eventually move spawn logic to the zone
-    // or other system
-
-    // For now dragon on last cell random otherwise
-    // Zone control here
-    if (Game.World.CurrentCell == 100) {
-        Game.Enemies.push(new Creature("Dragon", true));
-    } else {
-        let x = Math.floor(Math.random() * Lookup.Bestiary.length);
-
-        Game.Enemies.push(new Creature(Lookup.Bestiary[x].Name));
-    }
+    //Chronos.CreateTimer(time => {return time;},spawnEncounter,500);
+    Chronos.CreateTimer(3, null);
     
-    // If you're spawning enemies you should go back into core.
-    Game.GameState = Lookup.GameStrings.GameStates.Core;
 
 }
 
@@ -328,12 +217,6 @@ function newPage() {
         //console.log("Level Up Button Pressed");
         Game.Hero.LevelUp();
     });
-
-    // Start up game timers
-    Game.Hero.turnTimerID = Game.Chronos.CreateForevertimer(Game.Hero.CombatTicker.bind(Game.Hero),Game.Hero.CombatActions.bind(Game.Hero), Actor.baseTurnRate);
-
-    // Generate resources once every second
-    Lookup.BookKeeping.ResourceTimerID = Game.Chronos.CreateForevertimer(time => { return time}, generateResources, 1000);
 
     // Queue up main loop 
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);

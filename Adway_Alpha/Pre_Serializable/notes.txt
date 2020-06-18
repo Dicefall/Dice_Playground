@@ -49,7 +49,7 @@ Between Combat time
 --Feels weird without a break, needs testing
 
 I am here ---------------------------------------------------------------------
---------------------Reworking game/combat states-------------------------------
+--------------------Fixed serialization of systems-----------------------------
 
 Scraps
 -Something for scraps.

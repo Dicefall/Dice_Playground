@@ -160,7 +160,7 @@ class Creature extends Actor {
         })
 
         // Add creature combat timer to the list
-        this.turnTimerID = Game.Chronos.CreateForevertimer(this.CombatTicker.bind(this),this.CreatureCombatAction.bind(this),Actor.baseTurnRate);
+        this.turnTimerID = Chronos.CreateTimer(0,this);
         
     }
 
@@ -201,10 +201,6 @@ class Job {}
 class PlayerData {
 
     constructor() {
-        // Chronometer will be saved, and is considered part
-        // of the current state of the game and the player's
-        // progress, so it will be here.
-        this.Chronos = new Chronometer();
 
         // Resources
         this.Resources = {
@@ -398,4 +394,4 @@ class GameData {
 }
 
 const Lookup = new GameData();
-var Game = new PlayerData();
+const Game = new PlayerData();

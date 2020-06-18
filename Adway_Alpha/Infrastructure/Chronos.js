@@ -45,11 +45,11 @@ class EventBoard {
 
     // This needs to be redesigned to be serializable
     // The goal is to save a way for the events to be reconstructed in their current state
-    registerListener(listenFor, eventID, guidOverride = -1){
+    registerListener(listenFor, eventID, owner, guidOverride = -1){
 
         var eventCopy = {
             eventDBID: eventID,
-            eventCB: GameDB.Events[eventID].eventCB,
+            eventOwner: owner,
             cbGUID: (guidOverride > 0) ? guidOverride : this.GenerateEventGUID()
         }
 
@@ -68,7 +68,8 @@ class EventBoard {
             return;
         }
         this.RootBoard.get(eventType).forEach(element => {
-            element.eventCB(...restArgs);
+            GameDB.Events[element.eventDBID].eventCB(...restArgs);
+            //element.eventCB(...restArgs);
         });
     }
 
@@ -105,6 +106,7 @@ class EventBoard {
                 var seralizedEvent = {
                     eventDBID: eventObj.eventDBID,
                     eventGUID: eventObj.cbGUID,
+                    eventOwner: eventObj.eventOwner
                 }
                 SerializedEvents.get(EType).push(seralizedEvent);
             });
@@ -121,7 +123,7 @@ class EventBoard {
 
         this.EventTypes.forEach( EType => {
             serializedObj.get(EType).forEach(event => {
-                this.registerListener(EType, event.eventDBID, event.cbGUID);
+                this.registerListener(EType, event.eventDBID, event.eventOwner, event.cbGUID);
             });
         });
 
@@ -132,29 +134,38 @@ class EventBoard {
 // Chronometer is an all purpose time keeping class. 
 
 class Chronometer {
+
+    static instance;
+
     constructor() {
 
-        this.timerList = [];
+        if (this.instance) {
+            return instance;
+        } else {
+            this.instance = this;
 
-        this.nextTimerID = 0;
+            this.timerList = [];
+
+            this.nextTimerID = 0;
+        }
     }
 
     SortTimers() {
-        let isListSorted = false;
-        while (!isListSorted) {
+        // Insertion sort, should be the fastest for already mostly sorted lists
+        // Move longest backwards, should also be most efficient for timers with
+        // multiple ticks getting put in place more quickly
+        for (var outer = this.timerList.length; outer > 1; outer--) {
+            var isSorted = true;
+            for (var inner = 0; inner < outer - 1; inner++) {
+                if (this.timerList[inner].nextTick > this.timerList[inner + 1].nextTick) {
+                    [this.timerList[inner], this.timerList[inner + 1]] =
+                        [this.timerList[inner + 1], this.timerList[inner]];
 
-            // Assume sorted to start
-            isListSorted = true;
-
-            // go from second element down to the last
-            // check if it's smaller than the one before it
-            for (var i = 1; i < this.timerList.length; i++) {
-                if (this.timerList[i].remainingDuration < this.timerList[i - 1].remainingDuration) {
-                    //this.timerList.splice(i - 1, 0, this.timerList.splice(i,1));
-                    [this.timerList[i - 1], this.timerList[i]] = [this.timerList[i], this.timerList[i - 1]];
-                    isListSorted = false;
+                    isSorted = false;
                 }
             }
+
+            if (isSorted) return; // Exit early if no swaps were needed
         }
     }
 
@@ -165,70 +176,75 @@ class Chronometer {
     // this will go through all timers on the list and tick them down
     Tick(elapsedTime) {
 
+        Game.statTracking.RunTimeSpent += elapsedTime;
+        Game.statTracking.TotalTimeSpent += elapsedTime;
+
         // Don't need to do anything if there are no timers
         if (this.timerList.length == 0) return;
-        
-        // tick timers down
-        this.timerList.forEach(timer => {
-            timer.remainingDuration -= timer.tick(elapsedTime);
-        });
+
+        // Check for pauses:
+        this.timerList.forEach( timer => {
+            if (GameDB.Auras[timer.spellID].flags & Aura.AuraFlags.PauseOnCombat) {
+                if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
+                    timer.nextTick += elapsedTime;
+                    timer.endTime += elapsedTime;
+                }
+            }
+        })
         
         // sort timers
         // -since list should remain mostly sorted, going with insertion sort
         this.SortTimers();
 
         // tock timers in order
+        while (this.timerList[0].nextTick < Game.statTracking.TotalTimeSpent) {
 
-        // Swapping to a while loop instead
-
-        while (this.timerList[0].remainingDuration <= 0) {
+            // Placeholder ref for cleaner code
             var currentTimer = this.timerList[0];
 
-            currentTimer.tock();
+            // Aura's tick function, will need to check for partial effects eventually
+            if (GameDB.Auras[currentTimer.spellID].onTick) GameDB.Auras[currentTimer.spellID].onTick();
 
-            if (currentTimer.isForever) {
-                currentTimer.remainingDuration += currentTimer.initDuration;
-                this.SortTimers();
+            // After timer has ticked, either find out the next time to tick or if it should go away
+
+            // Check if we've reached the end of the timer, this is checked by checking:
+            //  If we're past the end time AND the 'next tick' value is the same as the end time.
+            if (currentTimer.endTime < Game.statTracking.TotalTimeSpent && currentTimer.endTime == currentTimer.nextTick) {
+                if (GameDB.Auras[currentTimer.spellID].onFade) GameDB.Auras[currentTimer.spellID].onFade();
+                console.log("Aura Fading: " + currentTimer.spellID);
+                this.timerList.splice(0,1);
+                if (this.timerList.length == 0) {
+                    return;
+                }
+                // TODO: clear it from the owner's aura list as well to make sure it gets cleaned up
+            // Check if the next tick would go over the final end time. Set it to be the same and set up partial tick info
+            } else if (currentTimer.nextTick + GameDB.Auras[currentTimer.spellID].tickFrequency >= currentTimer.endTime) {
+                currentTimer.nextTick = currentTimer.endTime;
+                if (GameDB.Auras[currentTimer.spellID].flags & Aura.AuraFlags.PartialFinalTick) {
+                    // set info important to partial ticks
+                }
+            // This should leave only the case where we get another full tick
             } else {
-                this.RemoveTimer(currentTimer.timerID);
+                currentTimer.nextTick += GameDB.Auras[currentTimer.spellID].tickFrequency;
             }
+
+            // Sort to make sure fresh ticks go to the back
+            this.SortTimers();
         }
 
     }
 
-    // Information needed:
-    // -Function for handling tick down time
-    // -What to call at the end of the timer
-    // -How long the timer is
-    CreateTimer(tickFunc, tockFunc, totalDuration){
+    CreateTimer(timerDBID, timerOwner, guidOverride = -1){
 
         var newTimer = {
-            timerID: this.GenerateTimerID(),
-            remainingDuration: totalDuration,
-            tick: tickFunc,
-            tock: tockFunc,
-            isForever: false,
-            initDuration: totalDuration
+            Owner: timerOwner, // Does nothing for now, included for future support for actual 'auras'
+            spellID: timerDBID,
+            timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
 
-        }
+            startTime: Game.statTracking.TotalTimeSpent,
+            endTime: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].maxDuration, // check for hasted duration
+            nextTick: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].tickFrequency,
 
-        // insert into list at appropriate spot
-
-        this.timerList.push(newTimer);
-        this.SortTimers();
-
-        return newTimer.timerID;
-    }
-
-    CreateForevertimer(tickFunc, tockFunc, frequency){
-
-        var newTimer = {
-            timerID: this.GenerateTimerID(),
-            remainingDuration: frequency,
-            tick: tickFunc,
-            tock: tockFunc,
-            isForever: true,
-            initDuration: frequency
         }
 
         this.timerList.push(newTimer);
@@ -237,8 +253,7 @@ class Chronometer {
         return newTimer.timerID;
     }
 
-    // TODO: Make finite repeating timer
-
+    
     RemoveTimer(removeID) {
 
         for (var i = 0; i < this.timerList.length; i++) {
@@ -255,8 +270,40 @@ class Chronometer {
     }
 
     ClearTimers(){
-        this.timerList = [];
+        this.timerList = []; // TODO: may need to remove other refs
     }
+
+    SerializeTimers(){
+        var serialized = {
+            Timers: this.timerList,
+            IDCounter: this.nextTimerID
+        }
+        this.ClearTimers();
+        Game.GameState = Lookup.GameStrings.GameStates.Paused;
+        return serialized;
+    };
+
+    DeserializeTimers(Data){
+        this.nextTimerID = Data.IDCounter;
+        Data.Timers.forEach( timer => {
+
+            // Essentially redo the create-timer but just copy fields
+            var newTimer = {
+                Owner: timer.Owner, // Does nothing for now, included for future support for actual 'auras'
+                spellID: timer.spellID,
+                timerID: timer.timerID,
+    
+                startTime: timer.startTime,
+                endTime: timer.endTime,
+                nextTick: timer.nextTick
+            }
+
+            this.timerList.push(newTimer);
+        })
+
+        this.SortTimers();
+    };
 }
 
 const allEvents = new EventBoard();
+const Chronos = new Chronometer();
