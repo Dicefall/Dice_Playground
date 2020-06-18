@@ -51,6 +51,8 @@ Between Combat time
 I am here ---------------------------------------------------------------------
 --------------------Fixed serialization of systems-----------------------------
 
+Proper setup of saving/loading
+
 Scraps
 -Something for scraps.
 --They do nothing right now
@@ -84,6 +86,8 @@ Animation Engine?
 -Not even ready to think about spell animations
 
 --Real GUID system?
+
+--Dodge spaghet code problems when you update combat and event/aura owners
 
 ----Bugfixes / Feature updates
 Update plans-----------------------------------------

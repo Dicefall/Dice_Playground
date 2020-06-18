@@ -140,6 +140,7 @@ class Creature extends Actor {
     constructor(name, isBoss = false) {
         super(name);
 
+        this.isBoss = isBoss;
         let minionMod = isBoss ? 1 : 0.5;
 
         // Get world and cell scaling
@@ -246,7 +247,7 @@ class PlayerData {
         this.Stats = {
             GameVersion: {
                 Major: 0,
-                Minor: 1,
+                Minor: 2,
                 Patch: 0,
             },
             LastUpdateTime: new Date().getTime(),

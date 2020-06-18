@@ -84,14 +84,16 @@ function UpdateUIElements() {
 // TODO: Maybe look at the lz-string thing other games do----------------------
 function saveGameToLocal() {
 
-    // Copy game save to prep local save
-    let saveString = JSON.stringify(Game);
-    let saveState = JSON.parse(saveString);
+    // Create save object
+    var saveGame = {};
+    saveGame.events = allEvents.serializeEvents();
+    saveGame.chron = Chronos.SerializeTimers();
+    saveGame.Game = JSON.parse(JSON.stringify(Game));
 
     // Get rid of things that don't need to be saved shouldn't be anything
 
     // after editting
-    saveString = JSON.stringify(saveState);
+    saveString = JSON.stringify(saveGame);
 
     window.localStorage.setItem("ADWAY_Save", saveString);
     console.log("AutoSaved");
@@ -99,18 +101,46 @@ function saveGameToLocal() {
 
 function loadGameFromLocal() {
     // TODO: Deal with version upgrading here somewhere
-    let tempSave = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
-    if (tempSave == null) {
+    let returnedSave = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
+    if (returnedSave == null) {
         console.log("No local save detected");
         return;
     }
-    Game = tempSave;
+    
+    // Events and Time
+    allEvents.deserializeEvents(returnedSave.events);
+    Chronos.DeserializeTimers(returnedSave.chron);
+
+    // Player data
+    // Data only fields
+    Game.Resources = JSON.parse(JSON.stringify(returnedSave.Game.Resources));
+    Game.Achievements = JSON.parse(JSON.stringify(returnedSave.Game.Achievements));
+    Game.Stats = JSON.parse(JSON.stringify(returnedSave.Game.Stats));
+    Game.Settings = JSON.parse(JSON.stringify(returnedSave.Game.Settings));
+    Game.GameState = returnedSave.GameState;
+
+    // Class based fields
+    // Hero, enemies, probably world eventually
+    Game.World = JSON.parse(JSON.stringify(returnedSave.Game.World));
+
+    // Object.assign is only a shallow copy
+    Game.Hero = new Hero("Hiro");
+    Object.assign(Game.Hero, returnedSave.Game.Hero);
+
+    // Make new copies of all the enemies    
+    returnedSave.Game.Enemies.forEach((oldBaddie, index) => {
+        // Steal name and boss mod to make new one
+        Game.Enemies.push(new Creature(oldBaddie.name, oldBaddie.isBoss));
+
+        // Copy stats same as hero
+        Object.assign(Game.Enemies[index], oldBaddie);
+    });
 
     // Offline Time
     // Maximum of 30 days
     var missingTime = Math.min(
         Date.now() - Game.Stats.LastUpdateTime,
-        1000 * 60 * 60 * 24 * 30);
+        1000 * 60 * 60 * 24 * 30); // 30 days in milliseconds
 
     Game.Stats.LastUpdateTime = Date.now();
     Game.Resources.Time += missingTime;

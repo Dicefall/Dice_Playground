@@ -80,7 +80,6 @@ GameDB = {
             switch (Game.Stats.StoryState.StoryStage) {
                 // Very first intro text
                 case 0:
-                    console.log(ParseGameText(GameText[Game.Settings.Language].Story.Intro));
                     Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.Intro);
 
                     Game.Stats.StoryState.StoryStage++;

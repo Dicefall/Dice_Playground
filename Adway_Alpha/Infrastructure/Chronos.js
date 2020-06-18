@@ -97,22 +97,29 @@ class EventBoard {
     // Grab each list, turn it into an object without functions basically
     serializeEvents(){
 
-        var SerializedEvents = new Map();
+        // TODO: This is broken, fix
+        var SerializedEvents = [];
 
         this.EventTypes.forEach( EType => {
-            SerializedEvents.set(EType, []);
+            //SerializedEvents.set(EType, []);
 
             this.RootBoard.get(EType).forEach( eventObj => {
                 var seralizedEvent = {
+                    eventType: EType,
                     eventDBID: eventObj.eventDBID,
                     eventGUID: eventObj.cbGUID,
                     eventOwner: eventObj.eventOwner
                 }
-                SerializedEvents.get(EType).push(seralizedEvent);
+                SerializedEvents.push(seralizedEvent);
             });
         });
 
-        return SerializedEvents;
+        let eventFinal = {
+            SEvents: SerializedEvents,
+            guidCount: this.nextGUID
+        }
+
+        return eventFinal;
 
     };
 
@@ -120,12 +127,13 @@ class EventBoard {
 
         // Clear the board and bring in the old
         this.clearAllEvents();
+        this.init();
 
-        this.EventTypes.forEach( EType => {
-            serializedObj.get(EType).forEach(event => {
-                this.registerListener(EType, event.eventDBID, event.eventOwner, event.cbGUID);
-            });
-        });
+        this.nextGUID = serializedObj.guidCount;
+
+        for (const oldEvent of serializedObj.SEvents) {
+            this.registerListener(oldEvent.eventType, oldEvent.eventDBID, oldEvent.eventOwner, oldEvent.eventGUID);
+        }
 
     };
 
@@ -278,8 +286,6 @@ class Chronometer {
             Timers: this.timerList,
             IDCounter: this.nextTimerID
         }
-        this.ClearTimers();
-        Game.GameState = Lookup.GameStrings.GameStates.Paused;
         return serialized;
     };
 
