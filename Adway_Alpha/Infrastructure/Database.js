@@ -24,6 +24,7 @@ class Aura {
     // Example from wow: Living Bomb
     //  onTick would be the dot damage, onFade would be the ae explosion at applying it to everyone
 
+    // Flags for auras
     static AuraFlags = {
         PauseOnCombat: 1,
         DurationHasted: 2,
@@ -49,27 +50,65 @@ class Spell {
 
 }
 
+// Templates for creatures
+class CreatureTemplate {
+    constructor(name, attack, health, speed, loot) {
+        this.Name = name;
+        this.AttackMod = attack;
+        this.HealthMod = health;
+        this.SpeedMod = speed;
+    }
+}
+
+// Achievements
+class Achievement {
+
+    constructor(achievementName, listenerType, handlerEventID) {
+
+        this.Name = achievementName;
+        this.handlerEventID = handlerEventID;
+        this.HandlerID = allEvents.registerListener(listenerType, handlerEventID);
+    }
+}
+
+class TieredAchievement extends Achievement {
+    constructor(achievementName, rewardBreakpoints, rewardValues, handlerType, handlerEventID) {
+        super(achievementName, handlerType, handlerEventID);
+
+        // Breakpoints are the value being checked
+        // E.g. 50 for a "get 50 scraps" achievement, or 100 for "get 100 scraps"
+        this.TierBreakpoints = rewardBreakpoints;
+
+        // Rewards for each breakpoint
+        // Indexes should match breakpoints
+        this.TierValues = rewardValues;
+    }
+}
+
+class Zone {
+    constructor(zoneName, cellCount, zoneEnemies, proceduralFlags, fixedSpawns) {
+        this.numCells = cellCount;
+        this.legalSpawns = zoneEnemies;
+        this.zoneFlags = proceduralFlags;
+        this.fixedEnemies = fixedSpawns;
+        this.name = zoneName;
+    }
+}
+
 GameDB = {
     Events: [
         new Event(() => { // Scraps achievement function, id == 0
 
-            if (Game.Achievements['Scraps'] >= Lookup.AchievementData.Scraps.TierBreakpoints.length) {
+            if (Game.Achievements['Scraps'] >= GameDB.Achievements[0].TierBreakpoints.length) {
                 //allEvents.removeEvent(Lookup.AchievementData['Scraps'].HandlerID);
                 return;
             }
 
-            let nextTier = Lookup.AchievementData.Scraps.TierBreakpoints[Game.Achievements['Scraps']];
+            if (Game.Resources.Scraps >= GameDB.Achievements[0].TierBreakpoints[Game.Achievements['Scraps']]) {
 
-            if (Game.Resources.Scraps >= nextTier) {
+                var recieveText = achievementRewardText(GameDB.Achievements[0]);
 
-                var recieveText = ParseGameText(
-                    ParseGameText(
-                        GameText[Game.Settings.Language].AchievementText.Recieved,
-                        GameText[Game.Settings.Language].AchievementText.Scraps.Names[Game.Achievements['Scraps']],
-                        GameText[Game.Settings.Language].AchievementText.Scraps.Criteria),
-                    nextTier);
-
-                console.log(recieveText);
+                console.log(recieveText); // TODO: Change to achievement reward system
 
                 Game.Achievements['Scraps']++;
                 Lookup.AchievementData.CalculateTotal();
@@ -80,7 +119,13 @@ GameDB = {
             switch (Game.Stats.StoryState.StoryStage) {
                 // Very first intro text
                 case 0:
-                    Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.Intro);
+                    Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[0]);
+
+                    // Player attack aura
+                    Chronos.CreateTimer(1,Game.Hero);
+                    // Regen aura
+                    Chronos.CreateTimer(4, Game.Hero);
+                    startWorldZone(1);
 
                     Game.Stats.StoryState.StoryStage++;
                     allEvents.removeEvent(
@@ -127,7 +172,10 @@ GameDB = {
 
                 if (Game.Hero.HealthCurr <= 0) {
                     Game.Hero.HealthCurr = 0;
-                    OnPartyWipe();
+                    Game.Hero.isAlive = false;
+                    
+                    // Switch to rest state
+                    Game.GameState = Lookup.GameStrings.GameStates.Rest;
                 }
             },
             null,
@@ -173,15 +221,46 @@ GameDB = {
                 if (Game.World.CurrentCell == 100) {
                     Game.Enemies.push(new Creature("Dragon", true));
                 } else {
-                    let x = Math.floor(Math.random() * Lookup.Bestiary.length);
+                    let x = Math.floor(Math.random() * GameDB.Creatures.length);
 
-                    Game.Enemies.push(new Creature(Lookup.Bestiary[x].Name));
+                    Game.Enemies.push(new Creature(GameDB.Creatures[x].Name));
                 }
                 // If you're spawning enemies you should go back into core.
                 Game.GameState = Lookup.GameStrings.GameStates.Core;
             },
             null,
             0
+        ),
+        new Aura( // Health regen aura id == 4
+            Infinity,
+            1000,
+            () => {
+                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen);
+                if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
+                    if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
+                        Game.GameState = Lookup.GameStrings.GameStates.Core;
+                        Game.Hero.isAlive = true;
+                    }
+                }
+            },
+            null,
+            Aura.AuraFlags.TickHasted
         )
+    ],
+    Creatures: [
+        new CreatureTemplate("Goblin", 1, 1, 1),
+        new CreatureTemplate("Kobold", 0.8,0.8,0.8),
+        //new CreatureTemplate("Dragon", 2, 5, 1.2)
+    ],
+    Achievements: [
+        new TieredAchievement(
+            "Scraps",
+            [50, 100, 500, 1000, 10000],
+            [1, 1, 2, 2, 5],
+            "CURRENCY_GAINED",
+            0
+        ),
+    ],
+    Zones: [
     ],
 }

@@ -69,7 +69,6 @@ class EventBoard {
         }
         this.RootBoard.get(eventType).forEach(element => {
             GameDB.Events[element.eventDBID].eventCB(...restArgs);
-            //element.eventCB(...restArgs);
         });
     }
 
@@ -177,11 +176,9 @@ class Chronometer {
         }
     }
 
-    // Timers will have their own tick and tock functions
-    // Tick(time) and Tock()
-
     // This is the Chronometer global tick
     // this will go through all timers on the list and tick them down
+    // TODO: Granularity and state changes
     Tick(elapsedTime) {
 
         Game.statTracking.RunTimeSpent += elapsedTime;
@@ -214,6 +211,7 @@ class Chronometer {
             if (GameDB.Auras[currentTimer.spellID].onTick) GameDB.Auras[currentTimer.spellID].onTick();
 
             // After timer has ticked, either find out the next time to tick or if it should go away
+            // TODO: Hasted ticks
 
             // Check if we've reached the end of the timer, this is checked by checking:
             //  If we're past the end time AND the 'next tick' value is the same as the end time.
@@ -250,8 +248,10 @@ class Chronometer {
             timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
 
             startTime: Game.statTracking.TotalTimeSpent,
-            endTime: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].maxDuration, // check for hasted duration
-            nextTick: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].tickFrequency,
+            endTime: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].maxDuration *
+                ((GameDB.Auras[timerDBID].AuraFlags & Aura.AuraFlags.DurationHasted) ? 1 / timerOwner.Speed : 1), // check for hasted duration
+            nextTick: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].tickFrequency *
+                ((GameDB.Auras[timerDBID].AuraFlags & Aura.AuraFlags.TickHasted) ? 1 / timerOwner.Speed : 1),
 
         }
 

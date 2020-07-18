@@ -48,10 +48,26 @@ Between Combat time
 --Change party wipe to non-combat?
 --Feels weird without a break, needs testing
 
+Proper setup of saving/loading
+
 I am here ---------------------------------------------------------------------
 --------------------Fixed serialization of systems-----------------------------
 
-Proper setup of saving/loading
+// Still need some kind of character progress at the run level
+
+Basic world design and implementation
+-World maps/zones
+--Enemy spawns, limitations, different enemies
+-Story
+--Zones are going to be a lot bigger I think. Have them tied directly to story.
+
+Story
+-Need to do the tutorial and early bits of story
+--See Story.txt
+
+Resets
+-Reset currency
+-Reset process
 
 Scraps
 -Something for scraps.
@@ -59,18 +75,6 @@ Scraps
 --Create basic equipment system out of this.
 --Sort of liking the way idle wizard handles it, might start there
 
-Resets
--Reset currency
--Reset process
-
-Story
--Need to do the tutorial and early bits of story
-
-Basic world design and implementation
--World maps/zones
---Enemy spawns, limitations, different enemies
--Story
---Include a reason there's an end or something
 
 VISUALS-----------------------------------------------
 
@@ -92,11 +96,6 @@ Animation Engine?
 ----Bugfixes / Feature updates
 Update plans-----------------------------------------
 
-World
--Zones, maps, etc
-
-Buffs/Debuffs
-
 Gear (Save for classes/jobs?)
 -Equipment from scraps/other resources
 -Extra stats?
@@ -111,8 +110,6 @@ Jobs/Classes
 -Different attacks maybe, or procs
 -Class mastery effects or special passives for each one
 -Stat modifiers for the classes
---Thoughts: Epic7 style few abilities with CDs to rotate through
---bit more complicated with buff/debuff system
 
 Expansion/Major patch ideas -----------------------------
 
@@ -139,6 +136,7 @@ Exploration
 
 -Quest system (probably just fancy stuff (ui) thrown on top of events)
 --This will be for everything, unlocks, etc
+--Should be regularly hooked into event system
 
 -"The Box" reverse containment chamber from antimemetics
 --This is where challenges might come in, left notes for self (remember more) makes it harder
@@ -173,20 +171,11 @@ Tutorial Steps:
 --Start combat, next step after combat (first enemy) is over.
 
 --Not ironed out past here
--Explain what's going on with scraps. Also what you're really looking for out here
--Go into talking about the world I guess
--Eventually on party wipe talk about the Box
 --reverse containment chamber, can start growing this into something larger
---Find all the information here, big exposition dump maybe?
 
 // TODO repo:
 -Game saving
---Saving is not working right now, class methods not saved?
 --Online saving: for later
 --Save string compression
 -Crowdsource enemies
--AI, more complicated combat
--Actual offline time acceleration similar to time warp
---Right now I've just set the game loop to run faster than the default update
---Eats through extra time if it can
--Check enemy death at some point, hacky right now without destructors
+-More complicated combat, not just attacks

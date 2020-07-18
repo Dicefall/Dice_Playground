@@ -1,36 +1,6 @@
 // All of the game's core classes and data will be found here.
 // TODO: Need some kind of copyright notice or something
 
-// Achievements
-class Achievement {
-
-    // Function for handling whatever the achievement needs
-    // Also ID for registering/unregistering it from events
-    handlerEventID;
-    HandlerID;
-
-    constructor(listenerType, handlerEventID) {
-
-        this.handlerEventID = handlerEventID;
-        this.HandlerID = allEvents.registerListener(listenerType, handlerEventID);
-    }
-}
-
-class TieredAchievement extends Achievement {
-    constructor(rewardBreakpoints, rewardValues, handlerType, handlerEventID) {
-        super(handlerType, handlerEventID);
-
-        // Breakpoints are the value being checked
-        // E.g. 50 for a "get 50 scraps" achievement
-        this.TierBreakpoints = rewardBreakpoints;
-        this.BreakpointEarned = 0;
-
-        // Rewards for each breakpoint
-        // Indexes should match breakpoints
-        this.TierValues = rewardValues;
-    }
-}
-
 // Actors, pretty much anyone that will end up in combat
 class Actor {
 
@@ -52,14 +22,6 @@ class Actor {
         this.HealthBase = 100;
 
         this.turnTimerID = -1;
-    }
-
-    CombatTicker(inputTime) {
-        if (Game.GameState == Lookup.GameStrings.GameStates.Core) {
-            return inputTime * this.Speed;
-        } else {
-            return 0;
-        }
     }
  }
 
@@ -103,37 +65,6 @@ class Hero extends Actor {
         }
     }
 
-    CombatTicker(inputtime){
-
-        if (!this.isAlive || Game.GameState == Lookup.GameStrings.GameStates.Rest) { 
-            if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
-                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthCurr + Game.Hero.HealthRegen * inputtime / 1000, Game.Hero.HealthMax);
-            }
-
-            if (Game.Hero.HealthCurr >= Game.Hero.HealthMax) {
-                Game.GameState = Lookup.GameStrings.GameStates.Core;
-                Game.Hero.isAlive = true;
-            }
-
-            return 0 
-        } else {
-        // Don't tick down if dead
-            return inputtime * this.Speed;
-        }
-    }
-
-    CombatActions() {
-        // This will be what fires off when an action is done in combat.
-
-        Game.Enemies[0].HealthCurr -= Game.Hero.Attack;
-
-        // See if you killed it
-        if (Game.Enemies[0].HealthCurr <= 0)
-            { allEvents.queueEvent("ENEMY_DEFEATED");}
-
-        // Chronos.CreateTimer(this.CombatTicker.bind(Game.Hero),this.CombatActions.bind(this),Actor.baseTurnRate);
-    }
-
 }
 
 class Creature extends Actor {
@@ -150,43 +81,23 @@ class Creature extends Actor {
     
         var cellMod = 1 + (Lookup.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
 
-        // Apply scaling to new creature
-        Lookup.Bestiary.forEach(archtype => {
-            if (name === archtype.Name) {
-                this.Speed *= archtype.SpeedMod;
-                this.Attack *= archtype.AttackMod * worldMod * cellMod * minionMod;
-                this.HealthMax *= archtype.HealthMod * worldMod * cellMod * minionMod;
+        for (var creature of GameDB.Creatures) {
+            if (creature.Name === name) {
+                this.Speed *= creature.SpeedMod;
+                this.Attack *= creature.AttackMod * worldMod * cellMod * minionMod;
+                this.HealthMax *= creature.HealthMod * worldMod * cellMod * minionMod;
                 this.HealthCurr = this.HealthMax;
+                break;
             }
-        })
+        }
 
         // Add creature combat timer to the list
         this.turnTimerID = Chronos.CreateTimer(0,this);
         
     }
-
-    CreatureCombatAction() {
-
-        if (Game.Hero.isAlive) {
-            Game.Hero.HealthCurr -= this.Attack;
-
-            if (Game.Hero.HealthCurr <= 0) {
-                Game.Hero.HealthCurr = 0;
-                OnPartyWipe();
-            }
-        }
-    }
 }
 
-// Templates for creatures
-class CreatureTemplate {
-    constructor(name, attack, health, speed, loot) {
-        this.Name = name;
-        this.AttackMod = attack;
-        this.HealthMod = health;
-        this.SpeedMod = speed;
-    }
-}
+
 
 // Spells and abilities
 // Auras are buffs/debuffs, basically anything that gets attached to an actor
@@ -267,16 +178,19 @@ class PlayerData {
         // Settings
         this.Settings = {
             Language: 'English',
-            // How frequently your browser attempts to run the game loop
-            // or other pieces of the game, in milliseconds. The game is
-            // still operating on the same timescales regardless of this
-            // setting. See GameData.GameLoopIntervalBase
+            // How frequently your browser attempts to run the game loop.
+            // The game is built to run on it's own sense of time and this
+            // is only for how frequently the browser tries to run things.
+            // If you want to game to process smaller 
+            // See GameData.GameLoopIntervalBase
             GameSpeed: 20,
-            AutoSaveFrequency: 30 * 60 * 1000, // in millisconds
+            AutoSaveFrequency: 60 * 1000, // in millisconds
 
             // Current number notations supported:
             // Scientific, Engineering, Log
             NumberNotation: "Scientific",
+            // Still working on other bases, this isn't hooked up to anything
+            NumberBase: 10,
         };
     }
 }
@@ -304,41 +218,21 @@ class GameData {
         // Obviously only english now but support for more exists
         this.Languages = [
             "English",
-        ]
-
-        // Enemy Archtypes
-        // name, attack, health, speed, loot
-        this.Bestiary = [
-            new CreatureTemplate("Goblin", 1, 1, 1),
-            new CreatureTemplate("Kobold", 0.8,0.8,0.8),
-            //new CreatureTemplate("Dragon", 2, 5, 1.2)
         ];
 
+        // Supported notations for displaying numbers
+        this.SupportedNumberNotations = ["Scientific", "Engineering", "Log"];
+
         // Enemy scaling factors
+        // TODO: Move this to zone structure in database
         this.WorldZoneScaleFactor = 2; // Double enemy stats each new zone
-        this.WorldCellScaleFactor = 0.021; // 2% per cell scaling
+        this.WorldCellScaleFactor = 0.021; // 2.1% per cell scaling
         this.WorldResourceScaleFactor = 0; // TODO something? Should scale
 
         // Levelling constants
         this.LevelScaleFactor = 1.1;
         this.ExperienceRequirement = 100;
         this.ExperienceRequirementScaleFactor = 1.15;
-        this.JobsAPScaleFactor = 5;
-
-        this.StoryTriggers = [
-            "TEST_EVENT",
-            "CURRENCY_GAINED",
-            "TEST_EVENT",
-        ];
-
-        // Databases for spells/abilities/etc.
-        // TODO: Figure out how I want to handle this
-        this.AuraDB = [];
-        this.AbilityDB = [];
-
-        this.JobsDB = [
-            new Job("Wanderer",1,1,1),
-        ];
 
         // For internal strings only. Strings easier to debug
         // Anything being displayed to the player should be in gameText.js
@@ -362,35 +256,25 @@ class GameData {
         
                 // Scraps
                 for (var i = 0; i < Game.Achievements['Scraps']; i++) {
-                    newTotal += Lookup.AchievementData.Scraps.TierValues[i];
+                    newTotal += GameDB.Achievements[0].TierValues[i];
                 }
         
                 Game.Achievements.TotalScore = newTotal;
-            },
-        
-            Scraps: new TieredAchievement(
-                [50, 100, 500, 1000, 10000],
-                [1, 1, 2, 2, 5],
-                "CURRENCY_GAINED",
-                0
-            ),
+            }
         }
 
         this.BookKeeping = {
             MainFunctionID: 0,
             AutoSaveFunctionID: 0,
             UIUpdateFunctionID: 0,
-            ResourceTimerID: -1,
         }
 
-        // How frequently the game should be processing itself.
-        // This is different from the game speed in the player settings
-        // This will define how fast the underlying game plays, the
-        // other setting will define how frequently the browser runs
+        // How big a single update frame is in the game. This should have no
+        // effect on the game and will only change how big of a chunk gets
+        // proccessed at a time. Currently this is not changeable but may be
+        // in the future. Lower values will use more resources.
         // See PlayerData.Settings.GameSpeed
         this.GameLoopIntervalBase = 100;
-
-        this.SupportedNumberNotations = ["Scientific", "Engineering", "Log"];
     }
 }
 

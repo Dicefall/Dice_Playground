@@ -27,27 +27,33 @@ function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
 }
 
 // Format numbers for text displaying. Cleans a lot of display up
-function formatNumber(number) {
+function formatNumber(number, base = Game.Settings.NumberBase) {
 
-    // Options are:
-    // Scientific, Engineering, Log, 
+    // Notation Options are:
+    // Scientific, Engineering, Log
+
+    // TODO: 
+    // Supporting alternate bases
 
     // Check for infinite:
-    if (!isFinite(number)) return GameText.Icons.Infinity;
+    if (!isFinite(number)) return '∞';//return GameText.Icons.Infinity;
 
     // Negative
-    if (number < 0) return '-' + formatNumber(-number);
+    if (number < 0) return '-' + formatNumber(-number, base);
 
     // Don't want negative exponents just yet
     if (number < 0.0001 && number > 0) return 'ε';
-
-    // Handling below 1, looks weird to see 0 when it's small but still > 0
-    //if (number < 1) return number.toFixed(2);
 
     // Get base and exponent
     // Number expressed by: mantissa * 10 ^ exponent
     var exponent = Math.floor(Math.log10(number));
     var mantissa = number / Math.pow(10, exponent);
+
+    // Future notes for different base:
+    // log b (x) = log a (x) / log a (b)
+    // Example for dozenal:
+    //  log 12 (x) = log 10 (x) / log 10 (12) OR
+    //  log 12 (x) = ln(x) / ln(12)
 
     // Clean up weird float precision for numbers less than 10k
     if (exponent <= 3) return Math.floor(number);
@@ -56,10 +62,6 @@ function formatNumber(number) {
     switch (Game.Settings.NumberNotation) {
         case 'Scientific':
             return mantissa.toFixed(2) + 'e' + exponent.toString();
-        case 'Standard':
-            // TODO: See Conway and Guy's construction for standard notation
-
-            return mantissa.toFixed(2)
         case 'Engineering':
             var precision = exponent % 3;
             return (mantissa * (Math.pow(10, precision))).toFixed(2 - precision) + 'e' + (exponent - precision);
@@ -68,4 +70,18 @@ function formatNumber(number) {
         default:
             return number;
     }
+}
+
+function PrettifyLargeBase(number, base) { // Currently supported up to 12
+    if (base > 12) return "Base not supported";
+
+    var jsRep = number.toString(Math.floor(base)); // for bases larger than 10, string goes a-z
+    var regex = /[a-z]/gi;
+
+    var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    var alphaReplacer = 'φψ'; // TODO: Come up with good replacement characters
+ 
+    return jsRep.replace(regex,function(match) {
+        return alphaReplacer[alphabet.indexOf(match)];
+    });
 }

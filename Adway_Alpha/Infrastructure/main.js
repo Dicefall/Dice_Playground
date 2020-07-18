@@ -100,7 +100,6 @@ function saveGameToLocal() {
 }
 
 function loadGameFromLocal() {
-    // TODO: Deal with version upgrading here somewhere
     let returnedSave = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
     if (returnedSave == null) {
         console.log("No local save detected");
@@ -145,6 +144,7 @@ function loadGameFromLocal() {
     Game.Stats.LastUpdateTime = Date.now();
     Game.Resources.Time += missingTime;
 
+    // TODO: Deal with version upgrading here
 }
 
 function removeLocalSave() {
@@ -169,26 +169,6 @@ function removeLocalSave() {
 // Combat ---------------------------------------------------------------------
 // Everything combat here, including class perks and anything else that needs
 // to be dealt with for combat.
-
-function combatCleanup() {
-    // Check for which enemies died, get loot from them, give rewards
-    for (var i = Game.Enemies.length - 1; i >= 0; i--) {
-        if (Game.Enemies[i].HealthCurr <= 0) {
-            //give rewards
-            Game.Resources.XP += 25 /* Game.Enemies[i].lootMod*/;
-            Game.Resources.Scraps += 5 /* Game.Enemies[i].lootMod*/;
-
-            Chronos.RemoveTimer(Game.Enemies[i].turnTimerID);
-            Game.Enemies.splice(i, 1);
-        }
-    }
-
-    // Prep for next encounter if needed
-    if (Game.Enemies.length == 0){
-        endEncounter();
-    }
-
-}
 
 function startWorldZone(zone) {
     Game.World.CurrentZone = zone;
@@ -215,20 +195,9 @@ function endEncounter() { // TODO: Major change to this, will redo when world sp
 
     // Spawn new encounter after a short delay
     // Delay is 500ms
-    //Chronos.CreateTimer(time => {return time;},spawnEncounter,500);
     Chronos.CreateTimer(3, null);
     
 
-}
-
-function OnPartyWipe() {
-    Game.Hero.HealthCurr = 0;
-    Game.Hero.isAlive = false;
-
-    //Chronos.RemoveTimer(Game.Hero.turnTimerID);
-
-    // Switch to rest state
-    Game.GameState = Lookup.GameStrings.GameStates.Rest;
 }
 
 function newPage() {
@@ -240,6 +209,7 @@ function newPage() {
     Game.Stats.StoryState.StoryControlID =
         allEvents.registerListener("TEST_EVENT",1); // Story Control
 
+    // Enemy deaths, clean up combat stuff
     allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
 
     // Example for adding buttons
