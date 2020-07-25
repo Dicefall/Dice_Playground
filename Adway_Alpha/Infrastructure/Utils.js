@@ -26,6 +26,11 @@ function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
     }
 }
 
+// Take in seed and desired output range, spit out a seeded random number
+function seededRandom(seed) {
+    
+}
+
 // Format numbers for text displaying. Cleans a lot of display up
 function formatNumber(number, base = Game.Settings.NumberBase) {
 

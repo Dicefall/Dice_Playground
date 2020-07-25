@@ -59,6 +59,7 @@ var GameText = {
                 'List of special thanks to people here',
                 'Ghostfrog for a lot of math help',
                 'Grabz for endless JS help',
+                'SpectralFlame, help with various topics',
                 'Testers?',
                 'Obligatory "And you the player!"'
             ],

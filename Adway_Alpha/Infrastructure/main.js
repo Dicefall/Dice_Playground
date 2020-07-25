@@ -103,7 +103,7 @@ function loadGameFromLocal() {
     let returnedSave = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
     if (returnedSave == null) {
         console.log("No local save detected");
-        return;
+        return false;
     }
     
     // Events and Time
@@ -115,6 +115,7 @@ function loadGameFromLocal() {
     Game.Resources = JSON.parse(JSON.stringify(returnedSave.Game.Resources));
     Game.Achievements = JSON.parse(JSON.stringify(returnedSave.Game.Achievements));
     Game.Stats = JSON.parse(JSON.stringify(returnedSave.Game.Stats));
+    Game.RNGSeeds = JSON.parse(JSON.stringify(returnedSave.Game.RNGSeeds));
     Game.Settings = JSON.parse(JSON.stringify(returnedSave.Game.Settings));
     Game.GameState = returnedSave.GameState;
 
@@ -143,8 +144,13 @@ function loadGameFromLocal() {
 
     Game.Stats.LastUpdateTime = Date.now();
     Game.Resources.Time += missingTime;
+    
+    // Added since last pass on this:
+    //  Zones/ActiveZone
 
     // TODO: Deal with version upgrading here
+
+    return true;
 }
 
 function removeLocalSave() {
@@ -166,51 +172,21 @@ function removeLocalSave() {
     }
 }
 
-// Combat ---------------------------------------------------------------------
-// Everything combat here, including class perks and anything else that needs
-// to be dealt with for combat.
-
-function startWorldZone(zone) {
-    Game.World.CurrentZone = zone;
-    Game.World.CurrentCell = 0;
-    endEncounter();
- } // TODO: more complicated zone spawn, just set new cell and spawn an encounter for now
-
-function endEncounter() { // TODO: Major change to this, will redo when world spawning advances
-
-    allEvents.queueEvent("CELL_CLEAR");
-
-    //Check for zone clear
-    // TODO: Generic zone sizes
-    if (Game.World.CurrentCell >= 100) {
-        startWorldZone(Game.World.CurrentZone++);
-        allEvents.queueEvent("ZONE_CLEAR");
-    }
-
-    // Move on to the next cell
-    Game.World.CurrentCell++;
-
-    // Switch to rest for the very small time until next combat
-    Game.GameState = Lookup.GameStrings.GameStates.Rest;
-
-    // Spawn new encounter after a short delay
-    // Delay is 500ms
-    Chronos.CreateTimer(3, null);
-    
-
-}
-
 function newPage() {
     // load game works, just leaving it out for testing
-    //loadGameFromLocal();
-    // Fix in for now, get current time for brand new game
-
+    // if (loadGameFromLocal()) {
+        // do potential catch up
+    // } else {
     // Story Controller
     Game.Stats.StoryState.StoryControlID =
         allEvents.registerListener("TEST_EVENT",1); // Story Control
 
     // Enemy deaths, clean up combat stuff
     allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
+
+    Zone.startZone(Game.World.CurrentZone++);
+
+    // --------------------------------------------------------------------
 
     // Example for adding buttons
     Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
@@ -228,5 +204,4 @@ function newPage() {
     allEvents.queueEvent("TEST_EVENT");
 }
 
-//window.onload = newPage();
 window.addEventListener('load', newPage);

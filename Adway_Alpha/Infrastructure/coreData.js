@@ -97,17 +97,6 @@ class Creature extends Actor {
     }
 }
 
-
-
-// Spells and abilities
-// Auras are buffs/debuffs, basically anything that gets attached to an actor
-// and will effect them in some way
-// Expect these to essentially be timers with effects on start and end
-
-// Basic structure for classes/Jobs
-class Job {}
-
-
 // This is it, the big player data structure. Anything that will get saved
 // will end up in here. 
 class PlayerData {
@@ -117,16 +106,7 @@ class PlayerData {
         // Resources
         this.Resources = {
             Scraps: 0,
-            ScrapsIncome: 1,
-            ScrapConversionRate: 0,
-            ScrapConversionEfficiency: 0.5,
-
-            ScrapToMetal: 0,
-            ScrapToLeather: 0,
-            ScrapToCloth: 0,
-            Metal: 0,
-            Leather: 0,
-            Cloth: 0,
+            ScrapsIncome: 0,
 
             XP: 0,
 
@@ -135,13 +115,21 @@ class PlayerData {
 
         // Hero
         // TODO: Figure out name situation
-        this.Hero = new Hero("Hiro");
+        this.Hero = new Hero("Hero");
 
         // List of currently alive enemies
         this.Enemies = [];
 
         // Current Map/World info
         this.World = {
+            // For preloading or pre-spawning
+            // Any data that exists for the entire zone that isn't
+            // fixed for that zone. For example if a number of enemies
+            // should spawn in with modifiers we can pre-arrange them.
+            // Sets up procedural things.
+            ActiveZone: {
+                Encounters: [],
+            },
             CurrentZone: 0,
             CurrentCell: 0,
         };
@@ -173,6 +161,12 @@ class PlayerData {
         this.statTracking = {
             TotalTimeSpent: 0,
             RunTimeSpent: 0
+        };
+
+        // See Utils.js for actual rand systems.
+        // TODO: Generate real seeds
+        this.RNGSeeds = {
+      
         };
 
         // Settings

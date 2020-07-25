@@ -85,13 +85,61 @@ class TieredAchievement extends Achievement {
     }
 }
 
+class MapTile {
+    // Contains the information in a tile needed before the player gets to it
+    // All information important for spawning enemies here
+    constructor(cellName, /*cellMods*/) {
+        this.Name = cellName;
+        //this.mods = cellMods; // Does nothing right now
+    }
+}
+
 class Zone {
-    constructor(zoneName, cellCount, zoneEnemies, proceduralFlags, fixedSpawns) {
+    constructor(zoneName, cellCount, enemyCounts, normalSpawns, fixedCells, fixedSpawns){
+        this.Name = zoneName;
         this.numCells = cellCount;
-        this.legalSpawns = zoneEnemies;
-        this.zoneFlags = proceduralFlags;
-        this.fixedEnemies = fixedSpawns;
-        this.name = zoneName;
+        this.enemyCounters = enemyCounts;
+        this.enemyNames = normalSpawns;
+        this.specialCells = fixedCells;
+        this.specialEncounters = fixedSpawns;
+    }
+
+    static startZone(zoneNumber) {
+        // Set up the zone!
+        // TODO: random selection not done
+        //      currently throws them all in order
+
+        var zoneRef = {};
+        Object.assign(zoneRef, GameDB.Zones[zoneNumber]);
+        
+        // TODO: Validation against PEBKAC errors with numbers enemies and cell counts
+        
+        // Generate the list of enemies for the zone
+        for (var i = 0; i <= zoneRef.numCells; i++) {
+            var enemyName = "";
+            var tileMods = [];
+
+            // Check for special/scripted encounters. E.g. bosses or special 
+            if (i === zoneRef.specialCells[0] - 1) {
+                enemyName = zoneRef.specialEncounters[0];                
+                zoneRef.specialEncounters.splice(0,1);
+            } else {
+                var randomEnemySelection = 0;
+
+                // Get a random enemy from the list
+                // Remove one from the count of selected enemy.
+
+                zoneRef.enemyCounters[randomEnemySelection]--;
+                enemyName = zoneRef.enemyNames[randomEnemySelection];
+                
+                if (zoneRef.enemyCounters[randomEnemySelection] <= 0) {
+                    zoneRef.enemyCounters.splice(randomEnemySelection, 1);
+                    zoneRef.enemyNames.splice(randomEnemySelection, 1);
+                }
+            }
+
+            Game.World.ActiveZone.Encounters.push(new MapTile(enemyName));
+        }
     }
 }
 
@@ -100,7 +148,7 @@ GameDB = {
         new Event(() => { // Scraps achievement function, id == 0
 
             if (Game.Achievements['Scraps'] >= GameDB.Achievements[0].TierBreakpoints.length) {
-                //allEvents.removeEvent(Lookup.AchievementData['Scraps'].HandlerID);
+                allEvents.removeEvent(GameDB.Achievements[0].HandlerID);
                 return;
             }
 
@@ -125,7 +173,8 @@ GameDB = {
                     Chronos.CreateTimer(1,Game.Hero);
                     // Regen aura
                     Chronos.CreateTimer(4, Game.Hero);
-                    startWorldZone(1);
+                    // Spawn the first enemies
+                    Chronos.CreateTimer(3, null);
 
                     Game.Stats.StoryState.StoryStage++;
                     allEvents.removeEvent(
@@ -154,9 +203,24 @@ GameDB = {
                 }
             }
 
-            // Prep for next encounter if needed
+            // Check for encounter being finished
             if (Game.Enemies.length == 0) {
-                endEncounter();
+                //endEncounter();
+                allEvents.queueEvent("CELL_CLEAR");
+
+                // Move on to the next cell
+                if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone - 1].numCells){
+                    allEvents.queueEvent("ZONE_CLEAR");
+                    Game.World.CurrentCell = 0;
+                    Zone.startZone(Game.World.CurrentZone++);
+                }
+            
+                // Switch to rest for the very small time until next combat
+                Game.GameState = Lookup.GameStrings.GameStates.Rest;
+            
+                // Spawn new encounter after a short delay
+                // Delay is 500ms
+                Chronos.CreateTimer(3, null);
             }
         })
     ],
@@ -213,19 +277,9 @@ GameDB = {
             500,
             500,
             () => {
-                // TODO: make it more fancy, eventually move spawn logic to the zone
-                // or other system
+                // Zone control here.
+                Game.Enemies.push(new Creature(Game.World.ActiveZone.Encounters[Game.World.CurrentCell++].Name));
 
-                // For now dragon on last cell random otherwise
-                // Zone control here
-                if (Game.World.CurrentCell == 100) {
-                    Game.Enemies.push(new Creature("Dragon", true));
-                } else {
-                    let x = Math.floor(Math.random() * GameDB.Creatures.length);
-
-                    Game.Enemies.push(new Creature(GameDB.Creatures[x].Name));
-                }
-                // If you're spawning enemies you should go back into core.
                 Game.GameState = Lookup.GameStrings.GameStates.Core;
             },
             null,
@@ -247,11 +301,6 @@ GameDB = {
             Aura.AuraFlags.TickHasted
         )
     ],
-    Creatures: [
-        new CreatureTemplate("Goblin", 1, 1, 1),
-        new CreatureTemplate("Kobold", 0.8,0.8,0.8),
-        //new CreatureTemplate("Dragon", 2, 5, 1.2)
-    ],
     Achievements: [
         new TieredAchievement(
             "Scraps",
@@ -261,6 +310,22 @@ GameDB = {
             0
         ),
     ],
+    Creatures: [
+        new CreatureTemplate("Goblin", 1, 1, 1),
+        new CreatureTemplate("Kobold", 0.8,0.8,0.8),
+        new CreatureTemplate("Dragon", 2, 5, 1.2),
+        new CreatureTemplate("Ogre", 1.4, 1.5, 1),
+        new CreatureTemplate("Orc", 1, 1.2, 1),
+        new CreatureTemplate("War Dog", 1, 0.8, 1)
+    ],
     Zones: [
+        new Zone( // Zone 0 - The Forgotten Battlefield
+            "Forgotten Battlefield",
+            100,
+            [20,45,15,14,5],
+            ["Goblin", "Kobold", "Orc", "War Dog", "Ogre"],
+            [100],
+            ["Dragon"]),
+
     ],
 }

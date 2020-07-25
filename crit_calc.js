@@ -150,7 +150,7 @@ function witherStacks(Hardened) {
     do {
         cellsFromHarden += hardenStacks * 0.05;
         hardenStacks = hardenStacks * 0.5 + hardenStacks * 0.05;
-    } while (hardenStacks > 2000)
+    } while (hardenStacks > 20)
 
     return cellsFromHarden;
 }
