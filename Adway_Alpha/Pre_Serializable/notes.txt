@@ -74,6 +74,10 @@ Scraps
 --They do nothing right now
 --Create basic equipment system out of this.
 --Sort of liking the way idle wizard handles it, might start there
+===Makes gear, gear gets themed based on class eventually.
+===More scraps needed to make better stuff, come up with something
+===Higher tier (prestige) of items requires more rare stuff
+    just need more scraps to find the good stuff (no actual change just lore)
 
 
 VISUALS-----------------------------------------------

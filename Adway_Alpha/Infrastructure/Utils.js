@@ -8,7 +8,7 @@ function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) 
         return multiBuyCount * (multiBuyCount * costScaling - costScaling + 2 * baseCost) / 2;
     } else {
         // S = A * (1 - r^n) / (1 - r)
-        return baseCost * (1 - Math.pow(costScaling, multiBuyCount) / (1 - costScaling));
+        return baseCost * ((1 - Math.pow(costScaling, multiBuyCount)) / (1 - costScaling));
     }
 }
 
@@ -21,14 +21,10 @@ function getMaxAffordable(baseCost, totalResource, costScaling, isCompounding) {
             (costScaling - (2 * baseCost) + Math.sqrt(Math.pow(2 * baseCost - costScaling, 2) + (8 * costScaling * totalResource))) / 2
         );
     } else {
+        // S = A * (1 - r^n) / (1 - r)
+        // n = Log[base r] (1 - (1 - r) * S / A) / Log (r)
         return Math.floor(Math.log(1 - (1 - costScaling) * totalResource / baseCost) / Math.log(costScaling));
-
     }
-}
-
-// Take in seed and desired output range, spit out a seeded random number
-function seededRandom(seed) {
-    
 }
 
 // Format numbers for text displaying. Cleans a lot of display up
@@ -89,4 +85,63 @@ function PrettifyLargeBase(number, base) { // Currently supported up to 12
     return jsRep.replace(regex,function(match) {
         return alphaReplacer[alphabet.indexOf(match)];
     });
+}
+
+// Deterministic Random Bit Generator -----------------------------------------
+// 
+
+function randomBigInt() {
+    
+    var bigString = "";
+    for (var i = 0; i < 64; i++) {
+        bigString += Math.floor(Math.random() * 2).toString();
+    }
+
+    return BigInt(parseInt(bigString, 2));
+}
+
+class DRNG {
+
+    constructor(){
+        // Do the init here, TODO: figure out how to get the initial entropy
+        //  probably just use timestamps to start
+        this.state = 0n;
+        this.multi = 0n;
+        this.increment = 0n;
+        
+        this.ReSeed();
+        
+    };
+
+    Init(){
+
+        this.state = randomBigInt();
+        this.multi = randomBigInt();
+        this.increment = randomBigInt();
+    }
+    UnInit(){
+        this.state = this.multi = this.increment = 0;
+    }
+    ReSeed(){
+        this.UnInit();
+        this.Init();
+    }
+    Generate(){
+
+        // LCG + PCG-XSH-RR
+        // state = state * multiplier + increment;
+        // output = rotate32((state ^ (state >> 18)) >> 27, state >> 59);
+        // Note that the top five bits specify the rotation, leading to
+        //  the constants above (64 − 5 = 59, 32 − 5 = 27, and (5 + 32)/2 = 18).
+        // uint32_t output = state >> (29 - (state >> 61))
+        //  note, uses top 3 bits for the window, 32 - 3 = 29
+        this.state = BigInt.asUintN(64, (this.state * this.multi + this.increment));
+
+        var rotation = this.state >> 59n; // Take the upper 5 bits as the rotation
+
+        var output = this.state;
+
+    }
+
+    //HealthTest(){}
 }

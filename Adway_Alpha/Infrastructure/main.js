@@ -90,7 +90,7 @@ function saveGameToLocal() {
     saveGame.chron = Chronos.SerializeTimers();
     saveGame.Game = JSON.parse(JSON.stringify(Game));
 
-    // Get rid of things that don't need to be saved shouldn't be anything
+    // Get rid of things that don't need to be saved, shouldn't be anything
 
     // after editting
     saveString = JSON.stringify(saveGame);
@@ -104,6 +104,8 @@ function loadGameFromLocal() {
     if (returnedSave == null) {
         console.log("No local save detected");
         return false;
+    } else {
+        console.log("Debug file size: " + window.localStorage.getItem("ADWAY_Save").length);
     }
     
     // Events and Time
@@ -122,6 +124,7 @@ function loadGameFromLocal() {
     // Class based fields
     // Hero, enemies, probably world eventually
     Game.World = JSON.parse(JSON.stringify(returnedSave.Game.World));
+    Game.World.ActiveZone = JSON.parse(JSON.stringify(returnedSave.Game.World.ActiveZone));
 
     // Object.assign is only a shallow copy
     Game.Hero = new Hero("Hiro");
@@ -144,11 +147,8 @@ function loadGameFromLocal() {
 
     Game.Stats.LastUpdateTime = Date.now();
     Game.Resources.Time += missingTime;
-    
-    // Added since last pass on this:
-    //  Zones/ActiveZone
 
-    // TODO: Deal with version upgrading here
+    // TODO: Deal with version upgrading here, so far nothing needed
 
     return true;
 }

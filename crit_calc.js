@@ -148,9 +148,23 @@ function witherStacks(Hardened) {
     var cellsFromHarden = 0;
 
     do {
+        // 5% of your current stacks
         cellsFromHarden += hardenStacks * 0.05;
+
+        // Lost half of your total stacks, plus 5% onvert to protection for the next round
         hardenStacks = hardenStacks * 0.5 + hardenStacks * 0.05;
     } while (hardenStacks > 20)
 
     return cellsFromHarden;
+}
+
+function greedBonus (tributes, greedLevel) {
+    var maxTributes = 1250;
+    var scalingTribs = Math.min(Math.max(tributes, 600), maxTributes) - 600
+
+    return Math.pow(1 + 
+      0.025 + 
+      0.00015 * scalingTribs + 
+      Math.floor(scalingTribs/25) * 0.0035, 
+      greedLevel);
 }

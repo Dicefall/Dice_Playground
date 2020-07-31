@@ -23,7 +23,7 @@ class Actor {
 
         this.turnTimerID = -1;
     }
- }
+}
 
 class Hero extends Actor { 
 
@@ -31,7 +31,7 @@ class Hero extends Actor {
         super(name);
 
         this.Level = 1;
-        this.LevelMax = 10;
+        this.LevelMax = 50;
 
         // Player character gets a base of 1
         this.HealthRegen = 1;
@@ -61,31 +61,26 @@ class Hero extends Actor {
 
             this.recalcStats();
         } else {
-            console.log("Not Enough XP, need " + formatNumber(XPReq - Game.Resources.XP) + " more.");
+            console.log("Not Enough XP, need " + formatNumber(XPReq - Game.Resources.XP) + " more for a total of " + formatNumber(XPReq) + " XP.");
         }
     }
 
 }
 
 class Creature extends Actor {
-    constructor(name, isBoss = false) {
+    constructor(name) {
         super(name);
-
-        this.isBoss = isBoss;
-        let minionMod = isBoss ? 1 : 0.5;
 
         // Get world and cell scaling
         var worldMod = Math.pow(
             Lookup.WorldZoneScaleFactor,
             Game.World.CurrentZone - 1);
-    
-        var cellMod = 1 + (Lookup.WorldCellScaleFactor * (Game.World.CurrentCell - 1));
 
         for (var creature of GameDB.Creatures) {
             if (creature.Name === name) {
                 this.Speed *= creature.SpeedMod;
-                this.Attack *= creature.AttackMod * worldMod * cellMod * minionMod;
-                this.HealthMax *= creature.HealthMod * worldMod * cellMod * minionMod;
+                this.Attack *= creature.AttackMod * worldMod;
+                this.HealthMax *= creature.HealthMod * worldMod;
                 this.HealthCurr = this.HealthMax;
                 break;
             }

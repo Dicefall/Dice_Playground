@@ -106,27 +106,30 @@ class Zone {
 
     static startZone(zoneNumber) {
         // Set up the zone!
-        // TODO: random selection not done
-        //      currently throws them all in order
+
+        // People are going to get further than I have built
+        // I've made a special zone that repeats at the end for them
+        if (zoneNumber >= GameDB.Zones.length) zoneNumber = GameDB.Zones.length - 1;
 
         var zoneRef = {};
         Object.assign(zoneRef, GameDB.Zones[zoneNumber]);
+        Game.World.ActiveZone.Encounters = [];
         
         // TODO: Validation against PEBKAC errors with numbers enemies and cell counts
+        // TODO: Change to indexof to store numbers instead of names for reduced memory footprint
         
         // Generate the list of enemies for the zone
         for (var i = 0; i <= zoneRef.numCells; i++) {
             var enemyName = "";
-            var tileMods = [];
 
-            // Check for special/scripted encounters. E.g. bosses or special 
+            // Check for special/scripted encounters. E.g. bosses or special
             if (i === zoneRef.specialCells[0] - 1) {
                 enemyName = zoneRef.specialEncounters[0];                
                 zoneRef.specialEncounters.splice(0,1);
             } else {
                 var randomEnemySelection = 0;
 
-                // Get a random enemy from the list
+                // TODO: Get a random enemy from the list
                 // Remove one from the count of selected enemy.
 
                 zoneRef.enemyCounters[randomEnemySelection]--;
@@ -316,7 +319,8 @@ GameDB = {
         new CreatureTemplate("Dragon", 2, 5, 1.2),
         new CreatureTemplate("Ogre", 1.4, 1.5, 1),
         new CreatureTemplate("Orc", 1, 1.2, 1),
-        new CreatureTemplate("War Dog", 1, 0.8, 1)
+        new CreatureTemplate("War Dog", 1, 0.8, 1),
+        new CreatureTemplate("Spacetime Curvature", 1, 1000, 0)
     ],
     Zones: [
         new Zone( // Zone 0 - The Forgotten Battlefield
@@ -326,6 +330,13 @@ GameDB = {
             ["Goblin", "Kobold", "Orc", "War Dog", "Ogre"],
             [100],
             ["Dragon"]),
+        new Zone( // The Final zone - The Inexorable March of Time
+            "The Inexorable March of Time",
+            100,
+            [100],
+            ["Spacetime Curvature"],
+            [],
+            [])
 
     ],
 }
