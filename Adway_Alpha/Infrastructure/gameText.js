@@ -8,6 +8,7 @@
 // Places tagged with #LocalizeMe means you can have fun with it
 // This is usually reserved for places where I make some puns and especially
 // in achievement names.
+"use strict";
 
 var GameText = {
     English: {
@@ -69,6 +70,14 @@ var GameText = {
                 "Trimps, probably my favorite and the most inspiration with an amazing community: https://trimps.github.io/",
             ]
         },
+
+        StatNames: [
+            "Critical Strike",
+            "Haste",
+            "Attack",
+            "Health",
+            "Health Regen"
+        ]
     },
 
     Icons: {

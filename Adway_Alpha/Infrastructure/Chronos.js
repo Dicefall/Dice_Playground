@@ -1,3 +1,4 @@
+"use strict";
 // EventBoard class is meant to be a centralized system for handling
 // all events such as combat, resource gain, and  other triggers.
 class EventBoard {
@@ -313,3 +314,5 @@ class Chronometer {
 
 const allEvents = new EventBoard();
 const Chronos = new Chronometer();
+
+//export {EventBoard, Chronometer};

@@ -50,16 +50,28 @@ Between Combat time
 
 Proper setup of saving/loading
 
-I am here ---------------------------------------------------------------------
---------------------Fixed serialization of systems-----------------------------
-
-// Still need some kind of character progress at the run level
-
 Basic world design and implementation
 -World maps/zones
 --Enemy spawns, limitations, different enemies
 -Story
 --Zones are going to be a lot bigger I think. Have them tied directly to story.
+
+I am here ---------------------------------------------------------------------
+--------------------Fixed serialization of systems-----------------------------
+
+// Still need some kind of character progress at the run level
+    Change XP giving a level to XP going specifically into different stats.
+    Crit, Haste, attack, health, others to come.
+        Maybe stuff like dodge, block, multistrike, parry, crit damage, etc
+        Easy to add new things too when 'people teach you new techniques'
+        Could even add xp gain 
+    Prestige is learning new techniques, unlearning old 'bad habits'
+    Need to worry about the problems with things scaling very high
+        Eg. haste gets weird and I don't want it to be too high
+        Crit will probably get over 100% chance and I can do crit tiers
+        Might do something with rating conversions like wow but for zones
+    
+Upgrades
 
 Story
 -Need to do the tutorial and early bits of story
@@ -78,6 +90,8 @@ Scraps
 ===More scraps needed to make better stuff, come up with something
 ===Higher tier (prestige) of items requires more rare stuff
     just need more scraps to find the good stuff (no actual change just lore)
+
+
 
 
 VISUALS-----------------------------------------------

@@ -1,3 +1,5 @@
+"use strict";
+
 // Events, spells, and auras, and creatures?!
 // Very crude database, built for serializability.
 
@@ -50,7 +52,6 @@ class Spell {
 
 }
 
-// Templates for creatures
 class CreatureTemplate {
     constructor(name, attack, health, speed, loot) {
         this.Name = name;
@@ -60,7 +61,6 @@ class CreatureTemplate {
     }
 }
 
-// Achievements
 class Achievement {
 
     constructor(achievementName, listenerType, handlerEventID) {
@@ -146,7 +146,18 @@ class Zone {
     }
 }
 
-GameDB = {
+class PlayerStat {
+    constructor(statName, baseXPCost, XPLevelCostScale, XPTierUpCostScale, TierUpScaleFactor, baseRatingPerLevel,){
+        this.shortName = statName;
+        this.baseXPCost = baseXPCost;
+        this.levelCostScaling = XPLevelCostScale;
+        this.tierUpCostScaling = XPTierUpCostScale;
+        this.baseStatGain = baseRatingPerLevel;
+        this.tierUpStatFactor = TierUpScaleFactor;
+    };
+}
+
+const GameDB = {
     Events: [
         new Event(() => { // Scraps achievement function, id == 0
 
@@ -216,6 +227,9 @@ GameDB = {
                     allEvents.queueEvent("ZONE_CLEAR");
                     Game.World.CurrentCell = 0;
                     Zone.startZone(Game.World.CurrentZone++);
+
+                    // Since rating conversions are going to change by zone
+                    Game.Hero.recalcStats();
                 }
             
                 // Switch to rest for the very small time until next combat
@@ -339,4 +353,49 @@ GameDB = {
             [])
 
     ],
-}
+    Stats: [
+        new PlayerStat( // Crit rating == 0
+            "Crit",
+            100,
+            1.25,
+            25,
+            10,
+            5
+        ),
+        new PlayerStat( // Haste rating, speed == 1
+            "Haste",
+            100,
+            1.25,
+            25,
+            10,
+            5
+        ),
+        new PlayerStat( // Raw attack value == 2
+            "Attack",
+            100,
+            1.25,
+            25,
+            10,
+            5
+        ),
+        new PlayerStat( // Raw Health/Stamina == 3
+            "Health",
+            100,
+            1.25,
+            25,
+            10,
+            25
+        ),
+        new PlayerStat( // Health Regen == 4
+            "HPRegen",
+            100,
+            1.25,
+            25,
+            10,
+            1
+        )
+    ]
+    
+};
+
+//export {GameDB};

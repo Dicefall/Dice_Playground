@@ -1,3 +1,4 @@
+"use strict";
 // All of the game's core classes and data will be found here.
 // TODO: Need some kind of copyright notice or something
 
@@ -33,36 +34,84 @@ class Hero extends Actor {
         this.Level = 1;
         this.LevelMax = 50;
 
+        // Stat upgrades
+        this.StatLevels = {
+            Attack: {
+                Tier: 0,
+                Level: 0
+            },
+            Health: {
+                Tier: 0,
+                Level: 0
+            },
+            Crit: {
+                Tier: 0,
+                Level: 0
+            },
+            Haste: {
+                Tier: 0,
+                Level: 0
+            },
+            Regen: {
+                Tier: 0,
+                Level: 0
+            }
+        };
+
+        // Upgraded stat values
+        this.CritRating = 0;
+        this.HasteRating = 0;
+
+        // Post conversion stats
+        this.CritChance = 0;
+
         // Player character gets a base of 1
         this.HealthRegen = 1;
     }
 
-    recalcStats() {
-        let levelMulti = Math.pow(Lookup.LevelScaleFactor,this.Level);
+    StatsUp(statName, numLevels, tierUp){
+        // reference for clarity
+        var statDBRef;
+        for (var stat of GameDB.Stats) {
+            if (stat.shortName === statName) {
+                statDBRef = stat;
+                break;
+            }
+        }
 
-        this.Attack = this.AttackBase * levelMulti;
-        this.HealthMax = this.HealthBase * levelMulti;
-        this.HealthCurr = Math.min(this.HealthCurr,this.HealthMax);
-        this.HealthRegen = Math.max(this.RegenBase * levelMulti, 0);
+        // Get cost required to level up desired stat
+        var targetTier = this.StatLevels[statName].Tier + (tierUp ? 1 : 0);
+        var targetLevel = tierUp ? numLevels : this.StatLevels[statName].Level + numLevels;
 
-        this.Speed = this.SpeedBase;
+        var buyoutCost = Math.ceil(getTotalMultiCost(statDBRef.baseXPCost * Math.pow(statDBRef.tierUpCostScaling, targetTier),targetLevel, statDBRef.levelCostScaling,true));
+        if (Game.Resources.XP >= buyoutCost) {
+            this.StatLevels[statName].Tier = targetTier;
+            this.StatLevels[statName].Level = targetLevel;
+            Game.Resources.XP -= buyoutCost;
+        } else {
+            console.log("Error, unable to afford upgrade");
+        }
+
+        this.recalcStats();
     }
 
-    LevelUp() {
-        if (this.Level >= this.LevelMax) {
-            console.log("Currently at or above max level. Increase cap to level up. Current level cap: " + formatNumber(this.LevelMax));
-            return;
-        }
+    recalcStats() {
 
-        let XPReq = Math.pow(Lookup.ExperienceRequirementScaleFactor,this.Level - 1) * Lookup.ExperienceRequirement;
-        if (Game.Resources.XP >= XPReq) {
-            Game.Resources.XP -= XPReq;
-            this.Level++;
+        // 'Primary' stats
+        this.Attack = this.AttackBase + GameDB.Stats[2].baseStatGain * Math.pow(GameDB.Stats[2].tierUpStatFactor, this.StatLevels.Attack.Tier) * this.StatLevels.Attack.Level;
 
-            this.recalcStats();
-        } else {
-            console.log("Not Enough XP, need " + formatNumber(XPReq - Game.Resources.XP) + " more for a total of " + formatNumber(XPReq) + " XP.");
-        }
+        var healthDeficit = this.HealthMax - this.HealthCurr;
+        this.HealthMax = this.HealthBase + GameDB.Stats[3].baseStatGain * Math.pow(GameDB.Stats[3].tierUpStatFactor, this.StatLevels.Health.Tier) * this.StatLevels.Health.Level;
+        this.HealthCurr = Math.max(this.HealthMax - healthDeficit,1);
+        this.HealthRegen = this.RegenBase + GameDB.Stats[4].baseStatGain * Math.pow(GameDB.Stats[4].tierUpStatFactor, this.StatLevels.Regen.Tier) * this.StatLevels.Regen.Level;
+
+        // 'Secondary' stats
+        this.HasteRating = GameDB.Stats[1].baseStatGain * Math.pow(GameDB.Stats[1].tierUpStatFactor, this.StatLevels.Haste.Tier) * this.StatLevels.Haste.Level;
+        this.CritRating = GameDB.Stats[0].baseStatGain * Math.pow(GameDB.Stats[0].tierUpStatFactor, this.StatLevels.Crit.Tier) * this.StatLevels.Crit.Level;
+
+        // TODO: Secondary stat rating conversions, hard coded for now, I may have to add the zone scaling here
+        this.Speed = this.SpeedBase * (1 + 0.01 * this.HasteRating / 25); // 25 rating for 1% haste
+        this.CritChance = 0.01 * (this.CritRating / 25); // 25 crit rating to 1% chance
     }
 
 }
@@ -103,6 +152,9 @@ class PlayerData {
             Scraps: 0,
             ScrapsIncome: 0,
 
+            Gold: 0,
+            GoldIncome: 0,
+
             XP: 0,
 
             Time: 0,
@@ -135,13 +187,15 @@ class PlayerData {
 
             // Earned
             Scraps: 0,
-            Metal: 0,
+
+            // Storing extra data for achievmenets if needed
+
         };
 
         this.Stats = {
             GameVersion: {
                 Major: 0,
-                Minor: 2,
+                Minor: 3,
                 Patch: 0,
             },
             LastUpdateTime: new Date().getTime(),
@@ -151,7 +205,7 @@ class PlayerData {
             },
         };
 
-        this.GameState = Lookup.GameStrings.GameStates.Core;
+        this.GameState = "Core";
 
         this.statTracking = {
             TotalTimeSpent: 0,
@@ -213,15 +267,8 @@ class GameData {
         this.SupportedNumberNotations = ["Scientific", "Engineering", "Log"];
 
         // Enemy scaling factors
-        // TODO: Move this to zone structure in database
         this.WorldZoneScaleFactor = 2; // Double enemy stats each new zone
-        this.WorldCellScaleFactor = 0.021; // 2.1% per cell scaling
-        this.WorldResourceScaleFactor = 0; // TODO something? Should scale
-
-        // Levelling constants
-        this.LevelScaleFactor = 1.1;
-        this.ExperienceRequirement = 100;
-        this.ExperienceRequirementScaleFactor = 1.15;
+        this.WorldResourceScaleFactor = 1.1; // TODO something? Should scale
 
         // For internal strings only. Strings easier to debug
         // Anything being displayed to the player should be in gameText.js
@@ -269,3 +316,5 @@ class GameData {
 
 const Lookup = new GameData();
 const Game = new PlayerData();
+
+//export {GameData, PlayerData};

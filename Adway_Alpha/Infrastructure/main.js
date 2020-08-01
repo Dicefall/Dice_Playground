@@ -1,3 +1,12 @@
+"use strict";
+// import {EventBoard, Chronometer} from './Chronos.js';
+// import {GameData, PlayerData} from './coreData.js';
+// const allEvents = new EventBoard();
+// const Chronos = new Chronometer();
+
+// const Lookup = new GameData();
+// var Game = new PlayerData();
+
 function mainLoop() {
 
     // Do Time stuff
@@ -93,7 +102,7 @@ function saveGameToLocal() {
     // Get rid of things that don't need to be saved, shouldn't be anything
 
     // after editting
-    saveString = JSON.stringify(saveGame);
+    var saveString = JSON.stringify(saveGame);
 
     window.localStorage.setItem("ADWAY_Save", saveString);
     console.log("AutoSaved");

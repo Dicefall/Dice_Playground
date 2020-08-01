@@ -1,4 +1,5 @@
 // Loosely connected utility functions held together in one place
+"use strict";
 
 // The cost to buy multiples of buildings.
 function getTotalMultiCost(baseCost, multiBuyCount, costScaling, isCompounding) {
