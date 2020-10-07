@@ -2,10 +2,13 @@
 
 function critcCalc(critChance) {
 
+    var timeCalc = Date.now();
+    var iterations = 1;
+
     var totalHits = 0;
 
     //Approximate average over 1000 attempts:
-    for (var i = 0; i<1000; i++) {
+    for (var i = 0; i<iterations; i++) {
 
         var consecutiveCrits = 0;
         while (consecutiveCrits < 10) {
@@ -18,7 +21,8 @@ function critcCalc(critChance) {
         }
     }
 
-    return totalHits / 1000;
+    console.log("It took " + (Date.now() - timeCalc) + "ms to run " + iterations + " iterations");
+    return totalHits / iterations;
 }
 
 function ghostCalc(critChance) {

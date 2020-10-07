@@ -191,7 +191,7 @@ class Chronometer {
         // Check for pauses:
         this.timerList.forEach( timer => {
             if (GameDB.Auras[timer.spellID].flags & Aura.AuraFlags.PauseOnCombat) {
-                if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
+                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
                     timer.nextTick += elapsedTime;
                     timer.endTime += elapsedTime;
                 }
@@ -218,7 +218,7 @@ class Chronometer {
             //  If we're past the end time AND the 'next tick' value is the same as the end time.
             if (currentTimer.endTime < Game.statTracking.TotalTimeSpent && currentTimer.endTime == currentTimer.nextTick) {
                 if (GameDB.Auras[currentTimer.spellID].onFade) GameDB.Auras[currentTimer.spellID].onFade();
-                console.log("Aura Fading: " + currentTimer.spellID);
+                //console.log("Aura Fading: " + currentTimer.spellID);
                 this.timerList.splice(0,1);
                 if (this.timerList.length == 0) {
                     return;
@@ -232,7 +232,11 @@ class Chronometer {
                 }
             // This should leave only the case where we get another full tick
             } else {
-                currentTimer.nextTick += GameDB.Auras[currentTimer.spellID].tickFrequency;
+                currentTimer.nextTick += GameDB.Auras[currentTimer.spellID].tickFrequency * 
+                    (GameDB.Auras[currentTimer.spellID].flags & Aura.AuraFlags.TickHasted ? 
+                        1 / currentTimer.Owner.Speed :
+                        1
+                    );
             }
 
             // Sort to make sure fresh ticks go to the back
@@ -250,9 +254,9 @@ class Chronometer {
 
             startTime: Game.statTracking.TotalTimeSpent,
             endTime: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].maxDuration *
-                ((GameDB.Auras[timerDBID].AuraFlags & Aura.AuraFlags.DurationHasted) ? 1 / timerOwner.Speed : 1), // check for hasted duration
+                ((GameDB.Auras[timerDBID].flags & Aura.AuraFlags.DurationHasted) ? (1 / timerOwner.Speed) : 1), // check for hasted duration
             nextTick: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].tickFrequency *
-                ((GameDB.Auras[timerDBID].AuraFlags & Aura.AuraFlags.TickHasted) ? 1 / timerOwner.Speed : 1),
+                ((GameDB.Auras[timerDBID].flags & Aura.AuraFlags.TickHasted) ? (1 / timerOwner.Speed) : 1),
 
         }
 

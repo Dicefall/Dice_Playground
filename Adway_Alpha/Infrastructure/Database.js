@@ -46,118 +46,18 @@ class Aura {
     }
 }
 
-class Spell {
-
-    static SpellFlags = {};
-
-}
-
-class CreatureTemplate {
-    constructor(name, attack, health, speed, loot) {
-        this.Name = name;
-        this.AttackMod = attack;
-        this.HealthMod = health;
-        this.SpeedMod = speed;
-    }
-}
-
-class Achievement {
-
-    constructor(achievementName, listenerType, handlerEventID) {
-
-        this.Name = achievementName;
-        this.handlerEventID = handlerEventID;
-        this.HandlerID = allEvents.registerListener(listenerType, handlerEventID);
-    }
-}
-
-class TieredAchievement extends Achievement {
-    constructor(achievementName, rewardBreakpoints, rewardValues, handlerType, handlerEventID) {
-        super(achievementName, handlerType, handlerEventID);
-
-        // Breakpoints are the value being checked
-        // E.g. 50 for a "get 50 scraps" achievement, or 100 for "get 100 scraps"
-        this.TierBreakpoints = rewardBreakpoints;
-
-        // Rewards for each breakpoint
-        // Indexes should match breakpoints
-        this.TierValues = rewardValues;
-    }
-}
-
 class MapTile {
     // Contains the information in a tile needed before the player gets to it
     // All information important for spawning enemies here
-    constructor(cellName, /*cellMods*/) {
+    constructor(cellName /*cellMods*/) {
         this.Name = cellName;
         //this.mods = cellMods; // Does nothing right now
     }
 }
 
-class Zone {
-    constructor(zoneName, cellCount, enemyCounts, normalSpawns, fixedCells, fixedSpawns){
-        this.Name = zoneName;
-        this.numCells = cellCount;
-        this.enemyCounters = enemyCounts;
-        this.enemyNames = normalSpawns;
-        this.specialCells = fixedCells;
-        this.specialEncounters = fixedSpawns;
-    }
-
-    static startZone(zoneNumber) {
-        // Set up the zone!
-
-        // People are going to get further than I have built
-        // I've made a special zone that repeats at the end for them
-        if (zoneNumber >= GameDB.Zones.length) zoneNumber = GameDB.Zones.length - 1;
-
-        var zoneRef = {};
-        Object.assign(zoneRef, GameDB.Zones[zoneNumber]);
-        Game.World.ActiveZone.Encounters = [];
-        
-        // TODO: Validation against PEBKAC errors with numbers enemies and cell counts
-        // TODO: Change to indexof to store numbers instead of names for reduced memory footprint
-        
-        // Generate the list of enemies for the zone
-        for (var i = 0; i <= zoneRef.numCells; i++) {
-            var enemyName = "";
-
-            // Check for special/scripted encounters. E.g. bosses or special
-            if (i === zoneRef.specialCells[0] - 1) {
-                enemyName = zoneRef.specialEncounters[0];                
-                zoneRef.specialEncounters.splice(0,1);
-            } else {
-                var randomEnemySelection = 0;
-
-                // TODO: Get a random enemy from the list
-                // Remove one from the count of selected enemy.
-
-                zoneRef.enemyCounters[randomEnemySelection]--;
-                enemyName = zoneRef.enemyNames[randomEnemySelection];
-                
-                if (zoneRef.enemyCounters[randomEnemySelection] <= 0) {
-                    zoneRef.enemyCounters.splice(randomEnemySelection, 1);
-                    zoneRef.enemyNames.splice(randomEnemySelection, 1);
-                }
-            }
-
-            Game.World.ActiveZone.Encounters.push(new MapTile(enemyName));
-        }
-    }
-}
-
-class PlayerStat {
-    constructor(statName, baseXPCost, XPLevelCostScale, XPTierUpCostScale, TierUpScaleFactor, baseRatingPerLevel,){
-        this.shortName = statName;
-        this.baseXPCost = baseXPCost;
-        this.levelCostScaling = XPLevelCostScale;
-        this.tierUpCostScaling = XPTierUpCostScale;
-        this.baseStatGain = baseRatingPerLevel;
-        this.tierUpStatFactor = TierUpScaleFactor;
-    };
-}
-
 const GameDB = {
+    // Events and auras here, functions are stored here
+    // done this way for serialization and clarity
     Events: [
         new Event(() => { // Scraps achievement function, id == 0
 
@@ -193,74 +93,106 @@ const GameDB = {
                     Game.Stats.StoryState.StoryStage++;
                     allEvents.removeEvent(
                         Game.Stats.StoryState.StoryControlID);
+
+                    Game.Stats.StoryState.StoryControlID = allEvents.registerListener("CELL_CLEAR", 1);
                     break;
                 // Get some resources, lets people look around a bit
                 case 1:
+                    if (Game.World.CurrentCell >= 20){
+                        Game.Stats.StoryState.StoryStage++;
+
+                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[1]);
+                    }
                     break;
                 // Intro to combat
                 case 2:
+                    if (Game.World.CurrentCell >= 50){
+                        Game.Stats.StoryState.StoryStage++;
+
+                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[2]);
+                    }
                     break;
+                case 3:
+                    if (Game.World.CurrentCell >= 75){
+                        Game.Stats.StoryState.StoryStage++;
+
+                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[3]);
+
+                        allEvents.removeEvent(
+                            Game.Stats.StoryState.StoryControlID);
+
+                        Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEAR", 1);
+                    }
+                    break;
+                case 4:
+                    Game.Stats.StoryState.StoryStage++;
+
+                    Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[4]);
+
+                    allEvents.removeEvent(
+                        Game.Stats.StoryState.StoryControlID);
+
+                    //Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEARED", 1);
+                    break;
+                case 5:
+                    // Unlock new feature for getting to town the first time.
+                    // Not sure what that feature is just yet, but it should probably be the equipment.
                 default:
                 // nothing to do here
             }
         }),
 
         new Event(() => { // Combat Cleaner, id == 2
-            for (var i = Game.Enemies.length - 1; i >= 0; i--) {
-                if (Game.Enemies[i].HealthCurr <= 0) {
-                    //give rewards
-                    Game.Resources.XP += 25 /* Game.Enemies[i].lootMod*/;
-                    Game.Resources.Scraps += 5 /* Game.Enemies[i].lootMod*/;
+            if (Game.Enemy.HealthCurr <= 0) {
+                //give rewards
+                Game.Resources.XP += 25 /* Game.Enemy].lootMod*/;
+                Game.Resources.Scraps += 5 /* Game.Enemy.lootMod*/;
 
-                    Chronos.RemoveTimer(Game.Enemies[i].turnTimerID);
-                    Game.Enemies.splice(i, 1);
-                }
-            }
+                Chronos.RemoveTimer(Game.Enemy.turnTimerID);
+                Game.Enemy = null;
 
-            // Check for encounter being finished
-            if (Game.Enemies.length == 0) {
                 //endEncounter();
                 allEvents.queueEvent("CELL_CLEAR");
 
                 // Move on to the next cell
-                if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone - 1].numCells){
+                if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone].numCells){
                     allEvents.queueEvent("ZONE_CLEAR");
                     Game.World.CurrentCell = 0;
-                    Zone.startZone(Game.World.CurrentZone++);
+                    Game.World.CurrentZone++;
+                    startZone(Game.World.CurrentZone);
 
                     // Since rating conversions are going to change by zone
                     Game.Hero.recalcStats();
                 }
-            
+
                 // Switch to rest for the very small time until next combat
-                Game.GameState = Lookup.GameStrings.GameStates.Rest;
-            
+                Game.CombatState = GameDB.Constants.States.Combat.Paused;
+
                 // Spawn new encounter after a short delay
                 // Delay is 500ms
                 Chronos.CreateTimer(3, null);
             }
         })
     ],
-    Spells: [],
     Auras: [
-        new Aura( // Enemy combat actions, id == 0
-            Infinity,
-            Actor.baseTurnRate,
-            () => {
+        new Aura(                                   // Enemy combat actions, id == 0
+            Infinity,                               // Duration
+            Actor.baseTurnRate,                     // Tick frequency
+            () => {                                 // onTick
                 if (Game.Hero.isAlive) {
-                    Game.Hero.HealthCurr -= Game.Enemies[0].Attack;
+                    Game.Hero.HealthCurr -= Game.Enemy.Attack;
                 }
 
                 if (Game.Hero.HealthCurr <= 0) {
                     Game.Hero.HealthCurr = 0;
                     Game.Hero.isAlive = false;
-                    
+
                     // Switch to rest state
-                    Game.GameState = Lookup.GameStrings.GameStates.Rest;
+                    Game.CombatState = GameDB.Constants.States.Combat.Paused;
                 }
             },
-            null,
-            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted
+            null,                                   // onFade
+            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted    // Flags
         ),
 
         new Aura( // Player GCD/Swing timer, id == 1
@@ -268,14 +200,18 @@ const GameDB = {
             Actor.baseTurnRate,
             () => {
                 // This will be what fires off when an action is done in combat.
+                if (Game.Enemy == null) return;
 
-                Game.Enemies[0].HealthCurr -= Game.Hero.Attack;
+                // Roll for crit
+                var doesCrit = (Math.random() < Game.Hero.CritChance);
+
+                Game.Enemy.HealthCurr -= Game.Hero.Attack * ((doesCrit) ? 1 + Game.Hero.CritDamageBonus : 1);
 
                 // See if you killed it
-                if (Game.Enemies[0].HealthCurr <= 0) { allEvents.queueEvent("ENEMY_DEFEATED"); }
+                if (Game.Enemy.HealthCurr <= 0) { allEvents.queueEvent("ENEMY_DEFEATED"); }
             },
             null,
-            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted
+            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted | Aura.AuraFlags.TickHasted
         ),
 
         new Aura( // Resource ticker, id == 2
@@ -295,9 +231,11 @@ const GameDB = {
             500,
             () => {
                 // Zone control here.
-                Game.Enemies.push(new Creature(Game.World.ActiveZone.Encounters[Game.World.CurrentCell++].Name));
+                Game.Enemy = new Creature(GameDB.Zones[Game.World.CurrentZone].enemyNames.concat(GameDB.Zones[Game.World.CurrentZone].specialEncounters)[
+                    [Game.World.ActiveZone.Encounters[Game.World.CurrentCell++]]
+                ]);
 
-                Game.GameState = Lookup.GameStrings.GameStates.Core;
+                Game.CombatState = GameDB.Constants.States.Combat.Active;
             },
             null,
             0
@@ -306,10 +244,10 @@ const GameDB = {
             Infinity,
             1000,
             () => {
-                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen);
-                if (Game.GameState == Lookup.GameStrings.GameStates.Rest) {
+                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen * Game.Hero.HealthMax);
+                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
                     if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
-                        Game.GameState = Lookup.GameStrings.GameStates.Core;
+                        Game.CombatState = GameDB.Constants.States.Combat.Active;
                         Game.Hero.isAlive = true;
                     }
                 }
@@ -318,84 +256,246 @@ const GameDB = {
             Aura.AuraFlags.TickHasted
         )
     ],
-    Achievements: [
-        new TieredAchievement(
-            "Scraps",
-            [50, 100, 500, 1000, 10000],
-            [1, 1, 2, 2, 5],
-            "CURRENCY_GAINED",
-            0
-        ),
-    ],
-    Creatures: [
-        new CreatureTemplate("Goblin", 1, 1, 1),
-        new CreatureTemplate("Kobold", 0.8,0.8,0.8),
-        new CreatureTemplate("Dragon", 2, 5, 1.2),
-        new CreatureTemplate("Ogre", 1.4, 1.5, 1),
-        new CreatureTemplate("Orc", 1, 1.2, 1),
-        new CreatureTemplate("War Dog", 1, 0.8, 1),
-        new CreatureTemplate("Spacetime Curvature", 1, 1000, 0)
-    ],
-    Zones: [
-        new Zone( // Zone 0 - The Forgotten Battlefield
-            "Forgotten Battlefield",
-            100,
-            [20,45,15,14,5],
-            ["Goblin", "Kobold", "Orc", "War Dog", "Ogre"],
-            [100],
-            ["Dragon"]),
-        new Zone( // The Final zone - The Inexorable March of Time
-            "The Inexorable March of Time",
-            100,
-            [100],
-            ["Spacetime Curvature"],
-            [],
-            [])
+    // Achievements here. Events added when game object is created.
+    // Player information about what's earned stored on player object.
+    Achievements: {
+        Scraps: {
+            Name: "Scraps",
+            Breakpoints: [50, 100, 500, 1000, 10000],
+            Value: [1, 1, 2, 2, 5],
 
+            EventTrigger: "CURRENCY_GAINED",
+            EventUsed: 0
+        }
+    },
+    // Zones stored as array, index is important and it's set up in order
+    //  Cells are 0-indexed
+    Zones: [
+        {   // Zone 0 - "Forgotten Battlefield"
+            numCells: 100,
+            enemyCounters: [20,45,19,10,5],
+            enemyNames: ["Goblin", "Kobold", "Orc", "WarDog", "Ogre"],
+            specialCells: [99],
+            specialEncounters: ["Dragon"]
+        },
+        {   // Zone 1 - "Battlefield outskirts"
+            numCells: 100,
+            enemyCounters: [40,15,20,25],
+            enemyNames: ["Goblin", "Orc", "WarDog", "Bear"],
+            specialCells: [99],
+            specialEncounters: ["Treant"]
+        },
+        {   // Zone 00 - "The Inexorable March of Time"
+            numCells: 100,
+            enemyCounters: [100],
+            enemyNames: ["SpacetimeCurvature"],
+            specialCells: [],
+            specialEncounters: []
+        }
     ],
-    Stats: [
-        new PlayerStat( // Crit rating == 0
-            "Crit",
-            100,
-            1.25,
-            25,
-            10,
-            5
-        ),
-        new PlayerStat( // Haste rating, speed == 1
-            "Haste",
-            100,
-            1.25,
-            25,
-            10,
-            5
-        ),
-        new PlayerStat( // Raw attack value == 2
-            "Attack",
-            100,
-            1.25,
-            25,
-            10,
-            5
-        ),
-        new PlayerStat( // Raw Health/Stamina == 3
-            "Health",
-            100,
-            1.25,
-            25,
-            10,
-            25
-        ),
-        new PlayerStat( // Health Regen == 4
-            "HPRegen",
-            100,
-            1.25,
-            25,
-            10,
-            1
-        )
-    ]
-    
+    // Creature information, mostly names and modifiers, loot not included yet.
+    Creatures: {
+        Goblin: {
+            Name: 'Goblin',
+            AttackMod: 1,
+            HealthMod: 1,
+            SpeedMod: 1,
+        },
+        Kobold: {
+            Name: 'Kobold',
+            AttackMod: 0.8,
+            HealthMod: 0.8,
+            SpeedMod: 0.8,
+        },
+        Dragon: {
+            Name: 'Dragon',
+            AttackMod: 2,
+            HealthMod: 5,
+            SpeedMod: 1.2,
+        },
+        Ogre: {
+            Name: 'Ogre',
+            AttackMod: 1.4,
+            HealthMod: 1.5,
+            SpeedMod: 1,
+        },
+        Orc: {
+            Name: 'Orc',
+            AttackMod: 1,
+            HealthMod: 1.2,
+            SpeedMod: 1,
+        },
+        WarDog: {
+            Name: 'War Dog',
+            AttackMod: 1,
+            HealthMod: 0.8,
+            SpeedMod: 1,
+        },
+        Bear:  {
+            Name: 'Bear',
+            AttackMod: 1.1,
+            HealthMod: 1.1,
+            SpeedMod: 0.8,
+        },
+        SpacetimeCurvature: {
+            Name: 'Spacetime Curvature',
+            AttackMod: 2,
+            HealthMod: 100,
+            SpeedMod: 1,
+        }
+    },
+    // Player stat progrses information such as cost, scaling values, etc
+    // Some numbers stored in comments so I can refer to them later.
+    //      Math.log(25) / Math.log(1.15) = 23.031
+    //      Math.log(25) / Math.log(1.25) = 14.425
+    //       -This is the cost point at which tier up should cost the same
+    //       -as one new level. I'll be using these as rough reference points
+    Stats: {
+        // "Primary" stats
+        Attack: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 10
+        },
+        Health: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 10
+        },
+        // "Secondary" stats, come in ratings
+        Crit: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 5
+        },
+        Haste: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 5
+        },
+        Regen: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 5
+        },
+        CritDmg: {
+            baseXPCost: 100,
+            levelCostScaling: 1.15,
+            tierUpCostScaling: 25,
+            baseStatGain: 10,
+            tierUpStatFactor: 5
+        },
+
+        // "Meta" stats, stats that effect other stats
+        Level: {
+            baseXPCost: 100,
+            levelCostScaling: 1.25,
+            primaryMulti: 1.1,
+            ratingConversionDecay: 1.05,
+        }
+    },
+    // Upgrades, starting off with stat tier up upgrades, others to be included.
+    Upgrades: {
+        CritTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('Crit',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.Crit.baseXPCost * Math.pow(GameDB.Stats.Crit.tierUpCostScaling, Game.Hero.StatLevels.Crit.Tier);
+            },
+        },
+        HasteTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('Haste',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.Haste.baseXPCost * Math.pow(GameDB.Stats.Haste.tierUpCostScaling, Game.Hero.StatLevels.Haste.Tier);
+            },
+        },
+        RegenTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('Regen',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.Regen.baseXPCost * Math.pow(GameDB.Stats.Regen.tierUpCostScaling, Game.Hero.StatLevels.Regen.Tier);
+            },
+        },
+        AttackTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('Attack',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.Attack.baseXPCost * Math.pow(GameDB.Stats.Attack.tierUpCostScaling, Game.Hero.StatLevels.Attack.Tier);
+            },
+        },
+        HealthTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('Health',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.Health.baseXPCost * Math.pow(GameDB.Stats.Health.tierUpCostScaling, Game.Hero.StatLevels.Health.Tier);
+            },
+        },
+        CritDmgTierUp: {
+            OnPurchase: function () {
+                Game.Hero.LevelUpStat('CritDmg',1, true);
+                Game.Hero.recalcStats();
+            },
+            GetCost: function() {
+                return GameDB.Stats.CritDmg.baseXPCost * Math.pow(GameDB.Stats.CritDmg.tierUpCostScaling, Game.Hero.StatLevels.CritDmg.Tier);
+            },
+        },
+        HeroLevelUp: {
+            OnPurchase: function() {
+                Game.Hero.Level++;
+            },
+            GetCost: function() {
+                return GameDB.Stats.Level.baseXPCost * Math.pow(GameDB.Stats.Level.levelCostScaling, Game.Hero.Level);
+            }
+        }
+    },
+    // One off pieces of information that need somewhere to sit.
+    Constants: {
+        // How things scale wrt world. Enemy stats, loot, etc.
+        WorldScaling: {
+            Zone: 2,
+            Resources: 1.1,
+        },
+        Stats: {
+            BaseRatingConversion: 25,
+        },
+        Supported: {
+            // Only english, see gameText.js for information about translating.
+            Languages: ['English'],
+            // Different kinds of notations for larger numbers.
+            NumberNotations: ["Scientific", "Engineering", "Log"],
+        },
+        States: {
+            Combat:
+            {
+                Paused: 0,
+                Active: 1
+            }
+        }
+        // Base reset currency and maybe scaling
+    },
+    // None yet but prepping for special challenges
+    Challenges: {}
 };
 
 //export {GameDB};

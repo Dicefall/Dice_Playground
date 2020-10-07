@@ -56,10 +56,9 @@ Basic world design and implementation
 -Story
 --Zones are going to be a lot bigger I think. Have them tied directly to story.
 
-I am here ---------------------------------------------------------------------
---------------------Fixed serialization of systems-----------------------------
+Fixed serialization of systems
 
-// Still need some kind of character progress at the run level
+// Changed Level to individual stats
     Change XP giving a level to XP going specifically into different stats.
     Crit, Haste, attack, health, others to come.
         Maybe stuff like dodge, block, multistrike, parry, crit damage, etc
@@ -70,8 +69,9 @@ I am here ---------------------------------------------------------------------
         Eg. haste gets weird and I don't want it to be too high
         Crit will probably get over 100% chance and I can do crit tiers
         Might do something with rating conversions like wow but for zones
-    
-Upgrades
+// Need to monitor cost/benefit curves and xp generation curves
+
+I am here ---------------------------------------------------------------------
 
 Story
 -Need to do the tutorial and early bits of story
@@ -79,19 +79,45 @@ Story
 
 Resets
 -Reset currency
+    Some kind of memory drug stuff.
+    Need a name for it.
 -Reset process
+    You wont change but the world wont be quite as you think you remember it
 
-Scraps
--Something for scraps.
---They do nothing right now
---Create basic equipment system out of this.
---Sort of liking the way idle wizard handles it, might start there
-===Makes gear, gear gets themed based on class eventually.
-===More scraps needed to make better stuff, come up with something
-===Higher tier (prestige) of items requires more rare stuff
-    just need more scraps to find the good stuff (no actual change just lore)
+Scraps:
+    Scraps are something you pick up and get along the way, similar to xp.
+    On your first trip back to town it'll unlock basic equipment.
+        Early on equipment quality is pretty low so only gives primary stats
+        Later on gear will be upgraded for more fancy stuff
+        Gear will persist through Resets
+            Costs for improvements should scale out of range without progress
+    Eventually "you know we could sell these right?"
+        A place to earn gold and starting to set up a larger economy
 
+Dungeons:
+Special places that should always have some pretty good persistent rewards
+    They should move around between runs, not too much but just enough to be cool
+    Lots of lore, for them too to make good story points
+    They'll slowly refill over time like in clickocalypse
+    Extra good rewards that make the reset nice
+        Should encourage, but not require reset periods based on them?
+        Maybe set them up to be a daily-like system?
+            Dailies/weeklies like mmo loot lockouts
+    
+Arena:
+Place in town you can pay to participate in arena matches
+    Grind out some XP
+    Can choose how difficult it is, better rewards for harder contests
+    Costs gold to enter
 
+Upgrades
+    Stat tier upgrades exist. Unlock conditions/requirements unknown
+        Scaling will be adjusted for tuning.
+    Thoughts are leaving them persistent after being unlocked
+        Limiting factor would be xp gain, probably not best.
+            Too strong for going back for early things.
+        Could also add in a zone milestone even in each run. to combat.
+    
 
 
 VISUALS-----------------------------------------------
@@ -111,14 +137,16 @@ Animation Engine?
 
 --Dodge spaghet code problems when you update combat and event/aura owners
 
-----Bugfixes / Feature updates
+
+------------------------------Version 1.0 end, Launch around here--------------
+
+----Feature updates
 Update plans-----------------------------------------
 
-Gear (Save for classes/jobs?)
--Equipment from scraps/other resources
--Extra stats?
--Randomness
--Armor types
+Equipment
+-Persistent gear that you keep between Resets
+-slowly grow it withi some options for builds
+-build options should tie into job/class choices later on
 
 Other Features!
 
@@ -129,7 +157,20 @@ Jobs/Classes
 -Class mastery effects or special passives for each one
 -Stat modifiers for the classes
 
+Player stats up to 10 *max*:
+Crit, Haste, Attack, Health, Regen, Crit dmg
+
+"Mastery" type stat for when jobs get added.
+
+
 Expansion/Major patch ideas -----------------------------
+
+Most feature unlocks will be either you find a new way to get stronger
+personally or you find someone that helps you make town better.
+
+A RG/CC/CH/IW style 'buy buildings get income" etc side game
+-Need a theme/flavor for it
+--That should dictate a huge amount of the rest of it.
 
 Exploration
 -Exploration, dungeons, etc
@@ -144,17 +185,8 @@ Exploration
 -"The swarm" (critter mound style thing maybe)
 --No clue how to make this make any sense, fights enemy swarm maybe?
 
--Town of some sort
---Maybe houses a lot of the other mechanisms
---They would know only that you're fighting
---Part of unlocking stuff and new systems like a mage tower etc
-
 -Alchemy/potions
 --Consumables, generic abilities anyone can use with potion theme
-
--Quest system (probably just fancy stuff (ui) thrown on top of events)
---This will be for everything, unlocks, etc
---Should be regularly hooked into event system
 
 -"The Box" reverse containment chamber from antimemetics
 --This is where challenges might come in, left notes for self (remember more) makes it harder
@@ -162,15 +194,11 @@ Exploration
 ---E.G. Sleep challenge (A day without sleep), Hope (A day without hope), etc
 
 -Museum/Artifacts?
---Some kind of collection system, copmlete sets for bonuses
+--Some kind of collection system, complete sets for bonuses
+--You learn something from studying a whole set to get some benefit
 
--Reputations
+-Reputations/Factions
 --Factions of some kind with presistent reputations and rewards
-
--Alignment bonuses
---Pick some kind of approach based on good/evil and law/chaos
---Neat 9x9 grid of potentially interesting bonuses
---Probably tie this into the town or non-direct player power
 
 -"Walk the path to power"
 --some corrupted power structure
@@ -180,20 +208,12 @@ Exploration
 --Kind of like spells from other games like RG or Idle Wizard
 --Big cooldown but some major payoff for it? Requires active to start
 --Potential for extra tie ins and additional progression
+---Summons are cool right?
 
-Tutorial Steps:
--Intro to world breifly and tell player to pick up scraps
---Pick up a sufficient amount of scrap, maybe just wait some small amount of time watching number go up a bit.
--Run into meryl, little story telling, keep getting scraps and wait breifly
---Very short time wait, just an actual time wait.
---Start combat, next step after combat (first enemy) is over.
-
---Not ironed out past here
---reverse containment chamber, can start growing this into something larger
-
-// TODO repo:
+// TODO collection:
 -Game saving
 --Online saving: for later
 --Save string compression
 -Crowdsource enemies
 -More complicated combat, not just attacks
+-Changelog for post launch

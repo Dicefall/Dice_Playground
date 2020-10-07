@@ -63,12 +63,13 @@ function UpdateUIElements() {
     Lookup.UIElements.PlayerHpBar.value = Math.max(Game.Hero.HealthCurr, 0);
     Lookup.UIElements.PlayerHpBar.max = Game.Hero.HealthMax;
 
-    if (Game.Enemies.length > 0) {
+    // TODO: Fix ui for change of enemy structure
+    if (Game.Enemy != null) {
         Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
             '{0} HP: {1} / {2}',
-            Game.Enemies[0].Name,
-            formatNumber(Math.max(Game.Enemies[0].HealthCurr, 0)),
-            formatNumber(Game.Enemies[0].HealthMax)
+            Game.Enemy.Name,
+            formatNumber(Math.max(Game.Enemy.HealthCurr, 0)),
+            formatNumber(Game.Enemy.HealthMax)
         );
     } else {
         Lookup.UIElements.EnemyHealth.textContent = ParseGameText(
@@ -89,98 +90,6 @@ function UpdateUIElements() {
     );
 }
 
-// Saving Functions, currently unused
-// TODO: Maybe look at the lz-string thing other games do----------------------
-function saveGameToLocal() {
-
-    // Create save object
-    var saveGame = {};
-    saveGame.events = allEvents.serializeEvents();
-    saveGame.chron = Chronos.SerializeTimers();
-    saveGame.Game = JSON.parse(JSON.stringify(Game));
-
-    // Get rid of things that don't need to be saved, shouldn't be anything
-
-    // after editting
-    var saveString = JSON.stringify(saveGame);
-
-    window.localStorage.setItem("ADWAY_Save", saveString);
-    console.log("AutoSaved");
-}
-
-function loadGameFromLocal() {
-    let returnedSave = JSON.parse(window.localStorage.getItem("ADWAY_Save"));
-    if (returnedSave == null) {
-        console.log("No local save detected");
-        return false;
-    } else {
-        console.log("Debug file size: " + window.localStorage.getItem("ADWAY_Save").length);
-    }
-    
-    // Events and Time
-    allEvents.deserializeEvents(returnedSave.events);
-    Chronos.DeserializeTimers(returnedSave.chron);
-
-    // Player data
-    // Data only fields
-    Game.Resources = JSON.parse(JSON.stringify(returnedSave.Game.Resources));
-    Game.Achievements = JSON.parse(JSON.stringify(returnedSave.Game.Achievements));
-    Game.Stats = JSON.parse(JSON.stringify(returnedSave.Game.Stats));
-    Game.RNGSeeds = JSON.parse(JSON.stringify(returnedSave.Game.RNGSeeds));
-    Game.Settings = JSON.parse(JSON.stringify(returnedSave.Game.Settings));
-    Game.GameState = returnedSave.GameState;
-
-    // Class based fields
-    // Hero, enemies, probably world eventually
-    Game.World = JSON.parse(JSON.stringify(returnedSave.Game.World));
-    Game.World.ActiveZone = JSON.parse(JSON.stringify(returnedSave.Game.World.ActiveZone));
-
-    // Object.assign is only a shallow copy
-    Game.Hero = new Hero("Hiro");
-    Object.assign(Game.Hero, returnedSave.Game.Hero);
-
-    // Make new copies of all the enemies    
-    returnedSave.Game.Enemies.forEach((oldBaddie, index) => {
-        // Steal name and boss mod to make new one
-        Game.Enemies.push(new Creature(oldBaddie.name, oldBaddie.isBoss));
-
-        // Copy stats same as hero
-        Object.assign(Game.Enemies[index], oldBaddie);
-    });
-
-    // Offline Time
-    // Maximum of 30 days
-    var missingTime = Math.min(
-        Date.now() - Game.Stats.LastUpdateTime,
-        1000 * 60 * 60 * 24 * 30); // 30 days in milliseconds
-
-    Game.Stats.LastUpdateTime = Date.now();
-    Game.Resources.Time += missingTime;
-
-    // TODO: Deal with version upgrading here, so far nothing needed
-
-    return true;
-}
-
-function removeLocalSave() {
-    var result = window.confirm(GameText[Game.Settings.Language].SaveReset);
-    if (result) {
-
-        // Clean up all of the event listeners
-        allEvents.clearAllEvents();
-        Chronos.ClearTimers();
-
-        // Delete localstorage save
-        window.localStorage.clear();
-
-        // Reset the base game object
-        Game = new PlayerData();
-
-        // Start up the game again
-        newPage();
-    }
-}
-
 function newPage() {
     // load game works, just leaving it out for testing
     // if (loadGameFromLocal()) {
@@ -193,15 +102,16 @@ function newPage() {
     // Enemy deaths, clean up combat stuff
     allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
 
-    Zone.startZone(Game.World.CurrentZone++);
+    startZone(Game.World.CurrentZone);
 
     // --------------------------------------------------------------------
 
     // Example for adding buttons
-    Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
-        //console.log("Level Up Button Pressed");
-        Game.Hero.LevelUp();
-    });
+    // Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
+    //     //console.log("Level Up Button Pressed");
+    //     //Game.Hero.LevelUp();
+    //     Game.Hero.LevelUpStat('Health',1,false);
+    // });
 
     // Queue up main loop 
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);
