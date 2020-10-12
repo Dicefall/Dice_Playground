@@ -75,7 +75,7 @@ function UpdateUIElements() {
     Lookup.UIElements.WorldStats.textContent = ParseGameText(
         'You are currently in the world at zone {0} and cell {1}',
         formatNumber(Game.World.CurrentZone + 1),
-        formatNumber(Game.World.CurrentCell + 1),
+        formatNumber(Game.World.CurrentCell),
     );
 
     // Party status indicator
@@ -87,17 +87,18 @@ function UpdateUIElements() {
 
 function newPage() {
     // load game works, just leaving it out for testing
-    // if (loadGameFromLocal()) {
+    if (loadGameFromLocal()) {
         // do potential catch up
-    // } else {
-    // Story Controller
-    Game.Stats.StoryState.StoryControlID =
-        allEvents.registerListener("TEST_EVENT",1); // Story Control
+    } else {
+        // Story Controller
+        Game.Stats.StoryState.StoryControlID =
+            allEvents.registerListener("TEST_EVENT",1); // Story Control
 
-    // Enemy deaths, clean up combat stuff
-    allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
+        // Enemy deaths, clean up combat stuff
+        allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
 
-    startZone(Game.World.CurrentZone);
+        startZone(Game.World.CurrentZone);
+    }
 
     // --------------------------------------------------------------------
 

@@ -486,7 +486,7 @@ const GameDB = {
         // How things scale wrt world. Enemy stats, loot, etc.
         WorldScaling: {
             Zone: 2,
-            Resources: 1.1,
+            //Resources: 1.1, // Will come back to this soon
         },
         Stats: {
             BaseRatingConversion: 25,
@@ -498,10 +498,14 @@ const GameDB = {
             NumberNotations: ["Scientific", "Engineering", "Log"],
         },
         States: {
-            Combat:
-            {
+            Combat: {
                 Paused: 0,
                 Active: 1
+            },
+
+            Game: {
+                Paused: 0,
+                Active: 1,
             }
         }
         // Base reset currency and maybe scaling
@@ -511,7 +515,15 @@ const GameDB = {
     // Dungeons
     // Arenas
     // None yet but prepping for special challenges
-    Challenges: {}
+    Challenges: {},
+    // Collection of functions that don't really have another home
+    Utils: {
+
+    },
+    // Primarily for things like certain ui related specifics,
+    // Nothing right now since there is no ui but an example would be:
+    //  Different colors for tooltips that scale with different stats
+    UI: {},
 };
 
 //export {GameDB};

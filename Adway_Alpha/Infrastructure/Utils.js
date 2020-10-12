@@ -404,28 +404,29 @@ function loadGameFromLocal() {
     // Player data
     // Data only fields
     Game.Resources = JSON.parse(JSON.stringify(returnedSave.Game.Resources));
-    Game.Upgrades = JSON.parse(JSON.stringify(returnedSave.Game.Upgrades));
     Game.Achievements = JSON.parse(JSON.stringify(returnedSave.Game.Achievements));
     Game.Stats = JSON.parse(JSON.stringify(returnedSave.Game.Stats));
     Game.RNGSeeds = JSON.parse(JSON.stringify(returnedSave.Game.RNGSeeds));
     Game.Settings = JSON.parse(JSON.stringify(returnedSave.Game.Settings));
-    Game.GameState = returnedSave.GameState;
+    Game.statTracking = JSON.parse(JSON.stringify(returnedSave.Game.statTracking));
+    Game.CombatState = returnedSave.CombatState;
 
     // Class based fields
     // Hero, enemies, probably world eventually
     Game.World = JSON.parse(JSON.stringify(returnedSave.Game.World));
-    Game.World.ActiveZone = JSON.parse(JSON.stringify(returnedSave.Game.World.ActiveZone));
 
-    // Object.assign is only a shallow copy
+    // Hero constructor makes new timers, have to nuke them right away
+    //  the Object.assign should connect the old timers back up.
     Game.Hero = new Hero("Hero");
+    Chronos.RemoveTimer(Game.Hero.turnTimerID);
+    Chronos.RemoveTimer(Game.Hero.regenTimerID);
     Object.assign(Game.Hero, returnedSave.Game.Hero);
 
     // Make a copy of the enemy and throw new stats on it
     // Steal name and boss mod to make new one
-    Game.Enemy = new Creature(oldBaddie.name, oldBaddie.isBoss);
-
-    // Copy stats same as hero
-    Object.assign(Game.Enemy, oldBaddie);
+    Game.Enemy = new Creature(returnedSave.Game.Enemy.Name);
+    Chronos.RemoveTimer(Game.Enemy.turnTimerID);
+    Object.assign(Game.Enemy, returnedSave.Game.Enemy);
 
     // Unchecked/Unadded
     // Nothing left
@@ -437,7 +438,7 @@ function loadGameFromLocal() {
         1000 * 60 * 60 * 24 * 30); // 30 days in milliseconds
 
     Game.Stats.LastUpdateTime = Date.now();
-    Game.Resources.Time += missingTime;
+    Chronos.TimeBank += missingTime;
 
     // TODO: Deal with version upgrading here, so far nothing needed
 
@@ -448,18 +449,24 @@ function removeLocalSave() {
     var result = window.confirm(GameText[Game.Settings.Language].SaveReset);
     if (result) {
 
-        // Clean up all of the event listeners
-        allEvents.clearAllEvents();
-        Chronos.ClearTimers();
+        // // Clean up all of the event listeners
+        // allEvents.clearAllEvents();
+        // Chronos.ClearTimers();
 
-        // Delete localstorage save
-        window.localStorage.clear();
+        // // Delete localstorage save
+        // window.localStorage.clear();
 
-        // Reset the base game object
-        Game = new PlayerData();
+        // var cleanSave = new PlayerData();
 
-        // Start up the game again
-        newPage();
+        // // Reset the base game object
+        // Object.assign(Game,cleanSave);
+        // saveGameToLocal();
+
+        // // Start up the game again
+        // newPage();
+
+        window.localStorage.removeItem("ADWAY_Save");
+        window.location.reload(true);
     }
 }
 
@@ -467,7 +474,8 @@ function removeLocalSave() {
 //  Mostly one-off things like spawning worlds or the like.
 
 // Deterministic Random Bit Generator -----------------------------------------
-// 
+// Incomplete and not working
+//  trying to figure it out as a personal project
 
 function randomBigInt() {
     

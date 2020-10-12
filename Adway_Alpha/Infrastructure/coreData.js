@@ -137,9 +137,6 @@ class GameData {
             TimeCounter: document.querySelector('#bonusTime')
         };
 
-        // Supported notations for displaying numbers
-        this.SupportedNumberNotations = ["Scientific", "Engineering", "Log"];
-
         // For internal strings only. Strings easier to debug
         // Anything being displayed to the player should be in gameText.js
         this.GameStrings = {
