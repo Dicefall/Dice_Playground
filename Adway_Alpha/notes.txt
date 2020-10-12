@@ -87,14 +87,22 @@ Resets
 Scraps:
     Scraps are something you pick up and get along the way, similar to xp.
     On your first trip back to town it'll unlock basic equipment.
-        Early on equipment quality is pretty low so only gives primary stats
-        Later on gear will be upgraded for more fancy stuff
-        Gear will persist through Resets
-            Costs for improvements should scale out of range without progress
     Eventually "you know we could sell these right?"
         A place to earn gold and starting to set up a larger economy
 
-Dungeons:
+    Equipment
+        Persistent gear that you keep between Resets
+        slowly grow it with some options for builds
+        Junk existing equipment for more Scraps
+            as a re-roll or to crunch old stuff for bigger stuff
+        
+    Equipment information:
+        All equipment will come with 1 primary stat(maybe more eventually), 0 or more secondaries, and 0 meta stats
+        Item level and quality will dictate stat budget. Primary stat is fixed, secondaries will vary.
+            Enchanting will come later, enchanting will add value to gear
+                Add to secondary stat budget, increase item level (sort of the same)
+
+Dungeons/Raids:
 Special places that should always have some pretty good persistent rewards
     They should move around between runs, not too much but just enough to be cool
     Lots of lore, for them too to make good story points
@@ -103,6 +111,14 @@ Special places that should always have some pretty good persistent rewards
         Should encourage, but not require reset periods based on them?
         Maybe set them up to be a daily-like system?
             Dailies/weeklies like mmo loot lockouts
+    Important information:
+        Where they are found
+        Their own zone type structure
+            How many floors, bosses, traps? etc.
+        Drops
+            From the boss, what kinds of items, what rarities, etc.
+        Other rewards
+            XP, maybe some raw scraps. Other things later on.
     
 Arena:
 Place in town you can pay to participate in arena matches
@@ -140,27 +156,14 @@ Animation Engine?
 
 ------------------------------Version 1.0 end, Launch around here--------------
 
-----Feature updates
-Update plans-----------------------------------------
+------------------Version 1.1 update plans-------------------------------------
 
-Equipment
--Persistent gear that you keep between Resets
--slowly grow it withi some options for builds
--build options should tie into job/class choices later on
+New story obviously
+-Will figure out launch story before getting there
 
-Other Features!
-
-Need some kind of automation system fantasy idea
-
-Jobs/Classes
--Different attacks maybe, or procs
--Class mastery effects or special passives for each one
--Stat modifiers for the classes
-
-Player stats up to 10 *max*:
-Crit, Haste, Attack, Health, Regen, Crit dmg
-
-"Mastery" type stat for when jobs get added.
+Classes
+-Wanderer base, Warrior/Mage + something techy (chemist? tinker? rogue/thief/archer?)
+--Class progression structure and improved combat for abilities
 
 
 Expansion/Major patch ideas -----------------------------
@@ -178,9 +181,9 @@ Exploration
 --Would have to be largely active and some good rewards for finishing floor
 --Would need to do something to avoid "look up the right map"
 
--Enchanting gear
--Long term gear scaling system maybe, researching new stuff
--Actual presistent gear
+-Tattoos
+--Tattoos often have some cool power associated with them, could be neat
+--Kidn of like rune words but could turn it into tattoos easily
 
 -"The swarm" (critter mound style thing maybe)
 --No clue how to make this make any sense, fights enemy swarm maybe?
@@ -198,7 +201,11 @@ Exploration
 --You learn something from studying a whole set to get some benefit
 
 -Reputations/Factions
---Factions of some kind with presistent reputations and rewards
+--Unsure if I want to make these persistent or per-run.
+--Per run could introduce more 'builds' and make some more interesting choices
+--Persistent would just be a nice longer progression system
+---Leaning to per-run with some milestone rewards.
+---Need to figure out how to encourage trying new ones and so on.
 
 -"Walk the path to power"
 --some corrupted power structure
@@ -209,6 +216,9 @@ Exploration
 --Big cooldown but some major payoff for it? Requires active to start
 --Potential for extra tie ins and additional progression
 ---Summons are cool right?
+
+-Beastiary
+--Some way to learn about the enemies with some reward for it.
 
 // TODO collection:
 -Game saving

@@ -11,24 +11,19 @@ function mainLoop() {
 
     // Do Time stuff
     var currTime = Date.now();
-    Game.Resources.Time += (currTime - Game.Stats.LastUpdateTime);
+    Chronos.TimeBank += (currTime - Game.Stats.LastUpdateTime);
     Game.Stats.LastUpdateTime = currTime;
 
     // If game is paused do nothing and move on
     if (Game.GameState == Lookup.GameStrings.GameStates.Paused) return;
 
     // Handling for possible slowdown and other effects, eg. background tab
-    if (Game.Resources.Time < Lookup.GameLoopIntervalBase) return;
+    if (Chronos.TimeBank < Lookup.GameLoopIntervalBase) return;
 
     // Eventually everything time based will be handled via Chronos.
     // Things that wont be handled via chronos will come after
     // This will be things like spawning new encounters, etc
     Chronos.Tick(Lookup.GameLoopIntervalBase);
-
-    // Basically the cost in terms of time of anything happening
-    // TODO: Add in a speed up mechanism for running multiple times per frame
-    Game.Resources.Time -= Lookup.GameLoopIntervalBase;
-    Game.statTracking.RunTimeSpent += Lookup.GameLoopIntervalBase;
 
     // Just in case I want to hook into this
     //allEvents.queueEvent("GAME_TICK");
@@ -44,7 +39,7 @@ function UpdateUIElements() {
 
     Lookup.UIElements.TimeCounter.innerHTML = ParseGameText(
         GameText[Game.Settings.Language].UI.Time,
-        formatNumber(Game.Resources.Time / 1000)
+        formatNumber(Chronos.TimeBank / 1000)
     );
 
     Lookup.UIElements.XPCounter.innerHTML = ParseGameText(
@@ -76,17 +71,17 @@ function UpdateUIElements() {
             'No Enemies');
     }
 
-    // Text output for zone/cell display
+    // Text output for zone/cell display, display at +1
     Lookup.UIElements.WorldStats.textContent = ParseGameText(
         'You are currently in the world at zone {0} and cell {1}',
-        formatNumber(Game.World.CurrentZone),
-        formatNumber(Game.World.CurrentCell),
+        formatNumber(Game.World.CurrentZone + 1),
+        formatNumber(Game.World.CurrentCell + 1),
     );
 
     // Party status indicator
     Lookup.UIElements.PartyStatus.innerHTML = ParseGameText(
         "Party status: {0}",
-        (Game.GameState == Lookup.GameStrings.GameStates.Rest) ? GameText.Icons.Skull : GameText.Icons.HeartBeat
+        (Game.CombatState == GameDB.Constants.States.Combat.Paused) ? GameText.Icons.Skull : GameText.Icons.HeartBeat
     );
 }
 

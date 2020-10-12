@@ -19,8 +19,6 @@ class PlayerData {
             // Reset currency
 
             XP: 0,
-
-            Time: 0,
         };
 
         // Amnesia is the opposite, so things that make you remember
@@ -28,12 +26,14 @@ class PlayerData {
         
 
         // Hero
-        // TODO: Figure out name situation
-        this.Hero = new Hero("Hero");
+        this.Hero = new Hero();
 
         // List of currently alive enemies
         this.Enemy = null;
 
+        // Note to self for later
+        //  Make dungeon/arena structure follow this
+        //  for spawn code to be the same
         // Current Map/World info
         this.World = {
             // For preloading or pre-spawning
@@ -49,6 +49,7 @@ class PlayerData {
             CurrentCell: 0,
             // If I end up letting the player dip out of combat to do combat elsewhere
             //  I'll need something like this to put the enemy on a stack
+            //  Probably multiples of these for different areas
             StoredEncounter: null
         };
 
@@ -81,7 +82,6 @@ class PlayerData {
         this.CombatState = GameDB.Constants.States.Combat.Paused;
 
         this.statTracking = {
-            TotalTimeSpent: 0,
             RunTimeSpent: 0,
             Resets: 0,
         };
@@ -89,7 +89,7 @@ class PlayerData {
         // See Utils.js for actual rand systems.
         // TODO: Generate real seeds
         this.RNGSeeds = {
-      
+            Equipment: 0,
         };
 
         // Settings
@@ -108,6 +108,11 @@ class PlayerData {
             NumberNotation: "Scientific",
             // Still working on other bases, this isn't hooked up to anything
             NumberBase: 10,
+
+            // Game Speedup settings
+            SpendIfOver: 1000*60*30, //Default to 30 minutes
+            Acceleration: 5, // Default 5x acceleration when accelerating
+
         };
     }
 }

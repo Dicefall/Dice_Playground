@@ -155,6 +155,9 @@ class Chronometer {
             this.timerList = [];
 
             this.nextTimerID = 0;
+
+            this.Time = 0;
+            this.TimeBank = 0;
         }
     }
 
@@ -181,9 +184,10 @@ class Chronometer {
     // this will go through all timers on the list and tick them down
     // TODO: Granularity and state changes
     Tick(elapsedTime) {
+        this.Time += elapsedTime;
+        this.TimeBank -= elapsedTime;
 
         Game.statTracking.RunTimeSpent += elapsedTime;
-        Game.statTracking.TotalTimeSpent += elapsedTime;
 
         // Don't need to do anything if there are no timers
         if (this.timerList.length == 0) return;
@@ -198,45 +202,42 @@ class Chronometer {
             }
         })
         
-        // sort timers
-        // -since list should remain mostly sorted, going with insertion sort
+        // sort timers, relying on order to pop them off
         this.SortTimers();
 
         // tock timers in order
-        while (this.timerList[0].nextTick < Game.statTracking.TotalTimeSpent) {
+        while (this.timerList[0].nextTick <= this.Time) {
 
             // Placeholder ref for cleaner code
             var currentTimer = this.timerList[0];
 
             // Aura's tick function, will need to check for partial effects eventually
-            if (GameDB.Auras[currentTimer.spellID].onTick) GameDB.Auras[currentTimer.spellID].onTick();
+            if (GameDB.Auras[currentTimer.spellID].onTick) GameDB.Auras[currentTimer.spellID].onTick.bind(currentTimer)();
 
-            // After timer has ticked, either find out the next time to tick or if it should go away
-            // TODO: Hasted ticks
-
-            // Check if we've reached the end of the timer, this is checked by checking:
-            //  If we're past the end time AND the 'next tick' value is the same as the end time.
-            if (currentTimer.endTime < Game.statTracking.TotalTimeSpent && currentTimer.endTime == currentTimer.nextTick) {
-                if (GameDB.Auras[currentTimer.spellID].onFade) GameDB.Auras[currentTimer.spellID].onFade();
-                //console.log("Aura Fading: " + currentTimer.spellID);
+            //  Check for if this tick should have been the last one
+            //      If it's last one, clean it up and continue
+            //      else move tick to the next one
+            if (currentTimer.nextTick >= currentTimer.endTime) {
+                if (GameDB.Auras[currentTimer.spellID].onFade) GameDB.Auras[currentTimer.spellID].onFade.bind(currentTimer)();
                 this.timerList.splice(0,1);
                 if (this.timerList.length == 0) {
                     return;
                 }
-                // TODO: clear it from the owner's aura list as well to make sure it gets cleaned up
-            // Check if the next tick would go over the final end time. Set it to be the same and set up partial tick info
-            } else if (currentTimer.nextTick + GameDB.Auras[currentTimer.spellID].tickFrequency >= currentTimer.endTime) {
-                currentTimer.nextTick = currentTimer.endTime;
-                if (GameDB.Auras[currentTimer.spellID].flags & Aura.AuraFlags.PartialFinalTick) {
-                    // set info important to partial ticks
-                }
-            // This should leave only the case where we get another full tick
+                continue;
             } else {
-                currentTimer.nextTick += GameDB.Auras[currentTimer.spellID].tickFrequency * 
+                // Check for hasted tick rate, multiply by tick frequency
+                currentTimer.nextTick += currentTimer.tickFrequency * 
                     (GameDB.Auras[currentTimer.spellID].flags & Aura.AuraFlags.TickHasted ? 
                         1 / currentTimer.Owner.Speed :
                         1
                     );
+            }
+
+            //  Check for next tick > end time
+            //      If yes, clamp
+            if (currentTimer.nextTick >= currentTimer.endTime) {
+                currentTimer.nextTick = currentTimer.endTime;
+                // any partial tick stuff should go here
             }
 
             // Sort to make sure fresh ticks go to the back
@@ -252,13 +253,10 @@ class Chronometer {
             spellID: timerDBID,
             timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
 
-            startTime: Game.statTracking.TotalTimeSpent,
-            endTime: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].maxDuration *
-                ((GameDB.Auras[timerDBID].flags & Aura.AuraFlags.DurationHasted) ? (1 / timerOwner.Speed) : 1), // check for hasted duration
-            nextTick: Game.statTracking.TotalTimeSpent + GameDB.Auras[timerDBID].tickFrequency *
-                ((GameDB.Auras[timerDBID].flags & Aura.AuraFlags.TickHasted) ? (1 / timerOwner.Speed) : 1),
-
+            startTime: this.Time
         }
+
+        GameDB.Auras[newTimer.spellID].Build.bind(newTimer)();
 
         this.timerList.push(newTimer);
         this.SortTimers();
@@ -289,13 +287,18 @@ class Chronometer {
     SerializeTimers(){
         var serialized = {
             Timers: this.timerList,
-            IDCounter: this.nextTimerID
+            IDCounter: this.nextTimerID,
+            Time: this.Time,
+            TimeBank: this.TimeBank,
         }
         return serialized;
     };
 
     DeserializeTimers(Data){
         this.nextTimerID = Data.IDCounter;
+        this.Time = Data.Time;
+        this.TimeBank = Data.TimeBank;
+
         Data.Timers.forEach( timer => {
 
             // Essentially redo the create-timer but just copy fields
@@ -310,6 +313,7 @@ class Chronometer {
             }
 
             this.timerList.push(newTimer);
+
         })
 
         this.SortTimers();
@@ -320,3 +324,6 @@ const allEvents = new EventBoard();
 const Chronos = new Chronometer();
 
 //export {EventBoard, Chronometer};
+// Chronos.js TODO list:
+//  Try to extract any direct references to the Game object, shouldn't be there
+//  GameDB is ok

@@ -26,7 +26,7 @@ class Actor {
 
 class Hero extends Actor { 
 
-    constructor(name) {
+    constructor(name = "Hero") {
         super(name);
 
         // Level gives a big boost to attack/defense
@@ -72,6 +72,11 @@ class Hero extends Actor {
         this.CritDamageBonus = 0;   // Bonus damage % of a critical strike, (1+this)x bonus
         this.HealthRegen = 0.01;       // %age of health regenerated per tick
         // Speed included here as well
+
+        // Player attack aura
+        this.turnTimerID = Chronos.CreateTimer("PlayerTurn",this);
+        // Regen aura
+        this.regenTimerID = Chronos.CreateTimer("PlayerRegen", this);
     }
 
     // TODO: Double check tier up cost things (in case numLevels =0 when tiering up)
@@ -95,8 +100,12 @@ class Hero extends Actor {
 
     recalcStats() {
 
+        // Meta stat
+        var primaryBoost = Math.pow(GameDB.Stats.Level.primaryMulti,this.Level);
+
         // 'Primary' stats, Attack and Health
         this.Attack = this.AttackBase + GameDB.Stats.Attack.baseStatGain * Math.pow(GameDB.Stats.Attack.tierUpStatFactor, this.StatLevels.Attack.Tier) * this.StatLevels.Attack.Level;
+        this.Attack *= primaryBoost;
 
         // When max health changes, health deficit is retained.
         // Example, if you start with 80/100 health
@@ -105,6 +114,7 @@ class Hero extends Actor {
         //      Can feel bad for getting max health cut real low but I feel this is the best way to handle changing health pools
         var healthDeficit = this.HealthMax - this.HealthCurr;
         this.HealthMax = this.HealthBase + GameDB.Stats.Health.baseStatGain * Math.pow(GameDB.Stats.Health.tierUpStatFactor, this.StatLevels.Health.Tier) * this.StatLevels.Health.Level;
+        this.HealthMax *= primaryBoost;
         this.HealthCurr = Math.max(this.HealthMax - healthDeficit,1);
 
         // 'Secondary' stats
@@ -123,11 +133,38 @@ class Hero extends Actor {
         this.HealthRegen = 0.01 + 0.01 * this.RegenRating / ratingDecay; 
     }
 
+    OnDeath() {
+        // Health has already dropped below zero, control it here for consistency
+        this.HealthCurr = 0;
+        this.isAlive = false;
+
+        // Attempting to balance death a bit
+        //  If you're faster than the enemy you can still get hits in
+        //  This might be trying to solve a problem that doesn't exist
+        //  I still think it's part of the penalty of hp going to 0
+        this.turnTimerID = Chronos.RemoveTimer(this.turnTimerID);
+    }
+
+    Revive() {
+
+        // Probably overshot max health
+        if (this.HealthCurr > this.HealthMax){
+            this.HealthCurr = this.HealthMax;
+        }
+        this.isAlive = true;
+
+        // Check for attack aura exist, if not start it up again.
+        if (this.turnTimerID == null) {
+            this.turnTimerID = Chronos.CreateTimer("PlayerTurn", this);
+        }
+
+    }
+
 }
 
 class Creature extends Actor {
     constructor(name) {
-        super(name);
+        super(GameDB.Creatures[name].Name);
 
         // Get world and cell scaling
         var worldMod = Math.pow(
@@ -140,7 +177,7 @@ class Creature extends Actor {
         this.HealthCurr = this.HealthMax;
 
         // Add creature combat timer to the list
-        this.turnTimerID = Chronos.CreateTimer(0,this);
+        this.turnTimerID = Chronos.CreateTimer("EnemyTurn",this);
         
     }
 }
@@ -204,6 +241,43 @@ function startZone(zoneNumber) {
             
         }
     }
+}
+
+// Reset functions ------------------------------------------------------------
+function resetRun() {
+
+    // Record that a reset has happened and set the run time to 0
+    Game.statTracking.Resets++;
+    Game.statTracking.RunTimeSpent = 0;
+
+    // Pause combat
+    Game.CombatState = GameDB.Constants.States.Combat.Paused;
+
+    // Clean up all timers and events that are specific to the run
+    // TODO: Maybe add a function to chronos to clear all unflagged timers
+    Chronos.RemoveTimer(Game.Hero.turnTimerID);
+    Chronos.RemoveTimer(Game.Hero.regenTimerID);
+
+    // Reset the world to the beginning
+    Game.World.CurrentZone = 0;
+    Game.World.CurrentCell = 0;
+    Game.World.StoredEncounter = null;
+    Game.World.ActiveZone.PossibleEnemies = [];
+    Game.World.ActiveZone.Encounters = [];
+
+    // Clean up enemy
+    Chronos.RemoveTimer(Game.Enemy.turnTimerID);
+    Game.Enemy = null;
+
+    // Reset all of our hero stats
+    Game.Hero = new Hero();
+    
+    // All income and resources
+    Game.Resources.Scraps = 0;
+    Game.Resources.ScrapsIncome = 0;
+    Game.Resources.Gold = 0;
+    Game.Resources.GoldIncome = 0;
+    Game.Resources.XP = 0;
 }
 
 // Math and number things   ---------------------------------------------------

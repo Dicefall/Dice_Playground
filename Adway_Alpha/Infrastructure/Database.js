@@ -36,14 +36,14 @@ class Aura {
         Visible: 32
     }
 
-    constructor(maxDuration, tickFrequency, onTick, onFade, auraFlags) {
-        this.maxDuration = maxDuration;
-        this.tickFrequency = tickFrequency;
-        this.onTick = onTick;
-        this.onFade = onFade;
+    // constructor(maxDuration, tickFrequency, onTick, onFade, auraFlags) {
+    //     this.maxDuration = maxDuration;
+    //     this.tickFrequency = tickFrequency;
+    //     this.onTick = onTick;
+    //     this.onFade = onFade;
 
-        this.flags = auraFlags;
-    }
+    //     this.flags = auraFlags;
+    // }
 }
 
 class MapTile {
@@ -68,9 +68,10 @@ const GameDB = {
 
             if (Game.Resources.Scraps >= GameDB.Achievements[0].TierBreakpoints[Game.Achievements['Scraps']]) {
 
-                var recieveText = achievementRewardText(GameDB.Achievements[0]);
+                var recieveText = achievementRewardText(GameDB.Achievements["Scraps"]);
 
-                console.log(recieveText); // TODO: Change to achievement reward system
+                // TODO: Move this to an actual ui reward
+                console.log(recieveText);
 
                 Game.Achievements['Scraps']++;
                 Lookup.AchievementData.CalculateTotal();
@@ -83,12 +84,8 @@ const GameDB = {
                 case 0:
                     Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[0]);
 
-                    // Player attack aura
-                    Chronos.CreateTimer(1,Game.Hero);
-                    // Regen aura
-                    Chronos.CreateTimer(4, Game.Hero);
                     // Spawn the first enemies
-                    Chronos.CreateTimer(3, null);
+                    Chronos.CreateTimer("DelayedSpawn", null);
 
                     Game.Stats.StoryState.StoryStage++;
                     allEvents.removeEvent(
@@ -170,66 +167,90 @@ const GameDB = {
 
                 // Spawn new encounter after a short delay
                 // Delay is 500ms
-                Chronos.CreateTimer(3, null);
+                Chronos.CreateTimer("DelayedSpawn", null);
             }
         })
     ],
-    Auras: [
-        new Aura(                                   // Enemy combat actions, id == 0
-            Infinity,                               // Duration
-            Actor.baseTurnRate,                     // Tick frequency
-            () => {                                 // onTick
+    Auras: {
+        EnemyTurn: {
+            Build: function() {
+                this.endTime = Infinity;
+                this.tickFrequency = Actor.baseTurnRate;
+                this.nextTick = Chronos.Time + this.tickFrequency / this.Owner.Speed;
+            },
+
+            Flags: Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.TickHasted,
+            onFade: null,
+            onTick: function() {
                 if (Game.Hero.isAlive) {
                     Game.Hero.HealthCurr -= Game.Enemy.Attack;
                 }
 
                 if (Game.Hero.HealthCurr <= 0) {
-                    Game.Hero.HealthCurr = 0;
-                    Game.Hero.isAlive = false;
+                    Game.Hero.OnDeath();
 
                     // Switch to rest state
                     Game.CombatState = GameDB.Constants.States.Combat.Paused;
                 }
-            },
-            null,                                   // onFade
-            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted    // Flags
-        ),
+            }
+        },
 
-        new Aura( // Player GCD/Swing timer, id == 1
-            Infinity,
-            Actor.baseTurnRate,
-            () => {
+        PlayerTurn: {
+            Build: function() {
+                this.endTime = Infinity;
+                this.tickFrequency = Actor.baseTurnRate;
+                this.nextTick = Chronos.Time + this.tickFrequency / this.Owner.Speed;
+            },
+
+            Flags: Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.TickHasted,
+            onFade: null,
+            onTick: function() {
                 // This will be what fires off when an action is done in combat.
                 if (Game.Enemy == null) return;
-
+    
                 // Roll for crit
                 var doesCrit = (Math.random() < Game.Hero.CritChance);
-
+    
                 Game.Enemy.HealthCurr -= Game.Hero.Attack * ((doesCrit) ? 1 + Game.Hero.CritDamageBonus : 1);
 
                 // See if you killed it
                 if (Game.Enemy.HealthCurr <= 0) { allEvents.queueEvent("ENEMY_DEFEATED"); }
             },
-            null,
-            Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.DurationHasted | Aura.AuraFlags.TickHasted
-        ),
+        },
 
-        new Aura( // Resource ticker, id == 2
-            Infinity,
-            1000, // 1000ms, give resources once every second
-            () => {
-                // All resource generation and other effects will go in here
-                Game.Resources.Scraps += (Game.Resources.ScrapsIncome);
-                allEvents.queueEvent("CURRENCY_GAINED");
+        PlayerRegen: {
+            Build: function() {
+                this.endTime = Infinity;
+                this.tickFrequency = 1000;
+                this.nextTick = Chronos.Time + this.tickFrequency / this.Owner.Speed;
             },
-            null,
-            0
-        ),
 
-        new Aura( // Spawn delay id == 3
-            500,
-            500,
-            () => {
+            Flags: Aura.AuraFlags.TickHasted,
+            onFade: null,
+            onTick: function() {
+                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen * Game.Hero.HealthMax);
+                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
+                    if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
+                        Game.CombatState = GameDB.Constants.States.Combat.Active;
+                        Game.Hero.Revive();
+                    }
+                }
+            },
+        },
+
+        DelayedSpawn: {
+            Build: function() {
+                // Change this owner for later when arenas/dungeons are a thing
+                this.Owner = Game.World;
+
+                this.endTime = Chronos.Time + 500;
+                this.tickFrequency = 1000;
+                this.nextTick = this.endTime;
+            },
+
+            Flags: Aura.AuraFlags.TickHasted,
+            onFade: null,
+            onTick: function() {
                 // Zone control here.
                 Game.Enemy = new Creature(GameDB.Zones[Game.World.CurrentZone].enemyNames.concat(GameDB.Zones[Game.World.CurrentZone].specialEncounters)[
                     [Game.World.ActiveZone.Encounters[Game.World.CurrentCell++]]
@@ -237,25 +258,9 @@ const GameDB = {
 
                 Game.CombatState = GameDB.Constants.States.Combat.Active;
             },
-            null,
-            0
-        ),
-        new Aura( // Health regen aura id == 4
-            Infinity,
-            1000,
-            () => {
-                Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen * Game.Hero.HealthMax);
-                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
-                    if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
-                        Game.CombatState = GameDB.Constants.States.Combat.Active;
-                        Game.Hero.isAlive = true;
-                    }
-                }
-            },
-            null,
-            Aura.AuraFlags.TickHasted
-        )
-    ],
+        }
+        
+    },
     // Achievements here. Events added when game object is created.
     // Player information about what's earned stored on player object.
     Achievements: {
@@ -280,7 +285,7 @@ const GameDB = {
         },
         {   // Zone 1 - "Battlefield outskirts"
             numCells: 100,
-            enemyCounters: [40,15,20,25],
+            enemyCounters: [39,15,20,25],
             enemyNames: ["Goblin", "Orc", "WarDog", "Bear"],
             specialCells: [99],
             specialEncounters: ["Treant"]
@@ -366,6 +371,7 @@ const GameDB = {
             baseStatGain: 10,
             tierUpStatFactor: 10
         },
+
         // "Secondary" stats, come in ratings
         Crit: {
             baseXPCost: 100,
@@ -400,7 +406,7 @@ const GameDB = {
         Level: {
             baseXPCost: 100,
             levelCostScaling: 1.25,
-            primaryMulti: 1.1,
+            primaryMulti: 1.15,
             ratingConversionDecay: 1.05,
         }
     },
@@ -469,6 +475,12 @@ const GameDB = {
             }
         }
     },
+    // Reset upgrades, fills the roles of things like ancients from CH, perks from Trimps, etc
+    //  Mnemonics are any thing that can aid in memory
+    //  Lore wise not settled yet
+    Mnemonics: {
+
+    },
     // One off pieces of information that need somewhere to sit.
     Constants: {
         // How things scale wrt world. Enemy stats, loot, etc.
@@ -494,6 +506,10 @@ const GameDB = {
         }
         // Base reset currency and maybe scaling
     },
+    // Reset perks
+    // Equipment information
+    // Dungeons
+    // Arenas
     // None yet but prepping for special challenges
     Challenges: {}
 };
