@@ -17,6 +17,10 @@ class PlayerData {
             GoldIncome: 0,
 
             // Reset currency
+            Essence: {
+                Total: 0,
+                CurrentRun: 0,
+            },
 
             XP: 0,
         };
@@ -59,6 +63,7 @@ class PlayerData {
 
             // Earned
             Scraps: {
+                // TODO: Maybe move this, feels like it shouldn't be here
                 HandlerID: allEvents.registerListener(GameDB.Achievements.Scraps.EventTrigger, GameDB.Achievements.Scraps.EventUsed),
                 TierEarned: 0
             }
@@ -120,6 +125,7 @@ class PlayerData {
 // This is for anything specific to this instance of the game
 // This will include most UI references and tab information
 //  such as refernces to the main game loop for the browser.
+//      Also including any calculated information that doesn't need to be saved.
 class GameData {
     constructor() {
         // References to the HTML elements

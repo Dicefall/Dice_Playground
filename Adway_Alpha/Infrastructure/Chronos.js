@@ -13,17 +13,6 @@ class EventBoard {
             return this.instance;
         } else {
             this.instance = this;
-
-            // All event types that will be supported should be included here
-            // Should throw error for unsupported event type
-            this.EventTypes = [
-                "TEST_EVENT", //Any time I want to just testing things or this system
-                "ZONE_CLEAR", //Zone is finished
-                "CELL_CLEAR", //Cell is finished
-                "ENEMY_DEFEATED", //Enemy is defeated
-                "CURRENCY_GAINED", //Might split into others
-                "ADDON_EVENT", //In case third party wants to hook into this
-            ];
             
             this.init();
         }
@@ -35,7 +24,8 @@ class EventBoard {
         // Before each individual board is a list of arguments it expects
         this.RootBoard = new Map();
 
-        this.EventTypes.forEach(EType => {
+        // See GameDB.Constants.EventTypes for list of event types
+        GameDB.Constants.EventTypes.forEach(EType => {
             this.RootBoard.set(EType, []);
         });
 
@@ -44,8 +34,9 @@ class EventBoard {
 
     GenerateEventGUID() {return ++(this.nextGUID);}
 
-    // This needs to be redesigned to be serializable
-    // The goal is to save a way for the events to be reconstructed in their current state
+    
+    // Add a listener to the system, guidOverride should not be used
+    //  Except for deserialization
     registerListener(listenFor, eventID, owner, guidOverride = -1){
 
         var eventCopy = {
@@ -63,7 +54,7 @@ class EventBoard {
 
     // Event happens, go and call each function
     queueEvent(eventType, ...restArgs){
-        if (!(this.EventTypes.includes(eventType))) {
+        if (!(GameDB.Constants.EventTypes.includes(eventType))) {
             // TODO: Error throwing
             console.log("Event type not supported: " + eventType);
             return;
@@ -75,7 +66,7 @@ class EventBoard {
 
     removeEvent(removeGUID) {
         let searchIndex = 0;
-        this.EventTypes.forEach(EType => {
+        GameDB.Constants.EventTypes.forEach(EType => {
             searchIndex = 0;
             this.RootBoard.get(EType).forEach(element => {
                 if (element.cbGUID === removeGUID) {
@@ -100,7 +91,7 @@ class EventBoard {
         // TODO: This is broken, fix
         var SerializedEvents = [];
 
-        this.EventTypes.forEach( EType => {
+        GameDB.Constants.EventTypes.forEach( EType => {
             //SerializedEvents.set(EType, []);
 
             this.RootBoard.get(EType).forEach( eventObj => {
@@ -193,8 +184,13 @@ class Chronometer {
         if (this.timerList.length == 0) return;
 
         // Check for pauses:
+        // TODO: suppression as well (ticks down, no effect, not actually paused)
         this.timerList.forEach( timer => {
-            if (GameDB.Auras[timer.spellID].flags & Aura.AuraFlags.PauseOnCombat) {
+
+            if (timer.isPaused) {
+                timer.nextTick += elapsedTime;
+                timer.endTime += elapsedTime;
+            } else if (GameDB.Auras[timer.spellID].flags & Aura.AuraFlags.PauseOnCombat) {
                 if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
                     timer.nextTick += elapsedTime;
                     timer.endTime += elapsedTime;
@@ -252,6 +248,7 @@ class Chronometer {
             Owner: timerOwner, // Does nothing for now, included for future support for actual 'auras'
             spellID: timerDBID,
             timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
+            isPaused: false,
 
             startTime: this.Time
         }

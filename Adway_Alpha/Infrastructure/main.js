@@ -31,6 +31,13 @@ function mainLoop() {
 
 function UpdateUIElements() {
 
+    // Example for adding buttons
+    // Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
+    //     //console.log("Level Up Button Pressed");
+    //     //Game.Hero.LevelUp();
+    //     Game.Hero.LevelUpStat('Health',1,false);
+    // });
+
     // Resource counter
     Lookup.UIElements.ScrapCounter.innerHTML = ParseGameText(
         GameText[Game.Settings.Language].UI.Scraps,
@@ -87,9 +94,9 @@ function UpdateUIElements() {
 
 function newPage() {
     // load game works, just leaving it out for testing
-    if (loadGameFromLocal()) {
-        // do potential catch up
-    } else {
+    // if (loadGameFromLocal()) {
+    //     // do potential catch up
+    // } else {
         // Story Controller
         Game.Stats.StoryState.StoryControlID =
             allEvents.registerListener("TEST_EVENT",1); // Story Control
@@ -98,16 +105,9 @@ function newPage() {
         allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
 
         startZone(Game.World.CurrentZone);
-    }
+    //}
 
     // --------------------------------------------------------------------
-
-    // Example for adding buttons
-    // Lookup.UIElements.LevelUpButton.addEventListener('click', event => {
-    //     //console.log("Level Up Button Pressed");
-    //     //Game.Hero.LevelUp();
-    //     Game.Hero.LevelUpStat('Health',1,false);
-    // });
 
     // Queue up main loop 
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);

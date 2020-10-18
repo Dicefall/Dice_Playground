@@ -164,7 +164,8 @@ class Hero extends Actor {
 
 class Creature extends Actor {
     constructor(name) {
-        super(GameDB.Creatures[name].Name);
+        // TODO: Change this to get from game text
+        super(GameText[Game.Settings.Language].CreatureNames[name]);
 
         // Get world and cell scaling
         var worldMod = Math.pow(
@@ -190,8 +191,8 @@ function startZone(zoneNumber) {
     // I've made a special zone that repeats at the end for them
     if (zoneNumber >= GameDB.Zones.length) zoneNumber = GameDB.Zones.length - 1;
 
-    var zoneRef = {};
-    Object.assign(zoneRef, GameDB.Zones[zoneNumber]);
+    // Non ref copy of the zone information so we can use it
+    var zoneRef = JSON.parse(JSON.stringify(GameDB.Zones[zoneNumber]));
     Game.World.ActiveZone.Encounters = [];
     Game.World.ActiveZone.PossibleEnemies = zoneRef.enemyNames.concat(zoneRef.specialEncounters)
 
@@ -216,7 +217,8 @@ function startZone(zoneNumber) {
         // Check for special/scripted encounters. E.g. bosses or special
         if (zoneRef.specialCells.includes(i)) {
             Game.World.ActiveZone.Encounters.push(
-                zoneRef.enemyNames.length + zoneRef.specialCells.indexOf(i)
+                // use GameDB since the zoneref is getting modified, and we're just stealing info
+                GameDB.Zones[zoneNumber].enemyNames.length + zoneRef.specialCells.indexOf(i)
             );
             continue;
         } else {
@@ -234,11 +236,10 @@ function startZone(zoneNumber) {
 
             // Count it against zone ref and clean up remaining enemies in list
             zoneRef.enemyCounters[randomEnemySelection]--;
-            if (zoneRef.enemyNames[randomEnemySelection] == 0) {
+            if (zoneRef.enemyCounters[randomEnemySelection] <= 0) {
                 zoneRef.enemyNames.splice(randomEnemySelection,1);
                 zoneRef.enemyCounters.splice(randomEnemySelection,1);
             }
-            
         }
     }
 }
@@ -402,6 +403,7 @@ function loadGameFromLocal() {
     Chronos.DeserializeTimers(returnedSave.chron);
 
     // Player data
+    //  Had a thought to sneak in some tricky "only when you close and re-open" narrative stuff here
     // Data only fields
     Game.Resources = JSON.parse(JSON.stringify(returnedSave.Game.Resources));
     Game.Achievements = JSON.parse(JSON.stringify(returnedSave.Game.Achievements));

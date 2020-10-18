@@ -3,12 +3,6 @@ Adway roadmap
 Basic world design and implementation
 -World maps/zones
 -Dungeons/maps/whatever
--Exploring concept
-
-Exploring is through combat, clean up afterwards with some kind of
-investigation thing, each cell fully scouted out is bonus resource
-generation and maybe discover some cool things. Maybe some forward
-scouting added also to see what's coming up.
 
 Figure out combat pieces:
 Combat Timer:
@@ -71,18 +65,30 @@ Fixed serialization of systems
         Might do something with rating conversions like wow but for zones
 // Need to monitor cost/benefit curves and xp generation curves
 
+Upgrades: 
+    Stat tier upgrades exist. Unlock conditions/requirements unknown
+        Scaling will be adjusted for tuning.
+    Thoughts are leaving them persistent after being unlocked
+        Limiting factor would be xp gain, probably not best.
+            Too strong for going back for early things.
+        Could also add in a zone milestone even in each run. to combat.
+    TODO: UI stuff and connect it to clickables and double check everything from there.
+
+
 I am here ---------------------------------------------------------------------
 
 Story
 -Need to do the tutorial and early bits of story
+-Add story for 
 --See Story.txt
 
-Resets
--Reset currency
-    Some kind of memory drug stuff.
-    Need a name for it.
--Reset process
-    You wont change but the world wont be quite as you think you remember it
+Reset perks:
+Currency named Essence, funnel it into attributes to boost core aspects of the person
+    Strength, dex, con, etc. Traditional main character stats from old school rpgs.
+Reset story basically last page of whatever you wrote to yourself, forget everything after reading it.
+    Some cognitohazard/infomatics/memetics/whatever, mostly staying a mystery to the player.
+Implementation
+    Just need to decide what each one actually does, how many to include at the start, and connect it all up
 
 Scraps:
     Scraps are something you pick up and get along the way, similar to xp.
@@ -101,6 +107,11 @@ Scraps:
         Item level and quality will dictate stat budget. Primary stat is fixed, secondaries will vary.
             Enchanting will come later, enchanting will add value to gear
                 Add to secondary stat budget, increase item level (sort of the same)
+
+        Notes on quality:
+            Higher qualities should have more intrinsic value. Initially lower qualities will have fewer secondaries
+            Some secondaries will begin to only show up on higher quality items granting inherent advantages
+            Maybe other bonuses? TBD
 
 Dungeons/Raids:
 Special places that should always have some pretty good persistent rewards
@@ -126,14 +137,7 @@ Place in town you can pay to participate in arena matches
     Can choose how difficult it is, better rewards for harder contests
     Costs gold to enter
 
-Upgrades
-    Stat tier upgrades exist. Unlock conditions/requirements unknown
-        Scaling will be adjusted for tuning.
-    Thoughts are leaving them persistent after being unlocked
-        Limiting factor would be xp gain, probably not best.
-            Too strong for going back for early things.
-        Could also add in a zone milestone even in each run. to combat.
-    
+Custom DRNG for seeding values.
 
 
 VISUALS-----------------------------------------------
@@ -143,6 +147,8 @@ Some basic UI work
 -Start thinking about art and theme options
 -Is it possible to massively change ui for a "work mode" or something?
 --It is, do I want to do it?
+
+Upgrade visuals
 
 Animation Engine?
 -Need to figure out how I want to architect it
@@ -156,15 +162,29 @@ Animation Engine?
 
 ------------------------------Version 1.0 end, Launch around here--------------
 
-------------------Version 1.1 update plans-------------------------------------
+------------------Version 1.1-2 update plans-----------------------------------
 
 New story obviously
 -Will figure out launch story before getting there
 
 Classes
--Wanderer base, Warrior/Mage + something techy (chemist? tinker? rogue/thief/archer?)
+-Wanderer base, Warrior/Mage + something techy (tinker? rogue/thief/archer?)
 --Class progression structure and improved combat for abilities
+    Think bravely default style classes, fluffy(trimps) style progression maybe
 
+-Alchemy/potions
+--Consumables, generic abilities anyone can use with potion theme
+
+-Food buffs
+--Pick from a selection of food at the start of the run, different buffs.
+--Somehow learn new recepies to make new foods that have a larger selection
+    and maybe some straight up better buffs
+
+-Reputations/Factions
+--Choose a faction to align with each run, get bonuses for each faction.
+--As you progress during the run your reptuation will increase
+    Increase reputation for more milestones to get cool benefits
+    Not 100% sure on how to increase reptuations just yet.
 
 Expansion/Major patch ideas -----------------------------
 
@@ -188,9 +208,6 @@ Exploration
 -"The swarm" (critter mound style thing maybe)
 --No clue how to make this make any sense, fights enemy swarm maybe?
 
--Alchemy/potions
---Consumables, generic abilities anyone can use with potion theme
-
 -"The Box" reverse containment chamber from antimemetics
 --This is where challenges might come in, left notes for self (remember more) makes it harder
 --Could have some fun with the name things for 'a day without X' for challenges
@@ -199,13 +216,6 @@ Exploration
 -Museum/Artifacts?
 --Some kind of collection system, complete sets for bonuses
 --You learn something from studying a whole set to get some benefit
-
--Reputations/Factions
---Unsure if I want to make these persistent or per-run.
---Per run could introduce more 'builds' and make some more interesting choices
---Persistent would just be a nice longer progression system
----Leaning to per-run with some milestone rewards.
----Need to figure out how to encourage trying new ones and so on.
 
 -"Walk the path to power"
 --some corrupted power structure

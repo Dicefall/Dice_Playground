@@ -13,8 +13,6 @@
 var GameText = {
     English: {
         Story: {
-            // Going for the theme of every chapter follows "A Day Without",
-            // Same for challenges eventually
             ChapterTitles: [
                 "A Day Without A Yesterday",
             ],
@@ -71,11 +69,12 @@ var GameText = {
             Thanks: [
                 'List of special thanks to people here',
                 'Ghostfrog for a lot of math help',
-                'Grabz for endless JS help',
+                'Grabz for a lot of JS help early on',
                 'SpectralFlame, help with various topics',
                 'Zek, actually making me spend more time working on it',
+                'GreenSatellite, answering questions about how he did things so I knew how not to do it',
                 'Testers?',
-                'Obligatory "And you the player!"'
+                'Obligatory "And you the player!"',
             ],
             Inspiration: [
                 "Other media that has inspired me greatly in the creation of this game. ",
@@ -101,6 +100,25 @@ var GameText = {
             "The Inexorable March of Time"
         ],
 
+        CreatureNames: {
+            Goblin: 'Goblin',
+            Kobold: 'Kobold',
+            Dragon: 'Dragon',
+            Ogre: 'Ogre',
+            Orc: 'Orc',
+            WarDog: 'War Dog',
+            Bear: 'Grizzly Bear',
+            Wolf: 'Wolf',
+            Deer: 'Deer',
+            Boar: 'Boar',
+            Snake: 'Snake',
+            Bandit: 'Bandit',
+            Treant: 'Treant',
+            Pixie: 'Pixie',
+
+            SpacetimeCurvature: 'SpacetimeCurvature',
+        },
+
         Upgrades: {
             CritTierUp: {
                 Name: 'Precision', // Critical Strike tier up
@@ -111,7 +129,7 @@ var GameText = {
                 Desc: "Don't hold back, they've already set themselves against you. Show them how brutal you can be. Increases your Critical Damage Tier by 1"
             },
             AttackTierUp: {
-                Name: 'Force', // Regular old attack tier up
+                Name: 'Momentum', // Regular old attack tier up
                 Desc: 'Hit them hard, and hit them fast. They wont go down easy. Increases your Attack Tier by 1'
             },
             HealthTierUp: {
@@ -119,7 +137,7 @@ var GameText = {
                 Desc: "Stand firm, they are nothing but the wind against a mountain. Increases your Health Tier by 1"
             },
             RegenTierUp: {
-                Name: 'Resilience', // Health regen, something about coming back from gettin' beat down
+                Name: 'Persistance', // Health regen, something about coming back from gettin' beat down
                 Desc: "You will get knocked down. You will get back up again. Nothing is going to keep you down. Increases your Health Regen Tier by 1"
             },
             HasteTierUp: {

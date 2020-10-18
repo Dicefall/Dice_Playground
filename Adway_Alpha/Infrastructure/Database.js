@@ -142,8 +142,9 @@ const GameDB = {
         new Event(() => { // Combat Cleaner, id == 2
             if (Game.Enemy.HealthCurr <= 0) {
                 //give rewards
-                Game.Resources.XP += 25 /* Game.Enemy].lootMod*/;
-                Game.Resources.Scraps += 5 /* Game.Enemy.lootMod*/;
+                var worldLootMod = Math.pow(GameDB.Constants.WorldScaling.Resources,Game.World.CurrentZone);
+                Game.Resources.XP += 25 * worldLootMod;
+                Game.Resources.Scraps += 5 * worldLootMod;
 
                 Chronos.RemoveTimer(Game.Enemy.turnTimerID);
                 Game.Enemy = null;
@@ -290,6 +291,27 @@ const GameDB = {
             specialCells: [99],
             specialEncounters: ["Treant"]
         },
+        {   // Zone 2 - "Wooded path"
+        numCells: 100,
+        enemyCounters: [5,5,5,20,20,38,7],
+        enemyNames: ["Goblin", "WarDog", "Bear", "Wolf", "Deer", "Boar", "Snake"],
+        specialCells: [],
+        specialEncounters: []
+        },
+        {   // Zone 3 - "Wooded path 2"
+        numCells: 100,
+        enemyCounters: [5,27,23,38,7],
+        enemyNames: ["Bear", "Wolf", "Deer", "Boar", "Snake"],
+        specialCells: [],
+        specialEncounters: []
+        },
+        {   // Zone 4 - "Heart of the Forest"
+        numCells: 100,
+        enemyCounters: [27,18,12,4,38,1],
+        enemyNames: ["Boar", "Deer", "Wolf", "Bandit", "Pixie", "BanditKing"],
+        specialCells: [],
+        specialEncounters: []
+        },
         {   // Zone 00 - "The Inexorable March of Time"
             numCells: 100,
             enemyCounters: [100],
@@ -301,46 +323,79 @@ const GameDB = {
     // Creature information, mostly names and modifiers, loot not included yet.
     Creatures: {
         Goblin: {
-            Name: 'Goblin',
             AttackMod: 1,
             HealthMod: 1,
             SpeedMod: 1,
         },
         Kobold: {
-            Name: 'Kobold',
             AttackMod: 0.8,
             HealthMod: 0.8,
             SpeedMod: 0.8,
         },
         Dragon: {
-            Name: 'Dragon',
             AttackMod: 2,
             HealthMod: 5,
             SpeedMod: 1.2,
         },
         Ogre: {
-            Name: 'Ogre',
             AttackMod: 1.4,
             HealthMod: 1.5,
             SpeedMod: 1,
         },
         Orc: {
-            Name: 'Orc',
             AttackMod: 1,
             HealthMod: 1.2,
             SpeedMod: 1,
         },
         WarDog: {
-            Name: 'War Dog',
             AttackMod: 1,
             HealthMod: 0.8,
             SpeedMod: 1,
         },
-        Bear:  {
-            Name: 'Bear',
+        Bear: {
             AttackMod: 1.1,
             HealthMod: 1.1,
             SpeedMod: 0.8,
+        },
+        Wolf: {
+            AttackMod: 1.1,
+            HealthMod: 1.0,
+            SpeedMod: 1.0,
+        },
+        Deer: {
+            AttackMod: 0.6,
+            HealthMod: 1.2,
+            SpeedMod: 1.2,
+        },
+        Boar: {
+            AttackMod: 1.2,
+            HealthMod: 1.4,
+            SpeedMod: 1.1,
+        },
+        Snake: {
+            AttackMod: 1.1,
+            HealthMod: 0.6,
+            SpeedMod: 1.4,
+        },
+        Bandit: {
+            AttackMod: 1,
+            HealthMod: 1,
+            SpeedMod: 1.1,
+        },
+        Treant: {
+            AttackMod: 2,
+            HealthMod: 5,
+            SpeedMod: 0.8,
+        },
+        Pixie: {
+            AttackMod: 0.6,
+            HealthMod: 0.4,
+            SpeedMod: 2.5,
+        },
+        BanditKing: {
+            AttackMod: 2,
+            HealthMod: 2,
+            SpeedMod: 1.3,
         },
         SpacetimeCurvature: {
             Name: 'Spacetime Curvature',
@@ -476,17 +531,46 @@ const GameDB = {
         }
     },
     // Reset upgrades, fills the roles of things like ancients from CH, perks from Trimps, etc
-    //  Mnemonics are any thing that can aid in memory
-    //  Lore wise not settled yet
-    Mnemonics: {
+    //  Starting with traditional fantasy game stats like strength, agi, dex, etc
+    Attributes: {
+        Constitution: {
+            // Health bonus
+        },
+        Perception: {
+            // Looting bonus
+        }
+        // Most stats will come with multiple effects, for example a basic attack bonus and a
+        //  secondary stat bonus as well. Example:
+        //      Strength might give attack and crit damage (rating) or armor penetration or something.
+        //      Dex might give attack and crit chance
+        //  It will all depend on the flavor, it is an incremental game afterall, balance comes in scaling
+        // Strength, Dexterity, Agility, Int, Spirit/Wisdom/Mind/etc, Charisma, Con, Vitality, 
+        //  Will eventually move on to other things but I'd like to keep the themeing similar
+        //  Try not to overlap with upgrades/tier up names. These should be more fundamental.
+    },
+    Equipment: {
+        // Value values
+        //  Small note: 18.3 item levels to make up for each quality level with 1.2 and 1.01
+        QualityScaling: 1.2, // 20% per quality level (compounding) to stat budget
+        LevelScaling: 1.01, // 1% per item level (compounding) to stat budget
+        BaseStatBudget: 10,
+        BasePrimary: 25,
+        // Stamina scaling with item level may need to be different.
 
+        // Cost/refund values
+        BaseScrapCost: 100,
+        QualityCostScaling: 10, // For refunding, unsure if allowing higher craft or procs
+        ScrapCostLevelScaling: 1.15, // 13x cost to catch up to quality via ilvl
+        RefundFactor: 0.1, // refunds some of effective scrap cost
     },
     // One off pieces of information that need somewhere to sit.
     Constants: {
+        // Quality color progression
+        // tbd https://cdn.discordapp.com/attachments/200624467012091904/767148900799873044/cq5dam.png
         // How things scale wrt world. Enemy stats, loot, etc.
         WorldScaling: {
-            Zone: 2,
-            //Resources: 1.1, // Will come back to this soon
+            Zone: 1.25,
+            Resources: 1.1, // Will come back to this soon
         },
         Stats: {
             BaseRatingConversion: 25,
@@ -507,19 +591,21 @@ const GameDB = {
                 Paused: 0,
                 Active: 1,
             }
-        }
+        },
+        EventTypes: [
+            "TEST_EVENT", //Any time I want to just testing things or this system
+            "ZONE_CLEAR", //Zone is finished
+            "CELL_CLEAR", //Cell is finished
+            "ENEMY_DEFEATED", //Enemy is defeated
+            "CURRENCY_GAINED", //Might split into others
+            "ADDON_EVENT", //In case third party wants to hook into this
+        ],
         // Base reset currency and maybe scaling
     },
-    // Reset perks
-    // Equipment information
     // Dungeons
     // Arenas
-    // None yet but prepping for special challenges
+    // None yet but prepping for special challenges, maybe creatures to be hunted?
     Challenges: {},
-    // Collection of functions that don't really have another home
-    Utils: {
-
-    },
     // Primarily for things like certain ui related specifics,
     // Nothing right now since there is no ui but an example would be:
     //  Different colors for tooltips that scale with different stats
