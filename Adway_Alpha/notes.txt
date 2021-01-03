@@ -79,66 +79,71 @@ I am here ---------------------------------------------------------------------
 
 Story
 -Need to do the tutorial and early bits of story
--Add story for 
 --See Story.txt
+    Story up to reset area planned.
 
 Reset perks:
 Currency named Essence, funnel it into attributes to boost core aspects of the person
     Strength, dex, con, etc. Traditional main character stats from old school rpgs.
-Reset story basically last page of whatever you wrote to yourself, forget everything after reading it.
-    Some cognitohazard/infomatics/memetics/whatever, mostly staying a mystery to the player.
 Implementation
     Just need to decide what each one actually does, how many to include at the start, and connect it all up
 
-Scraps:
-    Scraps are something you pick up and get along the way, similar to xp.
-    On your first trip back to town it'll unlock basic equipment.
-    Eventually "you know we could sell these right?"
-        A place to earn gold and starting to set up a larger economy
-
-    Equipment
-        Persistent gear that you keep between Resets
-        slowly grow it with some options for builds
-        Junk existing equipment for more Scraps
-            as a re-roll or to crunch old stuff for bigger stuff
-        
-    Equipment information:
-        All equipment will come with 1 primary stat(maybe more eventually), 0 or more secondaries, and 0 meta stats
-        Item level and quality will dictate stat budget. Primary stat is fixed, secondaries will vary.
-            Enchanting will come later, enchanting will add value to gear
-                Add to secondary stat budget, increase item level (sort of the same)
-
-        Notes on quality:
-            Higher qualities should have more intrinsic value. Initially lower qualities will have fewer secondaries
-            Some secondaries will begin to only show up on higher quality items granting inherent advantages
-            Maybe other bonuses? TBD
-
-Dungeons/Raids:
-Special places that should always have some pretty good persistent rewards
-    They should move around between runs, not too much but just enough to be cool
-    Lots of lore, for them too to make good story points
-    They'll slowly refill over time like in clickocalypse
-    Extra good rewards that make the reset nice
-        Should encourage, but not require reset periods based on them?
-        Maybe set them up to be a daily-like system?
-            Dailies/weeklies like mmo loot lockouts
-    Important information:
-        Where they are found
-        Their own zone type structure
-            How many floors, bosses, traps? etc.
-        Drops
-            From the boss, what kinds of items, what rarities, etc.
-        Other rewards
-            XP, maybe some raw scraps. Other things later on.
+Scraps?
     
 Arena:
 Place in town you can pay to participate in arena matches
     Grind out some XP
     Can choose how difficult it is, better rewards for harder contests
-    Costs gold to enter
+    Costs gold to enter (One free tournament unlocked right away)
+    They are lose-able.
+        Losing cashes out and makes you start over.
+    Reward breakpoint is probably a couple places in.
+        Need to hammer out balance of this a bit more strictly
+    Special arenas might pop up with unique characters or unlocks
 
-Custom DRNG for seeding values.
+    Different tournament styles
+        Options for type, size, difficulty/payout, other specials later,
+            Types:
+            Double knockout (losers bracket basically)
+            Single Elim
+            round robin (can lead into another type)
+            'dungeon run' (up to X losses, fight people of same win count)
+                This is essentially an N knockout type instead of single/double elim
+            
+---------------------
+TODO before pre-alpha
+Arenas
+    Spawning
+    Rewards
+Content/story up to reset (z15)
+    Zone contents
+    Story text
+Upgrades
+    Stat tier upgrade unlocks
+Attributes
+    Purchasing/planning
 
+UI
+    Can be very basic, just functional for testing
+Testing plan
+    Basic guide on simple goals and how to start
+    What sort of feedback I am interested and directed goals of testing
+
+"Bug" Fixes:
+    Fix owner on events/auras, balloons save right now.
+
+-Semi-done
+Basic balancing
+    Set proper rating scaling, set for slightly harsher than tier ups
+Game speedup
+    Add ui update for large speedups
+RNG
+    Would like to "class" it up, otherwise working
+Reset perks
+    Add a few more and balance income
+
+TODO:
+    Timer/Event owners as abstract ref
 
 VISUALS-----------------------------------------------
 
@@ -148,21 +153,12 @@ Some basic UI work
 -Is it possible to massively change ui for a "work mode" or something?
 --It is, do I want to do it?
 
-Upgrade visuals
-
-Animation Engine?
--Need to figure out how I want to architect it
--Big giant thing or make it small for each one?
--Not even ready to think about spell animations
-
---Real GUID system?
-
---Dodge spaghet code problems when you update combat and event/aura owners
-
 
 ------------------------------Version 1.0 end, Launch around here--------------
 
 ------------------Version 1.1-2 update plans-----------------------------------
+
+Patch notes prep
 
 New story obviously
 -Will figure out launch story before getting there
@@ -190,6 +186,10 @@ Expansion/Major patch ideas -----------------------------
 
 Most feature unlocks will be either you find a new way to get stronger
 personally or you find someone that helps you make town better.
+
+Dungeons/Raids/Equipment
+    Wanted to put it in earlier but need to figure more specifics later.
+    Basic idea is heirlooms mixed with wow equipment.
 
 A RG/CC/CH/IW style 'buy buildings get income" etc side game
 -Need a theme/flavor for it
@@ -230,6 +230,13 @@ Exploration
 -Beastiary
 --Some way to learn about the enemies with some reward for it.
 
+Upgrade visuals ------
+
+Animation Engine?
+-Need to figure out how I want to architect it
+-Big giant thing or make it small for each one?
+-Not even ready to think about spell animations
+
 // TODO collection:
 -Game saving
 --Online saving: for later
@@ -237,3 +244,23 @@ Exploration
 -Crowdsource enemies
 -More complicated combat, not just attacks
 -Changelog for post launch
+
+Spoiler free tl;dr of new mechanics
+
+Classes/Jobs (like final fantasy type stuff)
+Alchemy and potions and flasks and stuff
+Food buffs, legit straight out of wow, cooking and buffs
+Reputations/factions, again mostly an mmo idea not 100% sure what I want to do yet
+Some kind of exploration thing, like sending people back to look through cleared stuff or scouting new areas
+Some kind of tattoo system where you can get tattoos for certain buffs
+The swarm, some kind of army you build and get to breed things and control traits and stuff, like critter mound or something
+Some kind of town where all of this is housed and controlled from but also building up some big support systems, maybe toss in an old school incremental like CH or RG or CC or something.
+Summons, initially something like RG spells maybe, maybe just big extra combat power somehow idk
+Bestiary, long term collection and completion % rewards
+Sidequests, basically just achievements.
+
+
+Early Testers:
+Argo
+Feeeeeeee
+Zek

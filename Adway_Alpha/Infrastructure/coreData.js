@@ -10,19 +10,16 @@ class PlayerData {
 
         // Resources
         this.Resources = {
-            Scraps: 0,
-            ScrapsIncome: 0,
-
             Gold: 0,
             GoldIncome: 0,
+
+            XP: 0,
 
             // Reset currency
             Essence: {
                 Total: 0,
                 CurrentRun: 0,
             },
-
-            XP: 0,
         };
 
         // Amnesia is the opposite, so things that make you remember
@@ -32,8 +29,9 @@ class PlayerData {
         // Hero
         this.Hero = new Hero();
 
-        // List of currently alive enemies
+        // Current active encounter
         this.Enemy = null;
+        this.CombatArea = GameDB.Constants.CombatAreas.World;
 
         // Note to self for later
         //  Make dungeon/arena structure follow this
@@ -57,27 +55,73 @@ class PlayerData {
             StoredEncounter: null
         };
 
+        // Current Arena being run
+        this.Arena = {
+            BracketType: GameDB.Arenas.PrimitiveType.Knockout,
+            Teams: [], // Essentially which enemy, order important
+            TeamScores: [], // Their record, wins for elim, points for group
+            CurrentRound: 0,
+
+            StoredEncounter: null,
+        }
+
+        // Any run modifiers, unused right now
+        this.RunMods = [];
+        this.ModStrengths = [];
+
+        // Upgrades purchased/unlocked
+        this.Upgrades = {
+            Unlocked: [],
+            AvailableLevels: [],
+            PurchasedLevels: [],
+        };
+
         // Achievements
         this.Achievements = {
             TotalScore: 0,
 
             // Earned
-            Scraps: {
+            Gold: {
                 // TODO: Maybe move this, feels like it shouldn't be here
-                HandlerID: allEvents.registerListener(GameDB.Achievements.Scraps.EventTrigger, GameDB.Achievements.Scraps.EventUsed),
+                HandlerID: allEvents.registerListener(GameDB.Events.Gold.EventTrigger, GameDB.Events.Gold.EventUsed),
                 TierEarned: 0
             }
-
         };
+
+        // Player data regarding purchased attribute levels
+        this.Attributes = {
+            Strength: {
+                Unlocked: true,
+                Level: 0,
+            },
+            Constitution: {
+                Unlocked: true,
+                Level: 0,
+            },
+            Perception: {
+                Unlocked: true,
+                Level: 0,
+            },
+            Wisdom: {
+                Unlocked: true,
+                Level: 0,
+            },
+        };
+
+        // Keeping track of what's been unlocked for this run
+        //this.Runlocks = {};
+
+        // Keeping track of global feature unlocks
+        this.FeatureUnlocks = {};
 
         this.Stats = {
             GameVersion: {
                 Major: 0,
-                Minor: 4,
+                Minor: 5,
                 Patch: 0,
             },
 
-            LastUpdateTime: new Date().getTime(),
+            LastUpdateTime: Date.now(),
             StoryState: {
                 StoryStage: 0,
                 StoryControlID: 0,
@@ -92,9 +136,11 @@ class PlayerData {
         };
 
         // See Utils.js for actual rand systems.
-        // TODO: Generate real seeds
+        // Date to seed the seeds, remember to change this as you add more rng seeds
+        var seedSeed = Date.now();
+        seedSeed = RandomIntMulti(seedSeed, MIN,MAX, 1);
         this.RNGSeeds = {
-            Equipment: 0,
+            Equipment: seedSeed[0],
         };
 
         // Settings
@@ -131,7 +177,6 @@ class GameData {
         // References to the HTML elements
         // This will likely change as the ui gets built
         this.UIElements = {
-            ScrapCounter: document.querySelector('#scrapDisplay'),
             XPCounter: document.querySelector('#xpDisplay'),
             PlayerOrder: document.querySelector('#PlayerOrder'),
             PlayerHpBar: document.querySelector("#PlayerHP"),
@@ -154,22 +199,6 @@ class GameData {
                 Rest: "Rest",
                 Core: "Core",
             },
-        }
-
-        // Not the most elegant but all of the achievement stuff goes here
-        this.AchievementData = {
-
-            CalculateTotal: function () {
-                // go through each and total things up
-                let newTotal = 0;
-        
-                // Scraps
-                for (var i = 0; i < Game.Achievements['Scraps'].TierEarned; i++) {
-                    newTotal += GameDB.Achievements.Scraps.Value[i];
-                }
-        
-                Game.Achievements.TotalScore = newTotal;
-            }
         }
 
         this.BookKeeping = {

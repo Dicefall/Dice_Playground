@@ -3,28 +3,9 @@
 // Events, spells, and auras, and creatures?!
 // Very crude database, built for serializability.
 
-// Achievements will be implemented as events. (They'll all be awarded when a thing happens. I think that's fair)
-
 // All timers will be auras
-
-// Events are objects that listen for some event, and trigger some effect on that event.
-class Event {
-
-    constructor(eventFunction) {
-        this.eventCB = eventFunction;
-    }
-}
-
+// Container for static aura properties
 class Aura {
-    // Aura fields:
-
-    // onTick should be things that the timer does, including things that should happen at it's end
-    //  hopefully not confusing but clear in my head
-    // onFade should be things that the timer needs to keep track of when it's over
-    //  like remove itself from a buff list or trigger something when dispel'd
-
-    // Example from wow: Living Bomb
-    //  onTick would be the dot damage, onFade would be the ae explosion at applying it to everyone
 
     // Flags for auras
     static AuraFlags = {
@@ -35,143 +16,156 @@ class Aura {
         Dispellable: 16,
         Visible: 32
     }
-
-    // constructor(maxDuration, tickFrequency, onTick, onFade, auraFlags) {
-    //     this.maxDuration = maxDuration;
-    //     this.tickFrequency = tickFrequency;
-    //     this.onTick = onTick;
-    //     this.onFade = onFade;
-
-    //     this.flags = auraFlags;
-    // }
-}
-
-class MapTile {
-    // Contains the information in a tile needed before the player gets to it
-    // All information important for spawning enemies here
-    constructor(cellName /*cellMods*/) {
-        this.Name = cellName;
-        //this.mods = cellMods; // Does nothing right now
-    }
 }
 
 const GameDB = {
     // Events and auras here, functions are stored here
     // done this way for serialization and clarity
-    Events: [
-        new Event(() => { // Scraps achievement function, id == 0
+    Events: {
+        // Achievements first
+        Gold: {
+            Name: "Gold",
+            Breakpoints: [50, 100, 500, 1000, 10000],
+            Value: [1, 1, 2, 2, 5],
 
-            if (Game.Achievements['Scraps'] >= GameDB.Achievements[0].TierBreakpoints.length) {
-                allEvents.removeEvent(GameDB.Achievements[0].HandlerID);
-                return;
-            }
+            EventTrigger: "CURRENCY_GAINED",
+            EventUsed: "Gold",
+            eventCB: function() { // Gold achievement function
 
-            if (Game.Resources.Scraps >= GameDB.Achievements[0].TierBreakpoints[Game.Achievements['Scraps']]) {
-
-                var recieveText = achievementRewardText(GameDB.Achievements["Scraps"]);
-
-                // TODO: Move this to an actual ui reward
-                console.log(recieveText);
-
-                Game.Achievements['Scraps']++;
-                Lookup.AchievementData.CalculateTotal();
-            }
-        }),
-
-        new Event(() => { // Story Control, id == 1
-            switch (Game.Stats.StoryState.StoryStage) {
-                // Very first intro text
-                case 0:
-                    Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[0]);
-
-                    // Spawn the first enemies
-                    Chronos.CreateTimer("DelayedSpawn", null);
-
-                    Game.Stats.StoryState.StoryStage++;
-                    allEvents.removeEvent(
-                        Game.Stats.StoryState.StoryControlID);
-
-                    Game.Stats.StoryState.StoryControlID = allEvents.registerListener("CELL_CLEAR", 1);
-                    break;
-                // Get some resources, lets people look around a bit
-                case 1:
-                    if (Game.World.CurrentCell >= 20){
+                if (Game.Achievements['Gold'] >= GameDB.Events.Gold.TierBreakpoints.length) {
+                    allEvents.removeEvent(Game.Achievements.Gold.HandlerID);
+                    return;
+                }
+    
+                if (Game.Resources.Gold >= GameDB.Events.Gold.TierBreakpoints[Game.Achievements['Gold']]) {
+    
+                    var recieveText = achievementRewardText(GameDB.Achievements["Gold"]);
+    
+                    // TODO: Move this to an actual ui reward
+                    console.log(recieveText);
+    
+                    Game.Achievements['Gold']++;
+                    CalculateTotalAchievements();
+                }
+            },
+        },
+        // Non-achievements
+        StoryControl: {
+            eventCB: function() { // Story Control
+                switch (Game.Stats.StoryState.StoryStage) {
+                    // Very first intro text
+                    case 0:
+                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[0]);
+    
+                        // Spawn the first enemies
+                        Chronos.CreateTimer("DelayedSpawn", null);
+    
                         Game.Stats.StoryState.StoryStage++;
-
-                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[1]);
-                    }
-                    break;
-                // Intro to combat
-                case 2:
-                    if (Game.World.CurrentCell >= 50){
-                        Game.Stats.StoryState.StoryStage++;
-
-                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[2]);
-                    }
-                    break;
-                case 3:
-                    if (Game.World.CurrentCell >= 75){
-                        Game.Stats.StoryState.StoryStage++;
-
-                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[3]);
-
                         allEvents.removeEvent(
                             Game.Stats.StoryState.StoryControlID);
-
-                        Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEAR", 1);
-                    }
-                    break;
-                case 4:
-                    Game.Stats.StoryState.StoryStage++;
-
-                    Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[4]);
-
-                    allEvents.removeEvent(
-                        Game.Stats.StoryState.StoryControlID);
-
-                    //Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEARED", 1);
-                    break;
-                case 5:
-                    // Unlock new feature for getting to town the first time.
-                    // Not sure what that feature is just yet, but it should probably be the equipment.
-                default:
-                // nothing to do here
-            }
-        }),
-
-        new Event(() => { // Combat Cleaner, id == 2
-            if (Game.Enemy.HealthCurr <= 0) {
-                //give rewards
-                var worldLootMod = Math.pow(GameDB.Constants.WorldScaling.Resources,Game.World.CurrentZone);
-                Game.Resources.XP += 25 * worldLootMod;
-                Game.Resources.Scraps += 5 * worldLootMod;
-
-                Chronos.RemoveTimer(Game.Enemy.turnTimerID);
-                Game.Enemy = null;
-
-                //endEncounter();
-                allEvents.queueEvent("CELL_CLEAR");
-
-                // Move on to the next cell
-                if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone].numCells){
-                    allEvents.queueEvent("ZONE_CLEAR");
-                    Game.World.CurrentCell = 0;
-                    Game.World.CurrentZone++;
-                    startZone(Game.World.CurrentZone);
-
-                    // Since rating conversions are going to change by zone
-                    Game.Hero.recalcStats();
+    
+                        Game.Stats.StoryState.StoryControlID = allEvents.registerListener("CELL_CLEAR", "StoryControl");
+                        break;
+                    // Get some resources, lets people look around a bit
+                    case 1:
+                        if (Game.World.CurrentCell >= 20){
+                            Game.Stats.StoryState.StoryStage++;
+    
+                            Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[1]);
+                        }
+                        break;
+                    // Intro to combat
+                    case 2:
+                        if (Game.World.CurrentCell >= 50){
+                            Game.Stats.StoryState.StoryStage++;
+    
+                            Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[2]);
+                        }
+                        break;
+                    case 3:
+                        if (Game.World.CurrentCell >= 75){
+                            Game.Stats.StoryState.StoryStage++;
+    
+                            Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[3]);
+    
+                            allEvents.removeEvent(
+                                Game.Stats.StoryState.StoryControlID);
+    
+                            Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEAR", "StoryControl");
+                        }
+                        break;
+                    case 4:
+                        Game.Stats.StoryState.StoryStage++;
+    
+                        Lookup.UIElements.LogDebugMessage.textContent = ParseGameText(GameText[Game.Settings.Language].Story.ChapterOne[4]);
+    
+                        allEvents.removeEvent(
+                            Game.Stats.StoryState.StoryControlID);
+    
+                        //Game.Stats.StoryState.StoryControlID = allEvents.registerListener("ZONE_CLEARED", 1);
+                        break;
+                    case 5:
+                        // Unlock new feature for getting to town the first time.
+                        // Not sure what that feature is just yet, but it should probably be the equipment.
+                    default:
+                    // nothing to do here
                 }
+            },
+        },
+        CombatCleaner: {
+            eventCB: function() { // Combat Cleaner
+                // TODO: Arena checks
+                if (Game.Enemy.HealthCurr <= 0) {
+                    //give rewards
+                    var worldLootMod = Math.pow(GameDB.Constants.WorldScaling.Resources,Game.World.CurrentZone);
+                    var totalLootingMod = Math.pow(GameDB.Attributes.Perception.Bonus, Game.Attributes.Perception.Level);
 
-                // Switch to rest for the very small time until next combat
-                Game.CombatState = GameDB.Constants.States.Combat.Paused;
+                    Game.Resources.XP += GameDB.Constants.Base.XP * worldLootMod * totalLootingMod;
+                    Game.Resources.Gold += GameDB.Constants.Base.Gold * worldLootMod * totalLootingMod;
+    
+                    Chronos.RemoveTimer(Game.Enemy.turnTimerID);
+                    Game.Enemy = null;
+    
+                    allEvents.queueEvent("CELL_CLEAR");
+    
+                    // Move on to the next cell
+                    if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone].numCells){
+                        allEvents.queueEvent("ZONE_CLEAR");
 
-                // Spawn new encounter after a short delay
-                // Delay is 500ms
-                Chronos.CreateTimer("DelayedSpawn", null);
+                        if (Game.World.CurrentZone >= 15) {
+                            Game.Resources.Essence.CurrentRun += GameDB.Constants.Base.Essence * Math.pow(GameDB.Constants.WorldScaling.Essence, Game.World.CurrentZone - 15);
+                        }
+
+                        Game.World.CurrentCell = 0;
+                        Game.World.CurrentZone++;
+                        startZone(Game.World.CurrentZone)
+                    }
+    
+                    // Switch to rest for the very small time until next combat
+                    Game.CombatState = GameDB.Constants.States.Combat.Paused;
+    
+                    // Spawn new encounter after a short delay
+                    // Delay is 500ms
+                    Chronos.CreateTimer("DelayedSpawn", null);
+                }
             }
-        })
-    ],
+        },
+        // Unlocks assume normal zone progression, see testing suite for non-standards
+        LevelUpUnlock: {
+            eventCB: function() { // Level ups, new one every zone
+                var unlockIndex = Game.Upgrades.Unlocked.indexOf("LevelUp");
+
+                // If it's not found, add it all to the list
+                if (unlockIndex == -1) {
+                    Game.Upgrades.Unlocked.push("LevelUp");
+                    Game.Upgrades.AvailableLevels.push(1);
+                    Game.Upgrades.PurchasedLevels.push(0);
+                } else {
+                    Game.Upgrades.AvailableLevels[unlockIndex]++;
+                }
+            }
+        },
+    },
     Auras: {
         EnemyTurn: {
             Build: function() {
@@ -205,8 +199,7 @@ const GameDB = {
 
             Flags: Aura.AuraFlags.PauseOnCombat | Aura.AuraFlags.TickHasted,
             onFade: null,
-            onTick: function() {
-                // This will be what fires off when an action is done in combat.
+            onTick: function() { // This will be what fires off when an action is done in combat.
                 if (Game.Enemy == null) return;
     
                 // Roll for crit
@@ -249,10 +242,11 @@ const GameDB = {
                 this.nextTick = this.endTime;
             },
 
-            Flags: Aura.AuraFlags.TickHasted,
+            Flags: 0,
             onFade: null,
             onTick: function() {
                 // Zone control here.
+                //  TODO: Check where in the game we are and spawn based on that
                 Game.Enemy = new Creature(GameDB.Zones[Game.World.CurrentZone].enemyNames.concat(GameDB.Zones[Game.World.CurrentZone].specialEncounters)[
                     [Game.World.ActiveZone.Encounters[Game.World.CurrentCell++]]
                 ]);
@@ -261,18 +255,6 @@ const GameDB = {
             },
         }
         
-    },
-    // Achievements here. Events added when game object is created.
-    // Player information about what's earned stored on player object.
-    Achievements: {
-        Scraps: {
-            Name: "Scraps",
-            Breakpoints: [50, 100, 500, 1000, 10000],
-            Value: [1, 1, 2, 2, 5],
-
-            EventTrigger: "CURRENCY_GAINED",
-            EventUsed: 0
-        }
     },
     // Zones stored as array, index is important and it's set up in order
     //  Cells are 0-indexed
@@ -298,7 +280,7 @@ const GameDB = {
         specialCells: [],
         specialEncounters: []
         },
-        {   // Zone 3 - "Wooded path 2"
+        {   // Zone 3 - "Wooded path Redux"
         numCells: 100,
         enemyCounters: [5,27,23,38,7],
         enemyNames: ["Bear", "Wolf", "Deer", "Boar", "Snake"],
@@ -309,6 +291,13 @@ const GameDB = {
         numCells: 100,
         enemyCounters: [27,18,12,4,38,1],
         enemyNames: ["Boar", "Deer", "Wolf", "Bandit", "Pixie", "BanditKing"],
+        specialCells: [],
+        specialEncounters: []
+        },
+        {   // Zone 5 - "Edge of the Forest"
+        numCells: 100,
+        enemyCounters: [30,27,18,15,5,5],
+        enemyNames: ["Boar", "Deer", "Wolf", "Bandit", "Snake"],
         specialCells: [],
         specialEncounters: []
         },
@@ -416,14 +405,14 @@ const GameDB = {
             baseXPCost: 100,
             levelCostScaling: 1.15,
             tierUpCostScaling: 25,
-            baseStatGain: 10,
+            baseStatGain: 2,
             tierUpStatFactor: 10
         },
         Health: {
             baseXPCost: 100,
             levelCostScaling: 1.15,
             tierUpCostScaling: 25,
-            baseStatGain: 10,
+            baseStatGain: 20,
             tierUpStatFactor: 10
         },
 
@@ -432,7 +421,7 @@ const GameDB = {
             baseXPCost: 100,
             levelCostScaling: 1.15,
             tierUpCostScaling: 25,
-            baseStatGain: 10,
+            baseStatGain: 25,
             tierUpStatFactor: 5
         },
         Haste: {
@@ -456,131 +445,95 @@ const GameDB = {
             baseStatGain: 10,
             tierUpStatFactor: 5
         },
+        // Random ideas from notebook
+        //  Armor and Armor penetration
+        //  Thorns (% of attack as reflect)
+        //  Evasion and some other defensives like an energy shield (like wildstar)
 
         // "Meta" stats, stats that effect other stats
         Level: {
-            baseXPCost: 100,
-            levelCostScaling: 1.25,
-            primaryMulti: 1.15,
+            baseXPCost: 1000,
+            levelCostScaling: 1.5,
+            primaryMulti: 1.25,
             ratingConversionDecay: 1.05,
-        }
-    },
-    // Upgrades, starting off with stat tier up upgrades, others to be included.
-    Upgrades: {
-        CritTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('Crit',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.Crit.baseXPCost * Math.pow(GameDB.Stats.Crit.tierUpCostScaling, Game.Hero.StatLevels.Crit.Tier);
-            },
-        },
-        HasteTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('Haste',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.Haste.baseXPCost * Math.pow(GameDB.Stats.Haste.tierUpCostScaling, Game.Hero.StatLevels.Haste.Tier);
-            },
-        },
-        RegenTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('Regen',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.Regen.baseXPCost * Math.pow(GameDB.Stats.Regen.tierUpCostScaling, Game.Hero.StatLevels.Regen.Tier);
-            },
-        },
-        AttackTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('Attack',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.Attack.baseXPCost * Math.pow(GameDB.Stats.Attack.tierUpCostScaling, Game.Hero.StatLevels.Attack.Tier);
-            },
-        },
-        HealthTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('Health',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.Health.baseXPCost * Math.pow(GameDB.Stats.Health.tierUpCostScaling, Game.Hero.StatLevels.Health.Tier);
-            },
-        },
-        CritDmgTierUp: {
-            OnPurchase: function () {
-                Game.Hero.LevelUpStat('CritDmg',1, true);
-                Game.Hero.recalcStats();
-            },
-            GetCost: function() {
-                return GameDB.Stats.CritDmg.baseXPCost * Math.pow(GameDB.Stats.CritDmg.tierUpCostScaling, Game.Hero.StatLevels.CritDmg.Tier);
-            },
-        },
-        HeroLevelUp: {
-            OnPurchase: function() {
-                Game.Hero.Level++;
-            },
-            GetCost: function() {
-                return GameDB.Stats.Level.baseXPCost * Math.pow(GameDB.Stats.Level.levelCostScaling, Game.Hero.Level);
-            }
         }
     },
     // Reset upgrades, fills the roles of things like ancients from CH, perks from Trimps, etc
     //  Starting with traditional fantasy game stats like strength, agi, dex, etc
     Attributes: {
-        Constitution: {
-            // Health bonus
+        // Attack bonus
+        Strength: {
+            Bonus: 1.05,
+            Cost: 10,
+            CostScaling: 1.25,
         },
+        // Health bonus
+        Constitution: {
+            Bonus: 1.05,
+            Cost: 10,
+            CostScaling: 1.25,
+        },
+        // Looting bonus
         Perception: {
-            // Looting bonus
-        }
-        // Most stats will come with multiple effects, for example a basic attack bonus and a
-        //  secondary stat bonus as well. Example:
-        //      Strength might give attack and crit damage (rating) or armor penetration or something.
-        //      Dex might give attack and crit chance
-        //  It will all depend on the flavor, it is an incremental game afterall, balance comes in scaling
-        // Strength, Dexterity, Agility, Int, Spirit/Wisdom/Mind/etc, Charisma, Con, Vitality, 
-        //  Will eventually move on to other things but I'd like to keep the themeing similar
-        //  Try not to overlap with upgrades/tier up names. These should be more fundamental.
+            Bonus: 1.05,
+            Cost: 10,
+            CostScaling: 1.25,
+        },
+        // XP Bonus
+        Wisdom: {
+            Bonus: 1.05,
+            Cost: 10,
+            CostScaling: 1.25,
+        },
+        // Stats will be based on primary aspects of the game, attack/health/etc.
+        // Might need to add them for secondaries or metas as well.
+        // Might come up with multiples that give the same bonus with different flavor
+        //  Classes/jobs when they come in will get extra bonuses out of perks,
+        //  Examples:
+        //      Mage type classes might get extra attack or mana out of Intelligence
+        //      A paladin might get extra health regen out of constitution or wisdom, etc
+        //      A berserker class might get extra brutality levels out of strength
     },
-    Equipment: {
-        // Value values
-        //  Small note: 18.3 item levels to make up for each quality level with 1.2 and 1.01
-        QualityScaling: 1.2, // 20% per quality level (compounding) to stat budget
-        LevelScaling: 1.01, // 1% per item level (compounding) to stat budget
-        BaseStatBudget: 10,
-        BasePrimary: 25,
-        // Stamina scaling with item level may need to be different.
-
-        // Cost/refund values
-        BaseScrapCost: 100,
-        QualityCostScaling: 10, // For refunding, unsure if allowing higher craft or procs
-        ScrapCostLevelScaling: 1.15, // 13x cost to catch up to quality via ilvl
-        RefundFactor: 0.1, // refunds some of effective scrap cost
+    // Arenas
+    Arenas: {
+        // Elimination type vs point type
+        PrimitiveType: {
+            Knockout: 0,
+            Group: 1,
+            Hybrid: 2 // Like WC for example, group stage then knockout
+        },
+        // Going to keep adding some more here as we go on
+        AllowedEnemies: [
+            "Orc", "Pixie", "Bandit", "Ogre", "Goblin", "Kobold"
+        ],
     },
     // One off pieces of information that need somewhere to sit.
     Constants: {
-        // Quality color progression
-        // tbd https://cdn.discordapp.com/attachments/200624467012091904/767148900799873044/cq5dam.png
         // How things scale wrt world. Enemy stats, loot, etc.
-        WorldScaling: {
-            Zone: 1.25,
-            Resources: 1.1, // Will come back to this soon
+        GameVersion: {
+            Major: 0,
+            Minor: 5,
+            Patch: 0,
         },
-        Stats: {
-            BaseRatingConversion: 25,
-        },
+
+        EventTypes: [
+            "TEST_EVENT", //Any time I want to just testing things or this system
+            "ZONE_CLEAR", //Zone is finished
+            "CELL_CLEAR", //Cell is finished
+            "ENEMY_DEFEATED", //Enemy is defeated
+            "CURRENCY_GAINED", //Might split into others
+            "ADDON_EVENT", //In case third party wants to hook into this easily
+        ],
+
         Supported: {
             // Only english, see gameText.js for information about translating.
             Languages: ['English'],
+            // Latest game version that is up to date with selected language
+            LanguageVersions: ["0.4.0"],
             // Different kinds of notations for larger numbers.
             NumberNotations: ["Scientific", "Engineering", "Log"],
         },
+
         States: {
             Combat: {
                 Paused: 0,
@@ -592,24 +545,40 @@ const GameDB = {
                 Active: 1,
             }
         },
-        EventTypes: [
-            "TEST_EVENT", //Any time I want to just testing things or this system
-            "ZONE_CLEAR", //Zone is finished
-            "CELL_CLEAR", //Cell is finished
-            "ENEMY_DEFEATED", //Enemy is defeated
-            "CURRENCY_GAINED", //Might split into others
-            "ADDON_EVENT", //In case third party wants to hook into this
-        ],
+
+        CombatAreas: {
+            World: "World",
+            Arena: "Arena",
+            Dungeon: "Dungeon",
+        },
+
+        WorldScaling: {
+            Zone: 2,
+            Resources: 1.1, // Will come back to this soon
+            Essence: 1, // Obviously will have to change this
+        },
+        // Base resource drop values
+        Base: {
+            XP: 20,
+            Gold: 1,
+            Essence: 20,
+        },
+        Stats: {
+            BaseRatingConversion: 25,
+        },
+
         // Base reset currency and maybe scaling
     },
-    // Dungeons
-    // Arenas
+    // Needed for the engine to function
     // None yet but prepping for special challenges, maybe creatures to be hunted?
     Challenges: {},
     // Primarily for things like certain ui related specifics,
     // Nothing right now since there is no ui but an example would be:
     //  Different colors for tooltips that scale with different stats
-    UI: {},
+    UI: {
+        // Quality color progression
+        // tbd https://cdn.discordapp.com/attachments/200624467012091904/767148900799873044/cq5dam.png
+    },
 };
 
 //export {GameDB};

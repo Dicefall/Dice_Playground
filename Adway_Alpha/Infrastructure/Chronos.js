@@ -41,7 +41,7 @@ class EventBoard {
 
         var eventCopy = {
             eventDBID: eventID,
-            eventOwner: owner,
+            eventOwner: owner, // TODO: Change for serializable
             cbGUID: (guidOverride > 0) ? guidOverride : this.GenerateEventGUID()
         }
 
@@ -135,6 +135,14 @@ class EventBoard {
 class Chronometer {
 
     static instance;
+    static TimePrecision = {
+        Milliseconds: 1,
+        Seconds: 2,
+        Minutes: 3,
+        Hours: 4,
+        Days: 5,
+        Years: 6,
+    };
 
     constructor() {
 
@@ -173,41 +181,70 @@ class Chronometer {
 
     // This is the Chronometer global tick
     // this will go through all timers on the list and tick them down
-    // TODO: Granularity and state changes
+    // TODO: Clashing timers?
+    // TODO: Add in UI call for extremely long timers
+    //          Thinking just add an aura during tick that updates every so often
     Tick(elapsedTime) {
-        this.Time += elapsedTime;
-        this.TimeBank -= elapsedTime;
 
-        Game.statTracking.RunTimeSpent += elapsedTime;
+        // Granularity Re-write
+        if (this.timerList.length == 0) {
+            this.Time += elapsedTime;
+            this.TimeBank -= elapsedTime;    
+            return;
+        }
 
-        // Don't need to do anything if there are no timers
-        if (this.timerList.length == 0) return;
+        // Get when the tick will end
+        var tickEnd = this.Time + elapsedTime;
 
-        // Check for pauses:
-        // TODO: suppression as well (ticks down, no effect, not actually paused)
-        this.timerList.forEach( timer => {
-
-            if (timer.isPaused) {
-                timer.nextTick += elapsedTime;
-                timer.endTime += elapsedTime;
-            } else if (GameDB.Auras[timer.spellID].flags & Aura.AuraFlags.PauseOnCombat) {
-                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
-                    timer.nextTick += elapsedTime;
-                    timer.endTime += elapsedTime;
-                }
-            }
-        })
-        
-        // sort timers, relying on order to pop them off
+        // Relying on timers being in order
         this.SortTimers();
 
-        // tock timers in order
-        while (this.timerList[0].nextTick <= this.Time) {
+        // Main tick logic
+        //  Find next thing that's going to tick
+        //      Include checking for paused/stalled out/whatever
+        //      Next thing can include the tick end
+        //  Advance time to that tick
+        //      Include shifting end time of paused timers here
+        //  Do the tick
+        //  Resort timers
+        //  Repeat until no more timers
 
-            // Placeholder ref for cleaner code
-            var currentTimer = this.timerList[0];
+        do {
+            //  Find next thing that's going to tick
+            //      Include checking for paused/stalled out/whatever
+            //      Next thing can include the tick end
+            var microTick;
+            var nextTicker = this.GetNextTicker();
+            
+            // Cover no tickables case in case everything is paused but might be in the right window
+            //  Check first to avoid -1 index issues
+            if (nextTicker == -1) {
+                microTick = tickEnd - this.Time;
+            } else if (this.timerList[nextTicker].nextTick >= tickEnd) {
+                microTick = tickEnd - this.Time;
+            } else {
+                microTick = this.timerList[nextTicker].nextTick - this.Time;
+            }
 
-            // Aura's tick function, will need to check for partial effects eventually
+            //  Advance time to that tick
+            //      Include shifting end time of paused timers here
+            this.Time += microTick;
+            this.TimeBank -= microTick;
+
+            // Check for pauses:
+            this.timerList.forEach( timer => {
+                if (this.isTimerPaused(timer)) {
+                    timer.nextTick += microTick;
+                    timer.endTime += microTick;
+                }
+            });
+
+            // Time to exit?
+            //      timer tick == this end, shouldn't matter because of math
+            if (this.Time == tickEnd) break;
+
+            // Do the ticking
+            var currentTimer = this.timerList[nextTicker];
             if (GameDB.Auras[currentTimer.spellID].onTick) GameDB.Auras[currentTimer.spellID].onTick.bind(currentTimer)();
 
             //  Check for if this tick should have been the last one
@@ -217,9 +254,8 @@ class Chronometer {
                 if (GameDB.Auras[currentTimer.spellID].onFade) GameDB.Auras[currentTimer.spellID].onFade.bind(currentTimer)();
                 this.timerList.splice(0,1);
                 if (this.timerList.length == 0) {
-                    return;
+                    continue;
                 }
-                continue;
             } else {
                 // Check for hasted tick rate, multiply by tick frequency
                 currentTimer.nextTick += currentTimer.tickFrequency * 
@@ -236,16 +272,18 @@ class Chronometer {
                 // any partial tick stuff should go here
             }
 
-            // Sort to make sure fresh ticks go to the back
+            // Relying on timers being in order
             this.SortTimers();
-        }
+            
+        // Exit condition just for safety, earlier break condition *should* cover cases
+        } while(this.Time < tickEnd);
 
     }
 
     CreateTimer(timerDBID, timerOwner, guidOverride = -1){
 
         var newTimer = {
-            Owner: timerOwner, // Does nothing for now, included for future support for actual 'auras'
+            Owner: timerOwner, // TODO: Change for serializable benefits
             spellID: timerDBID,
             timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
             isPaused: false,
@@ -281,17 +319,30 @@ class Chronometer {
         this.timerList = []; // TODO: may need to remove other refs
     }
 
+    PauseTimer(pauseID, pauseState = true) {
+        for (var i = 0; i < this.timerList.length; i++) {
+            if (this.timerList[i].timerID == pauseID) {
+                this.timerList[i].isPaused = pauseState;
+                return;
+            }
+        }
+    }
+
     SerializeTimers(){
+
+        // TODO: Custom fields
         var serialized = {
             Timers: this.timerList,
             IDCounter: this.nextTimerID,
             Time: this.Time,
             TimeBank: this.TimeBank,
         }
+        
         return serialized;
     };
 
     DeserializeTimers(Data){
+        this.ClearTimers();
         this.nextTimerID = Data.IDCounter;
         this.Time = Data.Time;
         this.TimeBank = Data.TimeBank;
@@ -299,28 +350,47 @@ class Chronometer {
         Data.Timers.forEach( timer => {
 
             // Essentially redo the create-timer but just copy fields
-            var newTimer = {
-                Owner: timer.Owner, // Does nothing for now, included for future support for actual 'auras'
-                spellID: timer.spellID,
-                timerID: timer.timerID,
-    
-                startTime: timer.startTime,
-                endTime: timer.endTime,
-                nextTick: timer.nextTick
-            }
+            // TODO: generalize for custom fields
+
+            var newTimer = Object.assign({}, timer);
+            if (newTimer.endTime == null) {newTimer.endTime = Infinity;}
 
             this.timerList.push(newTimer);
-
-        })
+        });
 
         this.SortTimers();
     };
+
+    // For cleanliness, moving this big chunk down here.
+    // Returns index of the next non-paused, non-suppressed, etc, timer
+    //  -1 for no valid timers
+    GetNextTicker() {
+
+        for (var i = 0; i < this.timerList.length; i++) {
+            if (!this.isTimerPaused(this.timerList[i])) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // I've been re-using this a lot, lets make it consolidated
+    isTimerPaused(timerRef) {
+
+        if (timerRef.isPaused) return true;
+
+        if (GameDB.Auras[timerRef.spellID].Flags & Aura.AuraFlags.PauseOnCombat
+            && Game.CombatState == GameDB.Constants.States.Combat.Paused) {
+                return true;
+            }
+
+        
+        return false;
+    }
 }
 
 const allEvents = new EventBoard();
 const Chronos = new Chronometer();
 
 //export {EventBoard, Chronometer};
-// Chronos.js TODO list:
-//  Try to extract any direct references to the Game object, shouldn't be there
-//  GameDB is ok

@@ -20,13 +20,14 @@ function mainLoop() {
     // Handling for possible slowdown and other effects, eg. background tab
     if (Chronos.TimeBank < Lookup.GameLoopIntervalBase) return;
 
-    // Eventually everything time based will be handled via Chronos.
-    // Things that wont be handled via chronos will come after
-    // This will be things like spawning new encounters, etc
-    Chronos.Tick(Lookup.GameLoopIntervalBase);
-
-    // Just in case I want to hook into this
-    //allEvents.queueEvent("GAME_TICK");
+    // All game logic will be initiated via chronos.
+    //  Only things that wont are essentially events.
+    //  UI is also not handled by chronos
+    var tickDuration = Lookup.GameLoopIntervalBase * ((Chronos.TimeBank > Game.Settings.SpendIfOver) ? Game.Settings.Acceleration : 1);
+    if (Chronos.TimeBank > tickDuration) {
+        Chronos.Tick(tickDuration);
+        Game.statTracking.RunTimeSpent += tickDuration;
+    }
 }
 
 function UpdateUIElements() {
@@ -39,11 +40,6 @@ function UpdateUIElements() {
     // });
 
     // Resource counter
-    Lookup.UIElements.ScrapCounter.innerHTML = ParseGameText(
-        GameText[Game.Settings.Language].UI.Scraps,
-        formatNumber(Game.Resources.Scraps)
-    );
-
     Lookup.UIElements.TimeCounter.innerHTML = ParseGameText(
         GameText[Game.Settings.Language].UI.Time,
         formatNumber(Chronos.TimeBank / 1000)
@@ -97,14 +93,24 @@ function newPage() {
     // if (loadGameFromLocal()) {
     //     // do potential catch up
     // } else {
+        // Start all of the new game start up stuff.
+        //  Mostly register all of the events and timers
+        
+        // Level up upgrade on zone clear
+        allEvents.registerListener("ZONE_CLEAR", "LevelUpUnlock");
+
         // Story Controller
-        Game.Stats.StoryState.StoryControlID =
-            allEvents.registerListener("TEST_EVENT",1); // Story Control
+        //Game.Stats.StoryState.StoryControlID =
+        //    allEvents.registerListener("TEST_EVENT","StoryControl");
+        // Without story control on need to start things
+        Chronos.CreateTimer("DelayedSpawn", null);
 
         // Enemy deaths, clean up combat stuff
-        allEvents.registerListener("ENEMY_DEFEATED",2); // Combat Cleaner
+        allEvents.registerListener("ENEMY_DEFEATED","CombatCleaner");
 
-        startZone(Game.World.CurrentZone);
+
+        startZone(Game.World.CurrentZone); 
+        Game.Hero.recalcStats();
     //}
 
     // --------------------------------------------------------------------
@@ -113,7 +119,7 @@ function newPage() {
     Lookup.BookKeeping.MainFunctionID = window.setInterval(mainLoop, Game.Settings.GameSpeed);
     // Queue autosave
     Lookup.BookKeeping.AutoSaveFunctionID = window.setInterval(saveGameToLocal, Game.Settings.AutoSaveFrequency);
-
+    // UI update
     window.setInterval(UpdateUIElements,Game.Settings.GameSpeed);
 
     allEvents.queueEvent("TEST_EVENT");
