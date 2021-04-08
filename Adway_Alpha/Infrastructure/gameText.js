@@ -11,6 +11,7 @@
 "use strict";
 
 var GameText = {
+    // Any User facing text
     English: {
         Story: {
             ChapterTitles: [
@@ -39,6 +40,7 @@ var GameText = {
         AchievementRecieved:  "You have earned the achievement: {0} - {1}",
 
         AchievementText: {
+            // TODO: Change this from old scrap names to gold ones
             Gold: {
                 Names: [
                     'That\'s a real big piece of Scrap',
@@ -59,7 +61,7 @@ var GameText = {
                 'SpectralFlame, help with various topics',
                 'Zek, actually making me spend more time working on it',
                 'GreenSatellite, answering questions about how he did things so I knew how not to do it',
-                'Testers?',
+                'Testers, ',
                 'Obligatory "And you the player!"',
             ],
             Inspiration: [
@@ -97,14 +99,14 @@ var GameText = {
             "Aboleth Lair",
             "Forgotten Mural", // Another small zone with some lore
             "Summit Path",
-            "Mnemosyne Summit", // Mnemosyn summit? 15
+            "Mnemosyne Summit", // 15
             "The Inexorable March of Time"
         ],
 
         Attributes: {
             Strength: {
                 Name: "Strength",
-                Flavour: "You point, I punch. Makes you stronger.", // Reference to minsc from baldurs gate.
+                Flavour: "You point, I punch. Makes you stronger.", // Go for the eyes boo, the eyes!
                 Effect: "Increases your Attack by 5% per level."
             },
             Constitution: {
@@ -123,8 +125,10 @@ var GameText = {
                 Effect: "Increases the amount of XP you get from all sources by 5% per level.",
             },
 
+            // 0 is the current value gained from that specific attribute
             Current: "Currently gives you {0}",
-            Additional: "And additional effects based on your current Class."
+            // Eventually extra class effects will come in, will need to add some here
+            //Additional: "And additional effects based on your current Class."
         },
 
         CreatureNames: {
@@ -150,38 +154,43 @@ var GameText = {
         Upgrades: {
             CritTierUp: {
                 Name: 'Precision', // Critical Strike tier up
-                Desc: "You know where their weak spots are now. Aim for them. Increases your Critical Strike Tier by 1"
+                Desc: "You know where their weak spots are now. Aim for them. Increases your Critical Strike Tier"
             },
             CritDmgTierUp: {
                 Name: 'Brutality', // Crit dmg tier up in the future
-                Desc: "Don't hold back, they've already set themselves against you. Show them how brutal you can be. Increases your Critical Damage Tier by 1"
+                Desc: "Don't hold back, they've already set themselves against you. Show them how brutal you can be. Increases your Critical Damage Tier"
             },
             AttackTierUp: {
                 Name: 'Momentum', // Regular old attack tier up
-                Desc: 'Hit them hard, and hit them fast. They wont go down easy. Increases your Attack Tier by 1'
+                Desc: 'Hit them hard, and hit them fast. They wont go down easy. Increases your Attack Tier'
             },
             HealthTierUp: {
                 Name: 'Fortitude', // Regular old HP
-                Desc: "Stand firm, they are nothing but the wind against a mountain. Increases your Health Tier by 1"
+                Desc: "Stand firm, they are nothing but the wind against a mountain. Increases your Health Tier"
             },
             RegenTierUp: {
                 Name: 'Persistance', // Health regen, something about coming back from gettin' beat down
-                Desc: "You will get knocked down. You will get back up again. Nothing is going to keep you down. Increases your Health Regen Tier by 1"
+                Desc: "You will get knocked down. You will get back up again. Nothing is going to keep you down. Increases your Health Regen Tier"
             },
             HasteTierUp: {
                 Name: 'Instinct', // Haste, something about going faster I guess?
-                Desc: "React before they act. Know what they will do before you know what you will do. Increases your Haste Tier by 1"
+                Desc: "React before they act. Know what they will do before you know what you will do. Increases your Haste Tier"
+            },
+            LevelUp: {
+                Name: 'Growth', // Name of the upgrade used for levelling up.
+                Desc: "Become more than what you were before. Become more than them. Increases your Level"
             }
         },
 
     },
+    // End of language specific
 
     // Moving as much of this to unicode as possible,
     Icons: {
-        Skull: '<i class="fas fa-skull"></i>',
+        Skull: '☠', //'<i class="fas fa-skull"></i>',
         Infinity: '∞',
         HeartBeat: '<i class="fas fa-heartbeat"></i>',
-        LevelUp: '<i class="fas fa-level-up-alt"></i>',
+        LevelUp: '🡹', //'<i class="fas fa-level-up-alt"></i>',
     },
     
 }

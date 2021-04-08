@@ -117,11 +117,13 @@ class PlayerData {
         this.Stats = {
             GameVersion: {
                 Major: 0,
-                Minor: 5,
+                Minor: 6,
                 Patch: 0,
             },
 
             LastUpdateTime: Date.now(),
+
+            // TODO: Change this to secondary page with total story unlocks
             StoryState: {
                 StoryStage: 0,
                 StoryControlID: 0,

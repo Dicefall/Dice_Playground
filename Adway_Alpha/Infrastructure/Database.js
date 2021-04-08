@@ -118,31 +118,55 @@ const GameDB = {
                 if (Game.Enemy.HealthCurr <= 0) {
                     //give rewards
                     var worldLootMod = Math.pow(GameDB.Constants.WorldScaling.Resources,Game.World.CurrentZone);
-                    var totalLootingMod = Math.pow(GameDB.Attributes.Perception.Bonus, Game.Attributes.Perception.Level);
 
-                    Game.Resources.XP += GameDB.Constants.Base.XP * worldLootMod * totalLootingMod;
-                    Game.Resources.Gold += GameDB.Constants.Base.Gold * worldLootMod * totalLootingMod;
-    
-                    Chronos.RemoveTimer(Game.Enemy.turnTimerID);
-                    Game.Enemy = null;
+                    // XP from any enemies defeated
+                    Game.Resources.XP += GameDB.Constants.Base.XP * worldLootMod * GameDB.Attributes.Wisdom.getTotalBonus();
+                    // No gold from arenas until the end of it
+                    if (Game.CombatArea != GameDB.Constants.CombatAreas.Arena) {
+                        Game.Resources.Gold += GameDB.Constants.Base.Gold * worldLootMod * GameDB.Attributes.Perception.getTotalBonus();
+                    }
     
                     allEvents.queueEvent("CELL_CLEAR");
     
                     // Move on to the next cell
-                    if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone].numCells){
-                        allEvents.queueEvent("ZONE_CLEAR");
+                    if (Game.CombatArea == GameDB.Constants.CombatAreas.World){
+                        if (Game.World.CurrentCell === GameDB.Zones[Game.World.CurrentZone].numCells){
+                            allEvents.queueEvent("ZONE_CLEAR");
 
-                        if (Game.World.CurrentZone >= 15) {
-                            Game.Resources.Essence.CurrentRun += GameDB.Constants.Base.Essence * Math.pow(GameDB.Constants.WorldScaling.Essence, Game.World.CurrentZone - 15);
+                            if (Game.World.CurrentZone >= 15) {
+                                Game.Resources.Essence.CurrentRun += GameDB.Constants.Base.Essence * Math.pow(GameDB.Constants.WorldScaling.Essence, Game.World.CurrentZone - 15);
+                            }
+
+                            Game.World.CurrentCell = 0;
+                            Game.World.CurrentZone++;
+                            startZone(Game.World.CurrentZone)
+                        }
+                    } else if (Game.CombatArea == GameDB.Constants.CombatAreas.Arena){ // Arena stuff here
+                        // Do arena based rewards
+                        if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Group){
+                            Game.Arena.TeamScores[ Game.Arena.Teams.indexOf('Player') ] += 3;
+                        } else {
+                            Game.Arena.TeamScores[ Game.Arena.Teams.indexOf('Player') ] += 1;
                         }
 
-                        Game.World.CurrentCell = 0;
-                        Game.World.CurrentZone++;
-                        startZone(Game.World.CurrentZone)
+                        // Go onto the next round
+                        Game.Arena.CurrentRound++;
+
+                        // Check for arena being done
+                        var arenaEnd = false;
+                        if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Group && Game.Arena.CurrentRound >= Game.Arena.Teams.length - 1){
+                            arenaEnd = true;
+                        }
+                        if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Knockout && Game.Arena.CurrentRound >= Math.log(Game.Arena.Teams.length) / Math.log(2)){
+                            arenaEnd = true;
+                        }
+
+                        if (arenaEnd) endArena();
+
                     }
-    
-                    // Switch to rest for the very small time until next combat
-                    Game.CombatState = GameDB.Constants.States.Combat.Paused;
+
+                    // Remove current enemy
+                    clearEnemy();
     
                     // Spawn new encounter after a short delay
                     // Delay is 500ms
@@ -223,7 +247,7 @@ const GameDB = {
             onFade: null,
             onTick: function() {
                 Game.Hero.HealthCurr = Math.min(Game.Hero.HealthMax, Game.Hero.HealthCurr + Game.Hero.HealthRegen * Game.Hero.HealthMax);
-                if (Game.CombatState == GameDB.Constants.States.Combat.Paused) {
+                if (Game.Hero.isAlive == false) {
                     if (Game.Hero.HealthCurr == Game.Hero.HealthMax) {
                         Game.CombatState = GameDB.Constants.States.Combat.Active;
                         Game.Hero.Revive();
@@ -247,9 +271,82 @@ const GameDB = {
             onTick: function() {
                 // Zone control here.
                 //  TODO: Check where in the game we are and spawn based on that
-                Game.Enemy = new Creature(GameDB.Zones[Game.World.CurrentZone].enemyNames.concat(GameDB.Zones[Game.World.CurrentZone].specialEncounters)[
-                    [Game.World.ActiveZone.Encounters[Game.World.CurrentCell++]]
-                ]);
+                if (Game.CombatArea == GameDB.Constants.CombatAreas.World) { // World
+                    // Grab the encounter id from the zone list + special encounter list, do that and increase cell.
+                    Game.Enemy = new Creature(GameDB.Zones[Game.World.CurrentZone].enemyNames.concat(GameDB.Zones[Game.World.CurrentZone].specialEncounters)[
+                        [Game.World.ActiveZone.Encounters[Game.World.CurrentCell++]]
+                    ]);
+                } else if (Game.CombatArea == GameDB.Constants.CombatAreas.Arena) { // Arena
+                    var opponent = -1;
+                    if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Knockout) {
+                        // Elimination/knockout style
+                        // Find first person with round # == score
+                        // Find second person with round # == score
+                        // Set enemy if one of those people is the player
+                        // Do match and set score if neither is player
+                        var homeTeam = null;
+                        var awayTeam = null;
+                        var playerMatch = false;
+                        for (var i = 0; i < Game.Arena.Teams.length; i++) {
+                            // Skip over teams that have already been knocked out
+                            if (Game.Arena.TeamScores[i] < Game.Arena.CurrentRound) continue;
+                            // Check for player match
+                            if (playerMatch) {
+                                opponent = i;
+                                playerMatch = false;
+                                continue;
+                            }
+                            if (Game.Arena.Teams[i] == 'Player'){
+                                if (homeTeam != null){
+                                    opponent = homeTeam;
+                                    homeTeam = null;
+                                } else {
+                                    playerMatch = true;
+                                }
+                                continue;
+                            }
+                            // If we already have a home team, store it as away
+                            //  Otherwise store it as home team
+                            if (homeTeam != null) {
+                                awayTeam = i;
+                            } else {
+                                homeTeam = i;
+                            }
+
+                            // If we've got both teams do the comparison
+                            if (awayTeam != null) {
+                                if (getArenaClashResult(Game.Arena.Teams[homeTeam], Game.Arena.Teams[awayTeam]) == "Win"){
+                                    Game.Arena.TeamScores[homeTeam]++;
+                                } else {
+                                    Game.Arena.TeamScores[awayTeam]++;
+                                }
+                                // Reset team selection
+                                homeTeam = null;
+                                awayTeam = null;
+                            }
+                        }
+
+                        console.log(Game.Arena.TeamScores);
+                        
+                    } else {
+                        // Round robin or group style
+                        // Other teams scores are already calculated when tournament spawns
+                        // Just need to get which opponent is the current one
+                        opponent = Game.Arena.CurrentRound;
+                        if (opponent >= Game.Arena.Teams.indexOf('Player')) opponent++;
+
+                    }
+
+                    if (opponent == -1) {
+                         console.log("Opponent Calculation failure");
+                         console.log(Game.Arena.Teams);
+                         console.log(Game.Arena.TeamScores);
+                    }
+                    
+                    // Select from available enemies
+                    Game.Enemy = new Creature(Game.Arena.Teams[opponent]);
+
+                }
 
                 Game.CombatState = GameDB.Constants.States.Combat.Active;
             },
@@ -259,42 +356,42 @@ const GameDB = {
     // Zones stored as array, index is important and it's set up in order
     //  Cells are 0-indexed
     Zones: [
-        {   // Zone 0 - "Forgotten Battlefield"
+        {   // Zone 1 - "Forgotten Battlefield"
             numCells: 100,
             enemyCounters: [20,45,19,10,5],
             enemyNames: ["Goblin", "Kobold", "Orc", "WarDog", "Ogre"],
             specialCells: [99],
             specialEncounters: ["Dragon"]
         },
-        {   // Zone 1 - "Battlefield outskirts"
+        {   // Zone 2 - "Battlefield outskirts"
             numCells: 100,
             enemyCounters: [39,15,20,25],
             enemyNames: ["Goblin", "Orc", "WarDog", "Bear"],
             specialCells: [99],
             specialEncounters: ["Treant"]
         },
-        {   // Zone 2 - "Wooded path"
+        {   // Zone 3 - "Wooded path"
         numCells: 100,
         enemyCounters: [5,5,5,20,20,38,7],
         enemyNames: ["Goblin", "WarDog", "Bear", "Wolf", "Deer", "Boar", "Snake"],
         specialCells: [],
         specialEncounters: []
         },
-        {   // Zone 3 - "Wooded path Redux"
+        {   // Zone 4 - "Wooded path Redux"
         numCells: 100,
         enemyCounters: [5,27,23,38,7],
         enemyNames: ["Bear", "Wolf", "Deer", "Boar", "Snake"],
         specialCells: [],
         specialEncounters: []
         },
-        {   // Zone 4 - "Heart of the Forest"
+        {   // Zone 5 - "Heart of the Forest"
         numCells: 100,
         enemyCounters: [27,18,12,4,38,1],
         enemyNames: ["Boar", "Deer", "Wolf", "Bandit", "Pixie", "BanditKing"],
         specialCells: [],
         specialEncounters: []
         },
-        {   // Zone 5 - "Edge of the Forest"
+        {   // Zone 6 - "Edge of the Forest"
         numCells: 100,
         enemyCounters: [30,27,18,15,5,5],
         enemyNames: ["Boar", "Deer", "Wolf", "Bandit", "Snake"],
@@ -308,6 +405,25 @@ const GameDB = {
             specialCells: [],
             specialEncounters: []
         }
+        
+        /*ZoneNames: [
+            "Forgotten Battlefield",
+            "Battlefield outskirts",
+            "Wooded Path",
+            "Forest Path",
+            "Heart of the Forest", // 5
+            "Edge of the Forest",
+            "The Foothills", // Basecamp here something
+            "Cliffs of Mnemosyne",
+            "Ancient Mines",
+            "Haunted Drift", // 10
+            "Abandoned Mineshaft", // Small zone to show off different sized zones
+            "Aboleth Lair",
+            "Forgotten Mural", // Another small zone with some lore
+            "Summit Path",
+            "Mnemosyne Summit", // 15
+            "The Inexorable March of Time"
+        ],*/
     ],
     // Creature information, mostly names and modifiers, loot not included yet.
     Creatures: {
@@ -463,27 +579,40 @@ const GameDB = {
     Attributes: {
         // Attack bonus
         Strength: {
-            Bonus: 1.05,
+            Bonus: 1.1,
             Cost: 10,
             CostScaling: 1.25,
+            getTotalBonus: function() {
+                return Math.pow(GameDB.Attributes.Strength.Bonus, Game.Attributes.Strength.Level);
+            }
         },
         // Health bonus
         Constitution: {
-            Bonus: 1.05,
+            Bonus: 1.1,
             Cost: 10,
             CostScaling: 1.25,
+            getTotalBonus: function() {
+                return Math.pow(GameDB.Attributes.Constitution.Bonus, Game.Attributes.Constitution.Level);
+            }
         },
         // Looting bonus
+        //  Should not count arena rewards
         Perception: {
             Bonus: 1.05,
             Cost: 10,
             CostScaling: 1.25,
+            getTotalBonus: function() {
+                return Math.pow(GameDB.Attributes.Perception.Bonus, Game.Attributes.Perception.Level);
+            }
         },
         // XP Bonus
         Wisdom: {
             Bonus: 1.05,
             Cost: 10,
             CostScaling: 1.25,
+            getTotalBonus: function() {
+                return Math.pow(GameDB.Attributes.Wisdom.Bonus, Game.Attributes.Wisdom.Level);
+            }
         },
         // Stats will be based on primary aspects of the game, attack/health/etc.
         // Might need to add them for secondaries or metas as well.
@@ -493,6 +622,8 @@ const GameDB = {
         //      Mage type classes might get extra attack or mana out of Intelligence
         //      A paladin might get extra health regen out of constitution or wisdom, etc
         //      A berserker class might get extra brutality levels out of strength
+        // Future Attributes:
+        //  Charisma: For when I add reputations
     },
     // Arenas
     Arenas: {
@@ -506,6 +637,13 @@ const GameDB = {
         AllowedEnemies: [
             "Orc", "Pixie", "Bandit", "Ogre", "Goblin", "Kobold"
         ],
+        // Point values for arena scores in group stage defaults.
+        //  Going with pretty standard score totals here
+        GroupPoints: {
+            Win: 3,
+            Draw: 1,
+            Lose: 0
+        },
     },
     // One off pieces of information that need somewhere to sit.
     Constants: {
@@ -536,13 +674,13 @@ const GameDB = {
 
         States: {
             Combat: {
-                Paused: 0,
-                Active: 1
+                Paused: "Paused",
+                Active: "Active"
             },
 
             Game: {
-                Paused: 0,
-                Active: 1,
+                Paused: "Paused",
+                Active: "Active",
             }
         },
 

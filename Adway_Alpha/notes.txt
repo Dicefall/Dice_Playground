@@ -60,9 +60,7 @@ Fixed serialization of systems
         Could even add xp gain 
     Prestige is learning new techniques, unlearning old 'bad habits'
     Need to worry about the problems with things scaling very high
-        Eg. haste gets weird and I don't want it to be too high
-        Crit will probably get over 100% chance and I can do crit tiers
-        Might do something with rating conversions like wow but for zones
+        Decided to go with secondary stat ratings and rating to % conversions
 // Need to monitor cost/benefit curves and xp generation curves
 
 Upgrades: 
@@ -74,22 +72,6 @@ Upgrades:
         Could also add in a zone milestone even in each run. to combat.
     TODO: UI stuff and connect it to clickables and double check everything from there.
 
-
-I am here ---------------------------------------------------------------------
-
-Story
--Need to do the tutorial and early bits of story
---See Story.txt
-    Story up to reset area planned.
-
-Reset perks:
-Currency named Essence, funnel it into attributes to boost core aspects of the person
-    Strength, dex, con, etc. Traditional main character stats from old school rpgs.
-Implementation
-    Just need to decide what each one actually does, how many to include at the start, and connect it all up
-
-Scraps?
-    
 Arena:
 Place in town you can pay to participate in arena matches
     Grind out some XP
@@ -109,19 +91,37 @@ Place in town you can pay to participate in arena matches
             round robin (can lead into another type)
             'dungeon run' (up to X losses, fight people of same win count)
                 This is essentially an N knockout type instead of single/double elim
+    
+    Rewards
+        Based on your ranking in the arena.
+
+
+I am here ---------------------------------------------------------------------
+
+Story
+-Need to do the tutorial and early bits of story
+--See Story.txt
+    Story up to reset area planned...ish
+
+Reset perks:
+Currency named Essence, funnel it into attributes to boost core aspects of the person
+    Strength, dex, con, etc. Traditional main character stats from old school rpgs.
+Implementation
+    Just need to decide what each one actually does, how many to include at the start, and connect it all up
+    
+
             
 ---------------------
 TODO before pre-alpha
-Arenas
-    Spawning
-    Rewards
-Content/story up to reset (z15)
+Content/story up to reset (z15?)
     Zone contents
+        Zone names/concepts up to z15 done.
     Story text
 Upgrades
     Stat tier upgrade unlocks
 Attributes
     Purchasing/planning
+    Kind of a UI/Front end block
 
 UI
     Can be very basic, just functional for testing
@@ -130,7 +130,7 @@ Testing plan
     What sort of feedback I am interested and directed goals of testing
 
 "Bug" Fixes:
-    Fix owner on events/auras, balloons save right now.
+    Change to string probably or ID that connects to specific places
 
 -Semi-done
 Basic balancing
@@ -141,6 +141,8 @@ RNG
     Would like to "class" it up, otherwise working
 Reset perks
     Add a few more and balance income
+Arenas
+    Need arena clear rewards
 
 TODO:
     Timer/Event owners as abstract ref
