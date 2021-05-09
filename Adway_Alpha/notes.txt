@@ -118,31 +118,29 @@ Content/story up to reset (z15?)
         Zone names/concepts up to z15 done.
     Story text
 Upgrades
-    Stat tier upgrade unlocks
+    Stat tier upgrade unlocks back end. Names and effects done.
 Attributes
     Purchasing/planning
     Kind of a UI/Front end block
 
 UI
-    Can be very basic, just functional for testing
+    Drawn out plan, just need to figure out how to do it
 Testing plan
     Basic guide on simple goals and how to start
     What sort of feedback I am interested and directed goals of testing
-
-"Bug" Fixes:
-    Change to string probably or ID that connects to specific places
 
 -Semi-done
 Basic balancing
     Set proper rating scaling, set for slightly harsher than tier ups
 Game speedup
     Add ui update for large speedups
-RNG
-    Would like to "class" it up, otherwise working
 Reset perks
     Add a few more and balance income
 Arenas
     Need arena clear rewards
+
+Code Cleanup
+    Move a bunch of the utils things into class stuff.
 
 TODO:
     Timer/Event owners as abstract ref

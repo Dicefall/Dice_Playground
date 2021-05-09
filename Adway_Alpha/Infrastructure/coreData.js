@@ -118,12 +118,11 @@ class PlayerData {
             GameVersion: {
                 Major: 0,
                 Minor: 6,
-                Patch: 0,
+                Patch: 1,
             },
 
             LastUpdateTime: Date.now(),
 
-            // TODO: Change this to secondary page with total story unlocks
             StoryState: {
                 StoryStage: 0,
                 StoryControlID: 0,
@@ -138,7 +137,7 @@ class PlayerData {
         };
 
         // See Utils.js for actual rand systems.
-        // Date to seed the seeds, remember to change this as you add more rng seeds
+        // Date to seed the seeds
         var seedSeed = Date.now();
         seedSeed = RandomIntMulti(seedSeed, MIN,MAX, 1);
         this.RNGSeeds = {

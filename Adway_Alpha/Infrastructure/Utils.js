@@ -208,7 +208,7 @@ class Hero extends Actor {
             // Diff arena types work differently
             if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Knockout) {
                 // Knockout just ends it with a loss
-                endArena();
+                GameDB.Arenas.getClashResult();
             } else if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Group){
                 // Group style just handles points and moves on
                 var oponnent = Game.Arena.CurrentRound++;
@@ -222,7 +222,7 @@ class Hero extends Actor {
                 clearEnemy();
 
                 if (oponnent == Game.Arena.Teams.length) {
-                    endArena();
+                    GameDB.Arenas.getClashResult();
                 } else{
                     // Move on to next match
                     Chronos.CreateTimer("DelayedSpawn", null);
@@ -262,6 +262,8 @@ class Creature extends Actor {
         // TODO: Change this to get from game text
         super(GameText[Game.Settings.Language].CreatureNames[name]);
         this.coreName = name;
+
+        console.log(name);
 
         // Get world and cell scaling
         var worldMod = Math.pow(
@@ -346,172 +348,6 @@ function startZone(zoneNumber) {
     }
 }
 
-// Start an arena run
-function startArena(/**/){
-
-    // TODO: move this into params when front end starts happening
-    var constructionParams = {
-        Type: GameDB.Arenas.PrimitiveType.Group,
-        NumTeams: 8
-    }
-
-    // Set up enemies first, stat mods, variance on enemies.
-    // Set up initial scorse and types of each thing.
-    // Set up a delayed spawn for the first enemy
-
-    StoreCombat();
-
-    // Bracket type
-    Game.Arena.BracketType = constructionParams.Type;
-    // TODO: Validate team size
-    // Generate list of enemies (teams)
-    //  Leave one space for the player
-    for (var i = 0; i < constructionParams.NumTeams - 1; i++){
-        Game.Arena.Teams.push(GameDB.Arenas.AllowedEnemies[Math.floor(Math.random() * GameDB.Arenas.AllowedEnemies.length)]);
-    }
-
-    // Initialize scores
-    //  adjust initial scores potentially, maybe
-    for (var opp of Game.Arena.Teams) {
-        Game.Arena.TeamScores.push(0);
-    }
-
-    // Run the entire tournament except for the player
-    //  This lets us cheat and pre-construct the scores
-    // For knockout maybe a bit complicated,
-    // For points, calc each set of points but leave player out
-    if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Group){
-        // Each team plays each other team once (can be modified later)
-        for (var i = 0; i < Game.Arena.Teams.length - 1; i++){
-            // Only play teams not already played, can be changed later if I want a home team advantage
-            for (var k = i; k < Game.Arena.Teams.length; k++){
-                // Get result of match
-                //  Returns "Win, Draw, Lose" based on home team result
-                var matchResult = getArenaClashResult(Game.Arena.Teams[i], Game.Arena.Teams[k]);
-
-                // Give home team points based on result
-                Game.Arena.TeamScores[i] += GameDB.Arenas.GroupPoints[matchResult];
-
-                // Flip result for away team
-                if (matchResult == "Win") {matchResult = "Lose"}
-                 else if(matchResult == "Lose") {matchResult = "Win"}
-                
-                // Give away team points based on result
-                Game.Arena.TeamScores[k] += GameDB.Arenas.GroupPoints[matchResult];
-            }
-        }
-    }
-    // Only do this for the group stage, knockout style happens between rounds
-
-    // Make sure we're at the beginning of the tournament
-    Game.Arena.CurrentRound = 0;
-
-    // Add player into the list
-    var playerPos = Math.floor(Math.random() * constructionParams.NumTeams);
-    Game.Arena.Teams.splice(playerPos,0,'Player');
-    Game.Arena.TeamScores.splice(playerPos,0,0);
-
-    // Score tournament after player has been seeded
-    if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Knockout){
-        // Go through each rough
-        // TODO: Add case for non power of 2 knockout tournament
-        //  e.g. by rounds or whatnot
-        var numRounds = Math.floor(Math.log(constructionParams.NumTeams) / Math.log(2));
-    }
-
-    Game.CombatArea = GameDB.Constants.CombatAreas.Arena;
-
-    PauseAllCombat(false);
-
-
-    Chronos.CreateTimer("DelayedSpawn", Game.Arena);
-}
-
-// Returns a string with the home team result as Win, Draw, Lose
-function getArenaClashResult(homeTeam, awayTeam) {
-    var homeTeamStrength = 1
-    var awayTeamStrength = 1;
-    homeTeamStrength *= GameDB.Creatures[homeTeam].AttackMod
-        * GameDB.Creatures[homeTeam].HealthMod
-        * GameDB.Creatures[homeTeam].SpeedMod
-        * (Math.random() * 0.2 + 0.9);
-    
-    awayTeamStrength *= GameDB.Creatures[awayTeam].AttackMod
-        * GameDB.Creatures[awayTeam].HealthMod
-        * GameDB.Creatures[awayTeam].SpeedMod
-        * (Math.random() * 0.2 + 0.9);
-    
-    // Home team advantage win if a tie, highly unlikely
-    if (homeTeamStrength >= awayTeamStrength) {return "Win";}
-    else if (homeTeamStrength < awayTeamStrength) {return "Lose";}
-    
-    return "Error: Something went wrong in strength comparison";
-}
-
-// Clean up arena data and hand out rewards
-function endArena(){
-    // Check victory conditions and get position
-    var playerRanking = Game.Arena.Teams.length;
-    if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Knockout){
-        // Check which round he made it too
-        playerRanking = Math.log(Game.Arena.Teams.length) / Math.log(2) - Game.Arena.CurrentRound;
-        playerRanking = Math.pow(2,playerRanking);
-    } else if (Game.Arena.BracketType == GameDB.Arenas.PrimitiveType.Group){
-        console.log(Game.Arena.Teams);
-        console.log(Game.Arena.TeamScores);
-        var playerTeam = Game.Arena.Teams.indexOf('Player');
-        playerRanking = 1;
-        for (var i = 0; i < Game.Arena.Teams.length; i++) {
-            if (i != playerTeam) {
-                if (Game.Arena.TeamScores[playerTeam] < Game.Arena.TeamScores[i]) {
-                    playerRanking++;
-                }
-            }
-        }
-    }
-
-    // Rewards
-    //  Big bonus of gold and xp based on ranking. Formula for now, subject to change.
-    //  May need to throw in an extra kicker to make it more appealing
-    //      [Normal Gold/xp reward] * [Total number of teams in tournament] / [Rank in tournament]
-
-    // Calculate values
-    // Anything that will apply to all rewards from the arena
-    var arenaRewardScaling = 1;
-    // From zone/level
-    arenaRewardScaling *= Math.pow(GameDB.Constants.WorldScaling.Resources,Game.World.CurrentZone);
-    // From placement at the end of the arena
-    arenaRewardScaling *= Game.Arena.Teams.length / playerRanking;
-
-    // XP Rewards
-    var xpReward = GameDB.Constants.Base.XP;
-    // Wisdom Attribute
-    xpReward *= GameDB.Attributes.Wisdom.getTotalBonus();
-
-    // Gold Rewards
-    var goldReward = GameDB.Constants.Base.Gold;
-    // Perception attribute
-    //  TODO: Want to make perception not effect this but give something else, flavor doesn't work for me
-    //      Might be a balance thing to just leave it in
-    goldReward *= GameDB.Attributes.Perception.getTotalBonus();
-
-    // Actually give it to the player
-    Game.Resources.XP += xpReward * arenaRewardScaling;
-    Game.Resources.Gold += goldReward * arenaRewardScaling;
-
-    // Clear out arena info
-    Game.Arena.Teams = [];
-    Game.Arena.TeamScores = [];
-    Game.Arena.CurrentRound = 0;
-
-    // Check whether we're going back to world or more arenas
-    // if more arenas
-    //  startArena()
-    // else
-    LoadStoredEnemy(GameDB.Constants.CombatAreas.World);
-    Game.CombatArea = GameDB.Constants.CombatAreas.World;
-}
-
 // Reset functions
 function resetRun() {
 
@@ -559,6 +395,7 @@ function resetRun() {
 }
 
 function clearEnemy(){
+    if (Game.Enemy == null) return;
     // Switch to rest for the very small time until next combat
     Game.CombatState = GameDB.Constants.States.Combat.Paused;
 
@@ -668,6 +505,7 @@ function formatNumber(number, base = Game.Settings.NumberBase) {
 
     // TODO: 
     // Supporting alternate bases
+    // Mostly figured out, need a fun time to test it
 
     // Check for infinite:
     if (!isFinite(number)) return '∞';//return GameText.Icons.Infinity;
@@ -688,6 +526,10 @@ function formatNumber(number, base = Game.Settings.NumberBase) {
     // Example for dozenal:
     //  log 12 (x) = log 10 (x) / log 10 (12) OR
     //  log 12 (x) = ln(x) / ln(12)
+
+    // Generic base scientific notation
+    // exponent = Math.floor(Math.log(number) / Math.log(base))
+    // mantiassa = number / Math.pow(base, exponent)
 
     // Clean up weird float precision for numbers less than 10k
     if (exponent <= 3) return Math.floor(number);

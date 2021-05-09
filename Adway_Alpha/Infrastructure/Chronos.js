@@ -34,14 +34,13 @@ class EventBoard {
 
     GenerateEventGUID() {return ++(this.nextGUID);}
 
-    
     // Add a listener to the system, guidOverride should not be used
     //  Except for deserialization
     registerListener(listenFor, eventID, owner, guidOverride = -1){
 
         var eventCopy = {
             eventDBID: eventID,
-            eventOwner: owner, // TODO: Change for serializable
+            eventOwner: owner, // Should be soft ref
             cbGUID: (guidOverride > 0) ? guidOverride : this.GenerateEventGUID()
         }
 
@@ -260,7 +259,7 @@ class Chronometer {
                 // Check for hasted tick rate, multiply by tick frequency
                 currentTimer.nextTick += currentTimer.tickFrequency * 
                     (GameDB.Auras[currentTimer.spellID].flags & Aura.AuraFlags.TickHasted ? 
-                        1 / currentTimer.Owner.Speed :
+                        1 / currentTimer.Owner.Speed : // TODO, fix owner for soft ref
                         1
                     );
             }
@@ -283,7 +282,7 @@ class Chronometer {
     CreateTimer(timerDBID, timerOwner, guidOverride = -1){
 
         var newTimer = {
-            Owner: timerOwner, // TODO: Change for serializable benefits
+            Owner: timerOwner, // TODO: Should be soft ref
             spellID: timerDBID,
             timerID: (guidOverride > 0) ? guidOverride : this.GenerateTimerID(),
             isPaused: false,
